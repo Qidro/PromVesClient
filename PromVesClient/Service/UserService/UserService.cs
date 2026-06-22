@@ -11,10 +11,13 @@ namespace PromVesClient.Service.UserService
         private readonly ILogger<UserService> _logger;
 
         private readonly ApplicationDbContext _dbcontext;
-        public UserService(ILogger<UserService> logger, ApplicationDbContext dbcontext)
+
+        private readonly HashPasswordService _hashPasswordService;
+        public UserService(ILogger<UserService> logger, ApplicationDbContext dbcontext, HashPasswordService hashPasswordService)
         {
             _logger = logger;
             _dbcontext = dbcontext;
+            _hashPasswordService = hashPasswordService;
         }
 
         public async Task<ServiceResult> userAuthorizationAsync(string userName, string password)
@@ -32,6 +35,12 @@ namespace PromVesClient.Service.UserService
                 if (user == null)
                     return ServiceResult.Fail("Пользователь не найден");
                 
+                //проверка введенего пароля пользователя
+                if (!_hashPasswordService.passwordСheck(password ,user.PasswordHash))
+                {
+                    return ServiceResult.Fail("Неверный пароль");
+                }
+
                 return ServiceResult.Ok();
             }
             catch (Exception ex)
@@ -40,7 +49,27 @@ namespace PromVesClient.Service.UserService
             }
             
         }
+        //метод создания пользователя
+        public async Task<ServiceResult> createUserAsync(string login, string password)
+        {
+            //проверяет пустые ли строки лоигна и пароля
+            if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
+            {
+                return ServiceResult.Fail("Логин или пароль пустой");
+            }
+            
+            try
+            {
+                string hashPassword = _hashPasswordService.getHashPasswordUser(password);
+                
+                return ServiceResult.Ok();
+            }
+            catch (Exception ex)
+            {
+                return ServiceResult.Fail("Неизвестная ошибка: "+ex.ToString());
+            }
 
-        //public 
+            
+        }
     }
 }

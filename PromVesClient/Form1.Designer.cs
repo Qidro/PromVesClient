@@ -31,8 +31,8 @@
             label1 = new Label();
             label2 = new Label();
             button1 = new Button();
-            textBox1 = new TextBox();
-            textBox2 = new TextBox();
+            textBoxLogin = new TextBox();
+            textBoxPassword = new TextBox();
             programVersion = new Label();
             pictureBox1 = new PictureBox();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
@@ -70,23 +70,23 @@
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
             // 
-            // textBox1
+            // textBoxLogin
             // 
-            textBox1.Font = new Font("Segoe UI", 21.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            textBox1.Location = new Point(472, 310);
-            textBox1.Multiline = true;
-            textBox1.Name = "textBox1";
-            textBox1.Size = new Size(394, 49);
-            textBox1.TabIndex = 3;
+            textBoxLogin.Font = new Font("Segoe UI", 21.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            textBoxLogin.Location = new Point(472, 310);
+            textBoxLogin.Multiline = true;
+            textBoxLogin.Name = "textBoxLogin";
+            textBoxLogin.Size = new Size(394, 49);
+            textBoxLogin.TabIndex = 3;
             // 
-            // textBox2
+            // textBoxPassword
             // 
-            textBox2.Font = new Font("Segoe UI", 21.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            textBox2.Location = new Point(472, 380);
-            textBox2.Multiline = true;
-            textBox2.Name = "textBox2";
-            textBox2.Size = new Size(394, 49);
-            textBox2.TabIndex = 4;
+            textBoxPassword.Font = new Font("Segoe UI", 21.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            textBoxPassword.Location = new Point(472, 380);
+            textBoxPassword.Multiline = true;
+            textBoxPassword.Name = "textBoxPassword";
+            textBoxPassword.Size = new Size(394, 49);
+            textBoxPassword.TabIndex = 4;
             // 
             // programVersion
             // 
@@ -115,8 +115,8 @@
             ClientSize = new Size(1230, 561);
             Controls.Add(pictureBox1);
             Controls.Add(programVersion);
-            Controls.Add(textBox2);
-            Controls.Add(textBox1);
+            Controls.Add(textBoxPassword);
+            Controls.Add(textBoxLogin);
             Controls.Add(button1);
             Controls.Add(label2);
             Controls.Add(label1);
@@ -135,8 +135,8 @@
         private Label label1;
         private Label label2;
         private Button button1;
-        private TextBox textBox1;
-        private TextBox textBox2;
+        private TextBox textBoxLogin;
+        private TextBox textBoxPassword;
         private Label programVersion;
         private PictureBox pictureBox1;
     }

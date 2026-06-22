@@ -44,6 +44,7 @@ namespace PromVesClient
             
             //регистрация сервисов
             services.AddScoped<UserService>();
+            services.AddScoped<HashPasswordService>();
 
             var provider = services.BuildServiceProvider();
             ApplicationConfiguration.Initialize();
