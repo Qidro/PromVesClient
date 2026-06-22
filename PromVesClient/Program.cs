@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using PromVesClient.Service.UserService;
 using Serilog;
 
 namespace PromVesClient
@@ -40,6 +41,10 @@ namespace PromVesClient
             });
 
             services.AddTransient<Form1>();
+            
+            //регистрация сервисов
+            services.AddScoped<UserService>();
+
             var provider = services.BuildServiceProvider();
             ApplicationConfiguration.Initialize();
             Application.Run(
