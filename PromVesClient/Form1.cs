@@ -69,14 +69,14 @@ namespace PromVesClient
         private async void button1_Click(object sender, EventArgs e)
         {
             //метод авторизации, временно закоменчен
-            //var result = await _userService.userAuthorizationAsync(textBoxLogin.Text, textBoxPassword.Text);
+            var result = await _userService.userAuthorizationAsync(textBoxLogin.Text, textBoxPassword.Text);
 
             //временный метод создания пользователя
-            var result = await _userService.createUserAsync(textBoxLogin.Text, textBoxPassword.Text);
+            //var result = await _userService.createUserAsync(textBoxLogin.Text, textBoxPassword.Text);
             //результат авторизации
             if (result.Success == true)
             {
-                MessageBox.Show("успешно");
+                MessageBox.Show("успешно", result.Data.PasswordHash);
             }
             else
             {

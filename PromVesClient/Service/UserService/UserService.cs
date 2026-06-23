@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Npgsql;
+using PromVesClient.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.EntityFrameworkCore;
 
 namespace PromVesClient.Service.UserService
 {
@@ -10,42 +12,42 @@ namespace PromVesClient.Service.UserService
     {
         private readonly ILogger<UserService> _logger;
 
-        private readonly ApplicationDbContext _dbcontext;
+        private readonly ApplicationDbContext _dbContext;
 
         private readonly HashPasswordService _hashPasswordService;
         public UserService(ILogger<UserService> logger, ApplicationDbContext dbcontext, HashPasswordService hashPasswordService)
         {
             _logger = logger;
-            _dbcontext = dbcontext;
+            _dbContext = dbcontext;
             _hashPasswordService = hashPasswordService;
         }
 
-        public async Task<ServiceResult> userAuthorizationAsync(string userName, string password)
+        public async Task<ServiceResult<User>> userAuthorizationAsync(string userName, string password)
         {
             try
             {
                 //проверка: пустой ли userName
                 if (string.IsNullOrWhiteSpace(userName))
-                    return ServiceResult.Fail("Логин пустой");
+                    return ServiceResult<User>.Fail("Логин пустой");
                 // поиск пользователя
-                var user = await _dbcontext.Users.FirstOrDefaultAsync(u => u.Name == userName);
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Name == userName);
 
                 
                 //проверяем результат поиска
                 if (user == null)
-                    return ServiceResult.Fail("Пользователь не найден");
+                    return ServiceResult<User>.Fail("Пользователь не найден");
                 
                 //проверка введенего пароля пользователя
                 if (!_hashPasswordService.passwordСheck(password ,user.PasswordHash))
                 {
-                    return ServiceResult.Fail("Неверный пароль");
+                    return ServiceResult<User>.Fail("Неверный пароль");
                 }
 
-                return ServiceResult.Ok();
+                return ServiceResult<User>.Ok(user);
             }
             catch (Exception ex)
             {
-                return ServiceResult.Fail("Неизвестная ошибка: "+ ex.ToString());
+                return ServiceResult<User>.Fail("Неизвестная ошибка: "+ ex.ToString());
             }
             
         }
@@ -60,9 +62,29 @@ namespace PromVesClient.Service.UserService
             
             try
             {
-                string hashPassword = _hashPasswordService.getHashPasswordUser(password);
-                
+                var user = new User
+                {
+                    Id = Guid.NewGuid(),
+                    Name = login,
+                    PasswordHash = _hashPasswordService.getHashPasswordUser(password)
+                };
+                _dbContext.Users.Add(user);
+                await _dbContext.SaveChangesAsync();
+                //string hashPassword = _hashPasswordService.getHashPasswordUser(password);
+
                 return ServiceResult.Ok();
+            }
+            catch (DbUpdateException ex)
+            {
+                return ServiceResult.Fail("Неизвестная ошибка: " + ex.ToString());
+            }
+            catch (TimeoutException ex)
+            {
+                return ServiceResult.Fail("Неизвестная ошибка: " + ex.ToString());
+            }
+            catch (NpgsqlException ex)
+            {
+                return ServiceResult.Fail("Неизвестная ошибка: " + ex.ToString());
             }
             catch (Exception ex)
             {
