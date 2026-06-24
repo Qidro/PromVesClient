@@ -64,7 +64,7 @@
             button1.Font = new Font("Segoe UI", 20.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
             button1.Location = new Point(472, 448);
             button1.Name = "button1";
-            button1.Size = new Size(394, 53);
+            button1.Size = new Size(394, 49);
             button1.TabIndex = 2;
             button1.Text = "Принять";
             button1.UseVisualStyleBackColor = true;

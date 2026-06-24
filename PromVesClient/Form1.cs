@@ -1,4 +1,7 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using PromVesClient.Service;
+using PromVesClient.Service.AppInfoService;
 using PromVesClient.Service.UserService;
 using Serilog;
 using Serilog.Core;
@@ -10,50 +13,28 @@ namespace PromVesClient
     public partial class Form1 : Form
     {
         private readonly ILogger<Form1> _logger;
-        
+
         private readonly UserService _userService;
+        private readonly CurrentUserService _currentUserService;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly AppInfoService _appInfoService;
         //в конструкторе открываем файл о версии приложения
-        public Form1(ILogger<Form1> logger, UserService userService)
+        public Form1(ILogger<Form1> logger, UserService userService, CurrentUserService currentUserService, IServiceProvider serviceProvider, AppInfoService appInfoService)
         {
             _logger = logger;
             _userService = userService;
+            _currentUserService = currentUserService;
+            _serviceProvider = serviceProvider;
+            _appInfoService = appInfoService;
             //        Log.Logger = new LoggerConfiguration()
             //.WriteTo.File("logs/log.txt")
             //.CreateLogger();
             InitializeComponent();
             _logger.LogInformation("Приложение запущено");
             pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
-            try
-            {
-                string json = File.ReadAllText("appinfo.json");
+            programVersion.Text = _appInfoService.VersionInfo();
+            //programVersion.Text = "Версия: 1.0.0";
 
-                using var doc = JsonDocument.Parse(json);
-
-                string version = doc.RootElement
-                .GetProperty("application")
-                .GetProperty("version")
-                .GetString();
-
-                programVersion.Text = $"Версия: {version}";
-            }
-            catch (JsonException ex)
-            {
-                _logger.LogError(ex,
-                    "Некорректный формат appinfo.json");
-
-                programVersion.Text = "Версия: 1.0.0";
-            }
-            catch (FileNotFoundException ex)
-            {
-                _logger.LogError("Файл appinfo.json не найден");
-                programVersion.Text = $"Версия: 1.0.0";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("Неизвестная ошибка:", ex.ToString() );
-                programVersion.Text = $"Версия: 1.0.0";
-            }
-            
         }
         
         private void Form1_Load(object sender, EventArgs e)
@@ -76,7 +57,14 @@ namespace PromVesClient
             //результат авторизации
             if (result.Success == true)
             {
-                MessageBox.Show("успешно", result.Data.PasswordHash);
+                _currentUserService.Login(result.Data!);
+                //MessageBox.Show("успешно", result.Data.PasswordHash);
+                var form = _serviceProvider.GetRequiredService<MainMenu>();
+                //var form = new MainMenu();
+
+                form.ShowDialog();
+
+                //this.Hide();
             }
             else
             {

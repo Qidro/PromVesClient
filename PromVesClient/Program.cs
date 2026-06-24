@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using PromVesClient.Service;
+using PromVesClient.Service.AppInfoService;
 using PromVesClient.Service.UserService;
 using Serilog;
 
@@ -41,10 +43,14 @@ namespace PromVesClient
             });
 
             services.AddTransient<Form1>();
-            
+            services.AddTransient<MainMenu>();
+
             //регистрация сервисов
             services.AddScoped<UserService>();
             services.AddScoped<HashPasswordService>();
+            services.AddScoped<AppInfoService>();
+            //регистрация одного экземпляра, чтобы все формы работали именно с ним
+            services.AddSingleton<CurrentUserService>();
 
             var provider = services.BuildServiceProvider();
             ApplicationConfiguration.Initialize();
