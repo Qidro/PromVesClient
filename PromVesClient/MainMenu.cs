@@ -1,4 +1,5 @@
-﻿using PromVesClient.Service;
+﻿using Microsoft.Extensions.DependencyInjection;
+using PromVesClient.Service;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,10 +12,12 @@ namespace PromVesClient
 {
     public partial class MainMenu : Form
     {
+        private readonly IServiceProvider _serviceProvider;
         private readonly CurrentUserService _currentUserService;
-        public MainMenu(CurrentUserService currentUserService)
+        public MainMenu(CurrentUserService currentUserService, IServiceProvider serviceProvider)
         {
             InitializeComponent();
+            _serviceProvider = serviceProvider;
             _currentUserService = currentUserService;
             label1.Text =
        $"Пользователь: {_currentUserService.CurrentUser?.Name}";
@@ -22,7 +25,10 @@ namespace PromVesClient
 
         private void button1_Click(object sender, EventArgs e)
         {
+            var form = _serviceProvider.GetRequiredService<StaticWeighing>();
+            //var form = new MainMenu();
 
+            form.ShowDialog();
         }
 
         private void r3rToolStripMenuItem_Click(object sender, EventArgs e)

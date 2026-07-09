@@ -44,6 +44,7 @@ namespace PromVesClient
 
             services.AddTransient<Form1>();
             services.AddTransient<MainMenu>();
+            services.AddTransient<StaticWeighing>();
 
             //регистрация сервисов
             services.AddScoped<UserService>();
