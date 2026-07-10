@@ -6,7 +6,7 @@ namespace PromVesClient.Models
 {
     public class Receipt
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         //время создания квитанции
         public DateTime DateTime { get; set; }
         //тип взвешивания

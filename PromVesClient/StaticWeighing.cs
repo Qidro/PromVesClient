@@ -1,9 +1,4 @@
-﻿using LiveChartsCore;
-using LiveChartsCore;
-using LiveChartsCore.SkiaSharpView;
-using LiveChartsCore.SkiaSharpView;
-using LiveChartsCore.SkiaSharpView.WinForms;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -33,21 +28,21 @@ namespace PromVesClient
             _logger = logger;
 
             InitializeComponent();
-            cartesianChart1.Size = new Size(600, 300);
-            //отключение всплывающей подсказки
-            cartesianChart1.TooltipPosition = LiveChartsCore.Measure.TooltipPosition.Hidden;
-            cartesianChart1.Series = new ISeries[]
-   {
-        new LineSeries<double>
-        {
-            Values = values,
-             GeometrySize = 0,      // не рисовать кружки
-        Fill = null,           // убрать заливку под линией
-        LineSmoothness = 0     // прямая линия без сглаживания (по желанию)
-            //Values = new double[] { 1,2,3,4,5,6,7,8,9, 10, 11,12, 13,14,15,16,17,18,19,20 }
-        }
-   };
-            values.Add(10.1);
+   //         cartesianChart1.Size = new Size(600, 300);
+   //         //отключение всплывающей подсказки
+   //         cartesianChart1.TooltipPosition = LiveChartsCore.Measure.TooltipPosition.Hidden;
+   //         cartesianChart1.Series = new ISeries[]
+   //{
+   //     new LineSeries<double>
+   //     {
+   //         Values = values,
+   //          GeometrySize = 0,      // не рисовать кружки
+   //     Fill = null,           // убрать заливку под линией
+   //     LineSmoothness = 0     // прямая линия без сглаживания (по желанию)
+   //         //Values = new double[] { 1,2,3,4,5,6,7,8,9, 10, 11,12, 13,14,15,16,17,18,19,20 }
+   //     }
+   //};
+   //         values.Add(10.1);
             pictureBox1.Image = Properties.Resources._00;
             pictureBox2.Image = Properties.Resources._00;
             pictureBox3.Image = Properties.Resources._00;
@@ -122,9 +117,9 @@ namespace PromVesClient
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 }
-                
+
             }
-            else 
+            else
             {
                 _cts?.Cancel();
 
