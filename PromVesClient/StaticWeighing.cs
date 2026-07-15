@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text;
@@ -94,8 +95,9 @@ namespace PromVesClient
                 try
                 {
                     _client = new TcpClient();
-
-                    await _client.ConnectAsync("192.168.1.100", 5002).WaitAsync(TimeSpan.FromSeconds(5));
+                    IPAddress ipAddress = GetLocalIPAddress();
+                    await _client.ConnectAsync(ipAddress, 5002)
+             .WaitAsync(TimeSpan.FromSeconds(5));
 
                     _stream = _client.GetStream();
 
@@ -130,6 +132,18 @@ namespace PromVesClient
                 btnWeighing.Text = "Начать взвешивание";
             }
         }
+        private static IPAddress GetLocalIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+
+            foreach (IPAddress ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                    return ip;
+            }
+
+            throw new Exception("Локальный IPv4 адрес не найден.");
+        }
         //получение значения с весов
         private async Task ReceiveMessagesAsync(CancellationToken token)
         {
@@ -145,7 +159,7 @@ namespace PromVesClient
                         break;
 
                     string message = Encoding.UTF8.GetString(buffer, 0, count);
-
+                    lblPlatform1Right.Text = message;
                     //BeginInvoke(() =>
                     //{
                     //    listBox1.Items.Add(message);
