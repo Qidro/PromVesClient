@@ -44,11 +44,15 @@
             lblPlatform1Right = new Label();
             lblPlatform2Right = new Label();
             label3 = new Label();
-            comboBox1 = new ComboBox();
+            comboBoxVagonNumber = new ComboBox();
             label4 = new Label();
-            comboBox2 = new ComboBox();
+            cBoxTypeWeighing = new ComboBox();
             btnSaveWeight = new Button();
             btnWeighing = new Button();
+            formsPlot1 = new ScottPlot.WinForms.FormsPlot();
+            formsPlot2 = new ScottPlot.WinForms.FormsPlot();
+            formsPlot3 = new ScottPlot.WinForms.FormsPlot();
+            formsPlot4 = new ScottPlot.WinForms.FormsPlot();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox3).BeginInit();
@@ -157,9 +161,6 @@
             label2.Text = "Стабильность";
             label2.Click += label2_Click;
             // 
-            // cartesianChart1
-            // 
-            // 
             // lblPlatform1Left
             // 
             lblPlatform1Left.AutoSize = true;
@@ -211,14 +212,14 @@
             label3.Text = "Номер вагона";
             label3.Click += label3_Click;
             // 
-            // comboBox1
+            // comboBoxVagonNumber
             // 
-            comboBox1.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            comboBox1.FormattingEnabled = true;
-            comboBox1.Location = new Point(1232, 168);
-            comboBox1.Name = "comboBox1";
-            comboBox1.Size = new Size(142, 25);
-            comboBox1.TabIndex = 19;
+            comboBoxVagonNumber.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            comboBoxVagonNumber.FormattingEnabled = true;
+            comboBoxVagonNumber.Location = new Point(1232, 168);
+            comboBoxVagonNumber.Name = "comboBoxVagonNumber";
+            comboBoxVagonNumber.Size = new Size(142, 25);
+            comboBoxVagonNumber.TabIndex = 19;
             // 
             // label4
             // 
@@ -230,17 +231,17 @@
             label4.TabIndex = 20;
             label4.Text = "Тип взвешивания";
             // 
-            // comboBox2
+            // cBoxTypeWeighing
             // 
-            comboBox2.DropDownStyle = ComboBoxStyle.DropDownList;
-            comboBox2.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            comboBox2.FormattingEnabled = true;
-            comboBox2.Items.AddRange(new object[] { "Тара", "Брутто" });
-            comboBox2.Location = new Point(1232, 201);
-            comboBox2.Name = "comboBox2";
-            comboBox2.Size = new Size(142, 25);
-            comboBox2.TabIndex = 21;
-            comboBox2.SelectedIndexChanged += comboBox2_SelectedIndexChanged;
+            cBoxTypeWeighing.DropDownStyle = ComboBoxStyle.DropDownList;
+            cBoxTypeWeighing.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            cBoxTypeWeighing.FormattingEnabled = true;
+            cBoxTypeWeighing.Items.AddRange(new object[] { "Тара", "Брутто" });
+            cBoxTypeWeighing.Location = new Point(1232, 201);
+            cBoxTypeWeighing.Name = "cBoxTypeWeighing";
+            cBoxTypeWeighing.Size = new Size(142, 25);
+            cBoxTypeWeighing.TabIndex = 21;
+            cBoxTypeWeighing.SelectedIndexChanged += comboBox2_SelectedIndexChanged;
             // 
             // btnSaveWeight
             // 
@@ -252,6 +253,7 @@
             btnSaveWeight.TabIndex = 22;
             btnSaveWeight.Text = "Сохранить вес";
             btnSaveWeight.UseVisualStyleBackColor = true;
+            btnSaveWeight.Click += btnSaveWeight_Click;
             // 
             // btnWeighing
             // 
@@ -264,16 +266,48 @@
             btnWeighing.UseVisualStyleBackColor = true;
             btnWeighing.Click += button2_Click;
             // 
+            // formsPlot1
+            // 
+            formsPlot1.Location = new Point(28, 115);
+            formsPlot1.Name = "formsPlot1";
+            formsPlot1.Size = new Size(452, 301);
+            formsPlot1.TabIndex = 24;
+            // 
+            // formsPlot2
+            // 
+            formsPlot2.Location = new Point(586, 115);
+            formsPlot2.Name = "formsPlot2";
+            formsPlot2.Size = new Size(452, 301);
+            formsPlot2.TabIndex = 25;
+            // 
+            // formsPlot3
+            // 
+            formsPlot3.Location = new Point(28, 452);
+            formsPlot3.Name = "formsPlot3";
+            formsPlot3.Size = new Size(452, 301);
+            formsPlot3.TabIndex = 26;
+            // 
+            // formsPlot4
+            // 
+            formsPlot4.Location = new Point(586, 452);
+            formsPlot4.Name = "formsPlot4";
+            formsPlot4.Size = new Size(452, 301);
+            formsPlot4.TabIndex = 27;
+            // 
             // StaticWeighing
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1486, 801);
+            Controls.Add(formsPlot4);
+            Controls.Add(formsPlot3);
+            Controls.Add(formsPlot2);
+            Controls.Add(formsPlot1);
             Controls.Add(btnWeighing);
             Controls.Add(btnSaveWeight);
-            Controls.Add(comboBox2);
+            Controls.Add(cBoxTypeWeighing);
             Controls.Add(label4);
-            Controls.Add(comboBox1);
+            Controls.Add(comboBoxVagonNumber);
             Controls.Add(label3);
             Controls.Add(lblPlatform2Right);
             Controls.Add(lblPlatform1Right);
@@ -321,10 +355,14 @@
         private Label lblPlatform1Right;
         private Label lblPlatform2Right;
         private Label label3;
-        private ComboBox comboBox1;
+        private ComboBox comboBoxVagonNumber;
         private Label label4;
-        private ComboBox comboBox2;
+        private ComboBox cBoxTypeWeighing;
         private Button btnSaveWeight;
         private Button btnWeighing;
+        private ScottPlot.WinForms.FormsPlot formsPlot1;
+        private ScottPlot.WinForms.FormsPlot formsPlot2;
+        private ScottPlot.WinForms.FormsPlot formsPlot3;
+        private ScottPlot.WinForms.FormsPlot formsPlot4;
     }
 }

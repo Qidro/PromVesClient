@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PromVesClient.Service;
 using PromVesClient.Service.AppInfoService;
+using PromVesClient.Service.StaticWeighingService;
 using PromVesClient.Service.UserService;
 using Serilog;
 
@@ -50,6 +51,7 @@ namespace PromVesClient
             services.AddScoped<UserService>();
             services.AddScoped<HashPasswordService>();
             services.AddScoped<AppInfoService>();
+            services.AddScoped<StaticWeighingService>();
             //регистрация одного экземпляра, чтобы все формы работали именно с ним
             services.AddSingleton<CurrentUserService>();
 

@@ -1,10 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using PromVesClient.DTO;
 using PromVesClient.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PromVesClient.Service.StaticWeighingService
 {
@@ -15,6 +17,8 @@ namespace PromVesClient.Service.StaticWeighingService
         private readonly ApplicationDbContext _dbContext;
 
         private const double DefaultLoadCapacity = 70;
+
+        private Guid IdReceipt;
         //private double Platform1Left { get; set; }
         //private double Platform1Right { get; set; }
         //private double Platform2Left { get; set; }
@@ -24,11 +28,12 @@ namespace PromVesClient.Service.StaticWeighingService
             _logger = logger;
             _dbContext = dbContext;
         }
-        //метод отвечающий за сохранение данных взвешивания
-        public async Task<ServiceResult> saveWeighingAsync(Guid Id,double Platform1Left, double Platform1Right, double Platform2Left, double Platform2Right, string VagonNumber, double TareWeight, double GrossWeight)
+        //метод отвечающий за сохранение данных взвешивания WeighingDto dto
+        //public async Task<ServiceResult> saveWeighingAsync(double Platform1Left, double Platform1Right, double Platform2Left, double Platform2Right, string VagonNumber, double TareWeight, double GrossWeight)
+        public async Task<ServiceResult> saveWeighingAsync(WeighingDto dtoWeighing)
         {
             //общая сумма в весов
-            double WeightSum = Platform1Left + Platform1Right + Platform2Left + Platform2Right;
+            double WeightSum = dtoWeighing.Platform1Left + dtoWeighing.Platform1Right + dtoWeighing.Platform2Left + dtoWeighing.Platform2Right;
             //грузопольемность
             //double LoadCapacity = 70;
             //расчет переруза/недогруза
@@ -36,15 +41,15 @@ namespace PromVesClient.Service.StaticWeighingService
             //временно Нетто 0
             double NetWeight = 0;
             //первая тележка
-            double FirstCart = Platform1Left + Platform1Right;
+            double FirstCart = dtoWeighing.Platform1Left + dtoWeighing.Platform1Right;
             //вторая тележка
-            double SecondCart = Platform2Left + Platform2Right;
+            double SecondCart = dtoWeighing.Platform2Left + dtoWeighing.Platform2Right;
             //разница тележек
             double DifferenceCarts = FirstCart - SecondCart;
             //вес левого борта
-            double LeftSide = Platform1Left + Platform2Left;
+            double LeftSide = dtoWeighing.Platform1Left + dtoWeighing.Platform2Left;
             //вес правого борта
-            double RightSide = Platform1Right + Platform2Right;
+            double RightSide = dtoWeighing.Platform1Right + dtoWeighing.Platform2Right;
             //разница бортов
             double DifferenceSides = Math.Abs(LeftSide - RightSide);
             try
@@ -52,7 +57,7 @@ namespace PromVesClient.Service.StaticWeighingService
                 //поиск последней записи по номеру вагона
                 var lastWeighing = await _dbContext.Weighings
             .Include(w => w.Receipt)
-            .Where(w => w.VagonNumber == VagonNumber)
+            .Where(w => w.VagonNumber == dtoWeighing.VagonNumber)
             .OrderByDescending(w => w.Receipt.DateTime)
             .FirstOrDefaultAsync();
 
@@ -60,16 +65,16 @@ namespace PromVesClient.Service.StaticWeighingService
                 if (lastWeighing != null)
                 {
                     //вычесление нетто, если есть Тара и сохраняем Брутто в текущую запись
-                    if (TareWeight != 0 && lastWeighing.GrossWeight != 0)
+                    if (dtoWeighing.TareWeight != 0 && lastWeighing.GrossWeight != 0)
                     {
-                        NetWeight = lastWeighing.GrossWeight - TareWeight;
-                        GrossWeight = lastWeighing.GrossWeight;
+                        NetWeight = lastWeighing.GrossWeight - dtoWeighing.TareWeight;
+                        dtoWeighing.GrossWeight = lastWeighing.GrossWeight;
                     }
                     //вычесление нетто, если есть Брутто и сохраняем Тару в текущую запись
-                    else if (GrossWeight != 0 && lastWeighing.TareWeight != 0)
+                    else if (dtoWeighing.GrossWeight != 0 && lastWeighing.TareWeight != 0)
                     {
-                        NetWeight = GrossWeight - lastWeighing.TareWeight;
-                        TareWeight = lastWeighing.TareWeight;
+                        NetWeight = dtoWeighing.GrossWeight - lastWeighing.TareWeight;
+                        dtoWeighing.TareWeight = lastWeighing.TareWeight;
                     }
                 }
             } 
@@ -90,9 +95,9 @@ namespace PromVesClient.Service.StaticWeighingService
             var weighingResult = new Weighing
             { 
                 Id = Guid.NewGuid(),
-                VagonNumber = VagonNumber,
-                TareWeight = TareWeight,
-                GrossWeight = GrossWeight,
+                VagonNumber = dtoWeighing.VagonNumber,
+                TareWeight = dtoWeighing.TareWeight,
+                GrossWeight = dtoWeighing.GrossWeight,
                 NetWeight = NetWeight,
                 LoadCapacity = DefaultLoadCapacity,
                 LoadDeviation = LoadDeviation,
@@ -102,7 +107,7 @@ namespace PromVesClient.Service.StaticWeighingService
                 LeftSide = LeftSide,
                 RightSide = RightSide,
                 DifferenceSides = DifferenceSides,
-                ReceiptId = Id
+                ReceiptId = IdReceipt
             };
             //сохраняем данные
             try
@@ -129,7 +134,7 @@ namespace PromVesClient.Service.StaticWeighingService
         {
             var receipt = new Receipt
             {
-                Id = Guid.NewGuid(),
+                Id = Id,
                 DateTime = DateTime.Now,
                 TypeWeighng = TypeWeighing,
                 Operator = Operator
@@ -137,8 +142,17 @@ namespace PromVesClient.Service.StaticWeighingService
 
             try
             {
-                _dbContext.Receipts.Add(receipt);
-                await _dbContext.SaveChangesAsync();
+                bool exists = await _dbContext.Receipts.AnyAsync(r => r.Id == receipt.Id);
+                if (!exists)
+                {
+                    _dbContext.Receipts.Add(receipt);
+                    await _dbContext.SaveChangesAsync();
+                    IdReceipt = Id;
+                }
+                else
+                {
+                    // Квитанция уже существует
+                }
                 return ServiceResult.Ok();
             }
             catch (DbUpdateException ex)
@@ -152,6 +166,112 @@ namespace PromVesClient.Service.StaticWeighingService
                 return ServiceResult.Fail("Ошибка в записи в БД: " + ex.Message);
             }
             
+        }
+        //метод предназначен для получения коллекции изображений для табла общего веса
+        public async Task<List<Image>> GetImageWeighingAsync(double weightSum)
+        {
+            List<Image> images = new List<Image>();
+            //преобразуем массив в string формат
+            string weightSumString = weightSum.ToString("F2");
+            Console.WriteLine(weightSumString);
+            //начиаем проход массива с конца
+            for (int i = weightSumString.Length - 1; i >= 0; i--)
+            {
+                //вычисляем проход по цикла
+                int iteration = weightSumString.Length - 1 - i;
+                
+                if (weightSumString.Length-1 < i)
+                {
+                    images.Add(Properties.Resources._00);
+                }
+                //проверяем на третьем проходе массива ли мы 
+                if (iteration == 3)
+                {
+                    //сохраняем значения согласну элементу (значение с запятой)
+                    switch (weightSumString[i])
+                    {
+                        case '0':
+                            images.Add(Properties.Resources._0t);
+                            break;
+                        case '1':
+                            images.Add(Properties.Resources._1t);
+                            break;
+                        case '2':
+                            images.Add(Properties.Resources._2t);
+                            break;
+                        case '3':
+                            images.Add(Properties.Resources._3t);
+                            break;
+                        case '4':
+                            images.Add(Properties.Resources._4t);
+                            break;
+                        case '5':
+                            images.Add(Properties.Resources._5t);
+                            break;
+                        case '6':
+                            images.Add(Properties.Resources._6t);
+                            break;
+                        case '7':
+                            images.Add(Properties.Resources._7t);
+                            break;
+                        case '8':
+                            images.Add(Properties.Resources._8t);
+                            break;
+                        case '9':
+                            images.Add(Properties.Resources._9t);
+                            break;
+
+                    }
+                }
+                else
+                {
+                    //сохраняем значения согласну элементу (значение без запятой)
+                    switch (weightSumString[i])
+                    {
+                        case '0':
+                            images.Add(Properties.Resources._0);
+                            break;
+                        case '1':
+                            images.Add(Properties.Resources._1);
+                            break;
+                        case '2':
+                            images.Add(Properties.Resources._2);
+                            break;
+                        case '3':
+                            images.Add(Properties.Resources._3);
+                            break;
+                        case '4':
+                            images.Add(Properties.Resources._4);
+                            break;
+                        case '5':
+                            images.Add(Properties.Resources._5);
+                            break;
+                        case '6':
+                            images.Add(Properties.Resources._6);
+                            break;
+                        case '7':
+                            images.Add(Properties.Resources._7);
+                            break;
+                        case '8':
+                            images.Add(Properties.Resources._8);
+                            break;
+                        case '9':
+                            images.Add(Properties.Resources._9);
+                            break;
+
+                    }
+                }
+                //char u = weightSumString[i];
+                if (i == 0 && iteration != 6)
+                {
+                    for (int j = 0; j < 6 - iteration; j++)
+                    {
+                        images.Add(Properties.Resources._00);
+                    }
+                }
+            }
+            
+            return images;
         }
     }
 }
