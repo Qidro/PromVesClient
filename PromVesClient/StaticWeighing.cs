@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using PromVesClient.DTO;
+using PromVesClient.Service;
 using PromVesClient.Service.StaticWeighingService;
 using System;
 using System.Collections.Generic;
@@ -19,41 +20,46 @@ namespace PromVesClient
 {
     public partial class StaticWeighing : Form
     {
-        private readonly Queue<double>[] values =
-{
-    new Queue<double>(),
-    new Queue<double>(),
-    new Queue<double>(),
-    new Queue<double>()
-};
+        //DI
+        private readonly CurrentUserService _currentUserService;
+        //логи
+        private readonly ILogger<StaticWeighing> _logger;
+
+        private readonly StaticWeighingService _staticWeighingService;
+
+        private TcpClient? _client;
+        private NetworkStream? _stream;
+        private CancellationTokenSource? _cts;
+
         //коллекциями с ссылка на картинки 
         private List<PictureBox> pictureBoxesList;
         private ScottPlot.Plottables.Signal signal;
+        //сохранение ссылок на обьекты графиков
+        private List<ScottPlot.WinForms.FormsPlot> plots;
+        //Предназначен для создания точек на графике
+        private readonly Queue<double>[] values =
+        {
+            new Queue<double>(),
+            new Queue<double>(),
+            new Queue<double>(),
+            new Queue<double>()
+        };
         //таймер предназначен для создания точек для 4 графиков
         private readonly System.Windows.Forms.Timer graphTimer = new();
         //переменная предназначенная для соханения данных веса с бортов
         private double[] cartSideWeights = new double[4];
         //переменная, которая сохраняет полученные значения для расчета стабильности
         private double[] stableWeight = new double[100];
-        private TcpClient? _client;
-        private NetworkStream? _stream;
-        private CancellationTokenSource? _cts;
-        //логи
-        private readonly ILogger<StaticWeighing> _logger;
-        //сохранение ссылок на обьекты графиков
-        private List<ScottPlot.WinForms.FormsPlot> plots;
-        // private ObservableCollection<double> values = new(Enumerable.Range(1, 500).Select(x => (double)x).ToArray());
-        private readonly StaticWeighingService _staticWeighingService;
-
+        //поля предназначенные для передачи данных в методы сохранения данных  в БД
         private double TareWeight;
         private double GrossWeight;
+        private Guid IdReceipt;
 
-
-        public StaticWeighing(ILogger<StaticWeighing> logger, StaticWeighingService staticWeighingService)
+        public StaticWeighing(ILogger<StaticWeighing> logger, StaticWeighingService staticWeighingService, CurrentUserService currentUserService)
         {
             _staticWeighingService = staticWeighingService;
             _logger = logger;
-
+            _currentUserService = currentUserService;
             InitializeComponent();
             //добавляем при закрытии формы проверку на окончания взвешивания
             this.FormClosing += Form1_FormClosing;
@@ -66,6 +72,7 @@ namespace PromVesClient
                 formsPlot4
             };
             graphTimer.Interval = 1000; // 1 секунда
+            //сохраняем функцию, которая будет работать с тиком
             graphTimer.Tick += GraphTimer_Tick;
             
             //         cartesianChart1.Size = new Size(600, 300);
@@ -153,19 +160,23 @@ namespace PromVesClient
                 try
                 {
                     _client = new TcpClient();
+                    //подключение локального ip адреса
                     IPAddress ipAddress = GetLocalIPAddress();
+                    //подключение в серверу
                     await _client.ConnectAsync(ipAddress, 5002)
              .WaitAsync(TimeSpan.FromSeconds(5));
 
                     _stream = _client.GetStream();
 
                     _cts = new CancellationTokenSource();
-
+                    //ожидание новых данных
                     _ = ReceiveMessagesAsync(_cts.Token);
-
+                    //для отладки
                     MessageBox.Show("Подключено");
+                    //начали взвешивание - данные можно сохранить
                     btnSaveWeight.Enabled = true;
                     graphTimer.Start();
+                    IdReceipt = Guid.NewGuid();
                     btnWeighing.Text = "Закончить взвешивание";
                 }
                 catch (Exception ex)
@@ -278,7 +289,6 @@ namespace PromVesClient
         }
         private async void btnSaveWeight_Click(object sender, EventArgs e)
         {
-            Guid IdReceipt = Guid.NewGuid();
             var resultt = await _staticWeighingService.saveReceiptAsync(IdReceipt, cBoxTypeWeighing.Text, "123");
             if (cBoxTypeWeighing.Text == "Тара")
             {
@@ -298,8 +308,8 @@ namespace PromVesClient
                 Platform2Right = cartSideWeights[3],
                 VagonNumber = comboBoxVagonNumber.Text,
                 TareWeight = TareWeight,
-                GrossWeight = GrossWeight
-
+                GrossWeight = GrossWeight,
+                IdReceipt = IdReceipt
             };
             var result = await _staticWeighingService.saveWeighingAsync(dto);
         }

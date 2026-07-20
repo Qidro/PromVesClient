@@ -12,8 +12,8 @@ using PromVesClient;
 namespace PromVesClient.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260710060222_CreateReceiptAndWeighing")]
-    partial class CreateReceiptAndWeighing
+    [Migration("20260716112425_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,11 +27,9 @@ namespace PromVesClient.Migrations
 
             modelBuilder.Entity("PromVesClient.Models.Receipt", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("timestamp with time zone");
@@ -101,9 +99,6 @@ namespace PromVesClient.Migrations
                     b.Property<Guid>("ReceiptId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("ReceiptId1")
-                        .HasColumnType("integer");
-
                     b.Property<double>("RightSide")
                         .HasColumnType("double precision");
 
@@ -119,7 +114,7 @@ namespace PromVesClient.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ReceiptId1");
+                    b.HasIndex("ReceiptId");
 
                     b.ToTable("Weighings");
                 });
@@ -128,7 +123,7 @@ namespace PromVesClient.Migrations
                 {
                     b.HasOne("PromVesClient.Models.Receipt", "Receipt")
                         .WithMany("Weighings")
-                        .HasForeignKey("ReceiptId1")
+                        .HasForeignKey("ReceiptId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

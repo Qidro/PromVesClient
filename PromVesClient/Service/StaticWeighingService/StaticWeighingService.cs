@@ -18,7 +18,7 @@ namespace PromVesClient.Service.StaticWeighingService
 
         private const double DefaultLoadCapacity = 70;
 
-        private Guid IdReceipt;
+        //private Guid IdReceipt;
         //private double Platform1Left { get; set; }
         //private double Platform1Right { get; set; }
         //private double Platform2Left { get; set; }
@@ -107,7 +107,7 @@ namespace PromVesClient.Service.StaticWeighingService
                 LeftSide = LeftSide,
                 RightSide = RightSide,
                 DifferenceSides = DifferenceSides,
-                ReceiptId = IdReceipt
+                ReceiptId = dtoWeighing.IdReceipt
             };
             //сохраняем данные
             try
@@ -135,7 +135,7 @@ namespace PromVesClient.Service.StaticWeighingService
             var receipt = new Receipt
             {
                 Id = Id,
-                DateTime = DateTime.Now,
+                DateTime = DateTime.UtcNow,
                 TypeWeighng = TypeWeighing,
                 Operator = Operator
             };
@@ -147,7 +147,7 @@ namespace PromVesClient.Service.StaticWeighingService
                 {
                     _dbContext.Receipts.Add(receipt);
                     await _dbContext.SaveChangesAsync();
-                    IdReceipt = Id;
+                   // IdReceipt = Id;
                 }
                 else
                 {

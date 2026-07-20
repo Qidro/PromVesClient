@@ -6,6 +6,7 @@ namespace PromVesClient.DTO
 {
     public class WeighingDto
     {
+        
         public double Platform1Left { get; set; }
 
         public double Platform1Right { get; set; } 
@@ -14,5 +15,6 @@ namespace PromVesClient.DTO
         public string VagonNumber { get; set; }
         public double TareWeight { get; set; }
         public double GrossWeight { get; set; }
+        public Guid IdReceipt { get; set; }
     }
 }
