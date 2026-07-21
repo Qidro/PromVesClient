@@ -47,12 +47,14 @@ namespace PromVesClient
             services.AddTransient<Form1>();
             services.AddTransient<MainMenu>();
             services.AddTransient<StaticWeighing>();
+            services.AddTransient<ComPortSettingsForm>();
 
             //регистрация сервисов
             services.AddScoped<UserService>();
             services.AddScoped<HashPasswordService>();
             services.AddScoped<AppInfoService>();
             services.AddScoped<StaticWeighingService>();
+            services.AddSingleton<ComPortService>();
             services.AddScoped<TcpService>();
             //регистрация одного экземпляра, чтобы все формы работали именно с ним
             services.AddSingleton<CurrentUserService>();
