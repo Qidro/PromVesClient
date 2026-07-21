@@ -5,7 +5,7 @@ using System.IO.Ports;
 
 namespace PromVesClient.Models
 {
-    internal class SerialPortSettings
+    public class SerialPortSettings
     {
         public int Id { get; set; }
 
