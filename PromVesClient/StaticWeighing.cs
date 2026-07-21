@@ -354,6 +354,11 @@ namespace PromVesClient
         //сохранение
         private async void btnSaveWeight_Click(object sender, EventArgs e)
         {
+            if (comboBoxVagonNumber.Text.Length != 8)
+            {
+                MessageBox.Show("Перед сохранением введите корректный номер вагона", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
             //проверка на стабильность веса перед сохранением
             if (pictureBoxStabilityFalse.Visible == true && pictureBoxStabilityTrue.Visible == false)
             {
