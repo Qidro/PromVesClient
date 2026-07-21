@@ -1,0 +1,40 @@
+﻿{
+  "SerialPorts": [
+    {
+      "Id": 1,
+      "PortName": "",
+      "BaudRate": 115200,
+      "DataBits": 8,
+      "Parity": "None",
+      "StopBits": "One",
+      "Handshake": "None"
+    },
+    {
+      "Id": 2,
+      "PortName": "",
+      "BaudRate": 115200,
+      "DataBits": 8,
+      "Parity": "None",
+      "StopBits": "One",
+      "Handshake": "None"
+    },
+    {
+      "Id": 3,
+      "PortName": "",
+      "BaudRate": 115200,
+      "DataBits": 8,
+      "Parity": "None",
+      "StopBits": "One",
+      "Handshake": "None"
+    },
+    {
+      "Id": 4,
+      "PortName": "",
+      "BaudRate": 115200,
+      "DataBits": 8,
+      "Parity": "None",
+      "StopBits": "One",
+      "Handshake": "None"
+    }
+  ]
+}
