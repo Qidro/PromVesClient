@@ -66,6 +66,10 @@ namespace PromVesClient
             _currentUserService = currentUserService;
             _tcpService = tcpService;
             InitializeComponent();
+            //регистрации метода на ожидание новых данных
+            _tcpService.MessageReceived += ProcessMessage;
+            //регистрация метода на ожидание ошибок
+            _tcpService.ConnectionError += OnConnectionError;
             //добавляем при закрытии формы проверку на окончания взвешивания
             this.FormClosing += Form1_FormClosing;
             //сохраняем обьекты в List
@@ -154,10 +158,7 @@ namespace PromVesClient
 
                     // _cts = new CancellationTokenSource();
 
-                    //регистрации метода на ожидание новых данных
-                    _tcpService.MessageReceived += ProcessMessage;
-                    //регистрация метода на ожидание ошибок
-                    _tcpService.ConnectionError += OnConnectionError;
+                    
 
                     //_ = _tcpService.ReceiveMessagesAsync(_tcpService.Token);
                     //для отладки
@@ -283,7 +284,7 @@ namespace PromVesClient
 
                 MessageBox.Show(
                     ex.Message,
-                    "Ошибка соединения",
+                    "Ошибка",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             });
@@ -353,16 +354,27 @@ namespace PromVesClient
         //сохранение
         private async void btnSaveWeight_Click(object sender, EventArgs e)
         {
+            //проверка на стабильность веса перед сохранением
+            if (pictureBoxStabilityFalse.Visible == true && pictureBoxStabilityTrue.Visible == false)
+            {
+                MessageBox.Show("Перед сохранением дождитесь, чтобы вес был стабилен", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
             var resultt = await _staticWeighingService.saveReceiptAsync(IdReceipt, cBoxTypeWeighing.Text, "123");
             if (cBoxTypeWeighing.Text == "Тара")
             {
                 TareWeight = cartSideWeights.Sum();
                 GrossWeight = 0;
             }
-            else if(cBoxTypeWeighing.Text =="Брутто")
+            else if (cBoxTypeWeighing.Text == "Брутто")
             {
                 GrossWeight = cartSideWeights.Sum();
                 TareWeight = 0;
+            }
+            else
+            {
+                MessageBox.Show("Выберите тип взвешивания", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
             WeighingDto dto = new WeighingDto
             {
@@ -376,6 +388,15 @@ namespace PromVesClient
                 IdReceipt = IdReceipt
             };
             var result = await _staticWeighingService.saveWeighingAsync(dto);
+            //проерка на сохранение данных
+            if (result.Success == false)
+            {
+                MessageBox.Show("Данные взвешивания не были сохранены в БД. Причина: "+ result.Message, "Возникла ошибки при сохранении в БД", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else 
+            {
+                MessageBox.Show("Данные успешно сохранены в БД", "Данные сохранены", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
         //создание точек на графике
         private void AddPoint(int indexObject, double value)

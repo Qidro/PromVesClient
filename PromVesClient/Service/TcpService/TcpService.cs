@@ -1,4 +1,5 @@
-﻿using PromVesClient.Service.StaticWeighingService;
+﻿using Microsoft.Extensions.Logging;
+using PromVesClient.Service.StaticWeighingService;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -12,8 +13,16 @@ namespace PromVesClient.Service.TcpService
         private TcpClient? _client;
         private NetworkStream? _stream;
         private CancellationTokenSource? _cts;
+        private readonly ILogger<TcpService> _logger;
+
         public CancellationToken Token =>
     _cts?.Token ?? CancellationToken.None;
+
+        public TcpService(ILogger<TcpService> logger)
+        {
+            _logger = logger;
+        }
+
         //подключение к серверу
         public async Task ConnectAsync()
         {
@@ -61,20 +70,61 @@ namespace PromVesClient.Service.TcpService
         //считывание с сервера присланных данных
         public async Task ReceiveMessagesAsync(CancellationToken token)
         {
-            byte[] buffer = new byte[4096];
-
-            while (!token.IsCancellationRequested)
+            try 
             {
-                int count = await _stream.ReadAsync(buffer, token);
+                byte[] buffer = new byte[4096];
 
-                if (count == 0)
-                    break;
+                while (!token.IsCancellationRequested)
+                {
+                    int count = await _stream.ReadAsync(buffer, token);
 
-                string message = Encoding.UTF8.GetString(buffer, 0, count);
-                //Console.WriteLine("выключаем событие");
-                //
-                MessageReceived?.Invoke(message);
+                    if (count == 0)
+                        break;
+
+                    string message = Encoding.UTF8.GetString(buffer, 0, count);
+                    //Console.WriteLine("выключаем событие");
+                    //
+                    MessageReceived?.Invoke(message);
+                }
             }
+            //сервер разорвал соединение
+            catch (IOException ex)
+            {
+                //MessageBox.Show("Ошибка: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _logger.LogError(ex, "Ошибка ввода-вывода. Сервер разорвал соединение");
+                ConnectionError?.Invoke(new Exception("Сервер разорвал соединение", ex));
+                return;
+            }
+            //ошибка потока/работа с закрытым потоком, обьектом которго больше нет
+            catch (ObjectDisposedException ex)
+            {
+                _logger.LogError(ex, "Попытка считывания закрытого потока");
+                ConnectionError?.Invoke(new Exception("Сервер разорвал соединение", ex));
+                return;
+            }
+            //ошибка сокета
+            catch (SocketException ex)
+            {
+               // MessageBox.Show("Ошибка", $"Ошибка сокета: {ex.SocketErrorCode}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _logger.LogError(ex, "Ошибка сокета");
+                ConnectionError?.Invoke(new Exception("Сервер разорвал соединение", ex));
+                return;
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                //BeginInvoke(() =>
+                //{
+                //    //MessageBox.Show(ex.Message);
+                //});
+                _logger.LogError("Ошибка: " + ex.Message.ToString());
+                ConnectionError?.Invoke(new Exception("Сервер разорвал соединение", ex));
+                return;
+            }
+            
         }
         //обьявление событий
         public event Action<string>? MessageReceived;
