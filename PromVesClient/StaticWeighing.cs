@@ -153,12 +153,16 @@ namespace PromVesClient
                     // _stream = _client.GetStream();
 
                     // _cts = new CancellationTokenSource();
-                    //ожидание новых данных
+
+                    //регистрации метода на ожидание новых данных
                     _tcpService.MessageReceived += ProcessMessage;
+                    //регистрация метода на ожидание ошибок
                     _tcpService.ConnectionError += OnConnectionError;
+
                     //_ = _tcpService.ReceiveMessagesAsync(_tcpService.Token);
                     //для отладки
                     //MessageBox.Show("Подключено");
+
                     //начали взвешивание - данные можно сохранить
                     btnSaveWeight.Enabled = true;
                     graphTimer.Start();
@@ -196,18 +200,6 @@ namespace PromVesClient
                 btnWeighing.Text = "Начать взвешивание";
             }
         }
-        //private static IPAddress GetLocalIPAddress()
-        //{
-        //    var host = Dns.GetHostEntry(Dns.GetHostName());
-
-        //    foreach (IPAddress ip in host.AddressList)
-        //    {
-        //        if (ip.AddressFamily == AddressFamily.InterNetwork)
-        //            return ip;
-        //    }
-
-        //    throw new Exception("Локальный IPv4 адрес не найден.");
-        //}
 
         //получение значения с весов
         //private async Task ReceiveMessagesAsync(CancellationToken token)
@@ -296,12 +288,14 @@ namespace PromVesClient
                     MessageBoxIcon.Error);
             });
         }
+        //метод для события(получения данных с сервака) по обработке полцченных данных
         private void ProcessMessage(string message)
         {
             try 
             {
-                Console.WriteLine("мы находится в событии");
+                //Console.WriteLine("мы находится в событии");
                 string[] parts = message.Split(';');
+                //обработка 4 графиков
                 for (int i = 0; i < 4; i++)
                 {
                     cartSideWeights[i] = double.Parse(parts[i]) / 1000;
@@ -435,7 +429,7 @@ namespace PromVesClient
                 
             }
         }
-
+        //метод таймера
         private void GraphTimer_Tick(object? sender, EventArgs e)
         {
             AddPoint(0, cartSideWeights[0]);
