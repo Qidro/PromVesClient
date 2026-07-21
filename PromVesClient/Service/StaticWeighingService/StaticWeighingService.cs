@@ -5,6 +5,8 @@ using PromVesClient.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -272,6 +274,19 @@ namespace PromVesClient.Service.StaticWeighingService
             }
             
             return images;
+        }
+        //получение локального ip адреса компьютера
+        public async Task<IPAddress> GetLocalIPAddressAsync()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+
+            foreach (IPAddress ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                    return ip;
+            }
+
+            throw new Exception("Локальный IPv4 адрес не найден.");
         }
     }
 }

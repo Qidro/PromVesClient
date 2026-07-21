@@ -2,6 +2,7 @@
 using PromVesClient.DTO;
 using PromVesClient.Service;
 using PromVesClient.Service.StaticWeighingService;
+using Serilog.Core;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -109,6 +110,8 @@ namespace PromVesClient
                 pictureBox1
             };
             //var f = Properties.Resources._00;
+
+            //задаем изначальное на табло (все нули)
             pictureBox1.Image = Properties.Resources._00;
             pictureBox2.Image = Properties.Resources._00;
             pictureBox3.Image = Properties.Resources._00;
@@ -119,7 +122,7 @@ namespace PromVesClient
 
         private void pictureBox1_Click(object sender, EventArgs e)
         {
-            pictureBox1.Image = Properties.Resources._1t;
+            //pictureBox1.Image = Properties.Resources._1t;
         }
 
         private void StaticWeighing_Load(object sender, EventArgs e)
@@ -161,10 +164,10 @@ namespace PromVesClient
                 {
                     _client = new TcpClient();
                     //подключение локального ip адреса
-                    IPAddress ipAddress = GetLocalIPAddress();
+                    IPAddress ipAddress = await _staticWeighingService.GetLocalIPAddressAsync();
                     //подключение в серверу
                     await _client.ConnectAsync(ipAddress, 5002)
-             .WaitAsync(TimeSpan.FromSeconds(5));
+                    .WaitAsync(TimeSpan.FromSeconds(5));
 
                     _stream = _client.GetStream();
 
@@ -172,7 +175,7 @@ namespace PromVesClient
                     //ожидание новых данных
                     _ = ReceiveMessagesAsync(_cts.Token);
                     //для отладки
-                    MessageBox.Show("Подключено");
+                    //MessageBox.Show("Подключено");
                     //начали взвешивание - данные можно сохранить
                     btnSaveWeight.Enabled = true;
                     graphTimer.Start();
@@ -182,7 +185,13 @@ namespace PromVesClient
                 catch (Exception ex)
                 {
                     _logger.LogError("Ошибка: " + ex.Message.ToString());
+                    _cts?.Cancel();
 
+                    _stream?.Close();
+                    _client?.Close();
+
+                    //MessageBox.Show("Соединение закрыто");
+                    graphTimer.Stop();
                     MessageBox.Show(
                     ex.Message,
                     "Ошибка",
@@ -203,18 +212,19 @@ namespace PromVesClient
                 btnWeighing.Text = "Начать взвешивание";
             }
         }
-        private static IPAddress GetLocalIPAddress()
-        {
-            var host = Dns.GetHostEntry(Dns.GetHostName());
+        //private static IPAddress GetLocalIPAddress()
+        //{
+        //    var host = Dns.GetHostEntry(Dns.GetHostName());
 
-            foreach (IPAddress ip in host.AddressList)
-            {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
-                    return ip;
-            }
+        //    foreach (IPAddress ip in host.AddressList)
+        //    {
+        //        if (ip.AddressFamily == AddressFamily.InterNetwork)
+        //            return ip;
+        //    }
 
-            throw new Exception("Локальный IPv4 адрес не найден.");
-        }
+        //    throw new Exception("Локальный IPv4 адрес не найден.");
+        //}
+
         //получение значения с весов
         private async Task ReceiveMessagesAsync(CancellationToken token)
         {
@@ -252,6 +262,23 @@ namespace PromVesClient
                     //});
                 }
             }
+            //сервер разорвал соединение
+            catch (IOException ex)
+            {
+                MessageBox.Show("Ошибка: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _logger.LogError(ex, "Ошибка ввода-вывода. Сервер разорвал соединение");
+            }
+            //ошибка потока/работа с закрытым потоком, обьектом которго больше нет
+            catch (ObjectDisposedException ex)
+            {
+                _logger.LogError(ex, "Попытка считывания закрытого потока");
+            }
+            //ошибка сокета
+            catch (SocketException ex)
+            {
+                MessageBox.Show("Ошибка", $"Ошибка сокета: {ex.SocketErrorCode}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _logger.LogError(ex, "Ошибка сокета");
+            }
             catch (OperationCanceledException)
             {
             }
@@ -259,15 +286,15 @@ namespace PromVesClient
             {
                 BeginInvoke(() =>
                 {
-                    MessageBox.Show(ex.Message);
+                    //MessageBox.Show(ex.Message);
                 });
                 _logger.LogError("Ошибка: " + ex.Message.ToString());
             }
         }
-        private async Task CreateGraphAsync(double coordinatePoint)
-        { 
+        //private async Task CreateGraphAsync(double coordinatePoint)
+        //{ 
             
-        }
+        //}
         //расчет стабильности вагона
         private void stable(double data)
         {
@@ -337,11 +364,16 @@ namespace PromVesClient
             //}
             
         }
+        //ивент на закрытие формы, если взвешивание активно - форма не будет закрыта и будет предупреждение
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (!btnWeighing.Text.Equals("Начать взвешивание", StringComparison.OrdinalIgnoreCase))
             {
-                MessageBox.Show("Сначала закончите взвешивание!");
+                MessageBox.Show(
+                "Сначала закончите взвешивание!",
+                "Предупреждение",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
 
                 e.Cancel = true;
             }
