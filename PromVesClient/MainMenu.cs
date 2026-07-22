@@ -45,5 +45,13 @@ namespace PromVesClient
         {
 
         }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            var form = _serviceProvider.GetRequiredService<frmWeighingReceipts>();
+            //var form = new MainMenu();
+
+            form.ShowDialog();
+        }
     }
 }
