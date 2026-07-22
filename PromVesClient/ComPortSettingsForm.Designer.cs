@@ -473,8 +473,9 @@
             btnRestoreDefaults.Name = "btnRestoreDefaults";
             btnRestoreDefaults.Size = new Size(131, 55);
             btnRestoreDefaults.TabIndex = 5;
-            btnRestoreDefaults.Text = "button2";
+            btnRestoreDefaults.Text = "По умолчанию";
             btnRestoreDefaults.UseVisualStyleBackColor = true;
+            btnRestoreDefaults.Click += btnRestoreDefaults_Click;
             // 
             // cbPort4
             // 
