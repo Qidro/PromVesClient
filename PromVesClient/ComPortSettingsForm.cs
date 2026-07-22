@@ -199,7 +199,14 @@ namespace PromVesClient
     ComboBox stopBitsBox,
     ComboBox handshakeBox)
         {
-            portBox.SelectedItem = settings.PortName;
+            if (string.IsNullOrWhiteSpace(settings.PortName))
+            {
+                portBox.SelectedItem = null;
+            }
+            else
+            {
+                portBox.SelectedItem = settings.PortName;
+            }
 
             baudRateBox.SelectedItem = settings.BaudRate;
 
@@ -314,6 +321,30 @@ namespace PromVesClient
 
             MessageBox.Show(
                 "Настройки успешно сохранены.",
+                "COM-порты",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+        }
+
+        private void btnRestoreDefaults_Click(object sender, EventArgs e)
+        {
+            var result = MessageBox.Show(
+        "Восстановить настройки по умолчанию?",
+        "Подтверждение",
+        MessageBoxButtons.YesNo,
+        MessageBoxIcon.Question);
+
+            if (result != DialogResult.Yes)
+                return;
+
+            _comPortService.RestoreDefaults();
+
+            LoadSettings();
+
+            UpdateAvailablePorts();
+
+            MessageBox.Show(
+                "Настройки успешно восстановлены.",
                 "COM-порты",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
