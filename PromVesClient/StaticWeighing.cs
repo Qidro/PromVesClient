@@ -2,6 +2,8 @@
 using PromVesClient.DTO;
 using PromVesClient.Service;
 using PromVesClient.Service.StaticWeighingService;
+using PromVesClient.Service.TcpService;
+using Serilog.Core;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -26,10 +28,12 @@ namespace PromVesClient
         private readonly ILogger<StaticWeighing> _logger;
 
         private readonly StaticWeighingService _staticWeighingService;
+        //обьект, который отвечает за подключение/отключение/получение данных сервера
+        private readonly TcpService _tcpService;
 
-        private TcpClient? _client;
-        private NetworkStream? _stream;
-        private CancellationTokenSource? _cts;
+        //private TcpClient? _client;
+        //private NetworkStream? _stream;
+        //private CancellationTokenSource? _cts;
 
         //коллекциями с ссылка на картинки 
         private List<PictureBox> pictureBoxesList;
@@ -55,12 +59,17 @@ namespace PromVesClient
         private double GrossWeight;
         private Guid IdReceipt;
 
-        public StaticWeighing(ILogger<StaticWeighing> logger, StaticWeighingService staticWeighingService, CurrentUserService currentUserService)
+        public StaticWeighing(ILogger<StaticWeighing> logger, StaticWeighingService staticWeighingService, CurrentUserService currentUserService, TcpService tcpService)
         {
             _staticWeighingService = staticWeighingService;
             _logger = logger;
             _currentUserService = currentUserService;
+            _tcpService = tcpService;
             InitializeComponent();
+            //регистрации метода на ожидание новых данных
+            _tcpService.MessageReceived += ProcessMessage;
+            //регистрация метода на ожидание ошибок
+            _tcpService.ConnectionError += OnConnectionError;
             //добавляем при закрытии формы проверку на окончания взвешивания
             this.FormClosing += Form1_FormClosing;
             //сохраняем обьекты в List
@@ -74,29 +83,6 @@ namespace PromVesClient
             graphTimer.Interval = 1000; // 1 секунда
             //сохраняем функцию, которая будет работать с тиком
             graphTimer.Tick += GraphTimer_Tick;
-            
-            //         cartesianChart1.Size = new Size(600, 300);
-            //         //отключение всплывающей подсказки
-            //         cartesianChart1.TooltipPosition = LiveChartsCore.Measure.TooltipPosition.Hidden;
-            //         cartesianChart1.Series = new ISeries[]
-            //{
-            //     new LineSeries<double>
-            //     {
-            //         Values = values,
-            //          GeometrySize = 0,      // не рисовать кружки
-            //     Fill = null,           // убрать заливку под линией
-            //     LineSmoothness = 0     // прямая линия без сглаживания (по желанию)
-            //         //Values = new double[] { 1,2,3,4,5,6,7,8,9, 10, 11,12, 13,14,15,16,17,18,19,20 }
-            //     }
-            //};
-            //         values.Add(10.1);
-            //    double[] values =
-            //        {
-            //    5,8,3,7,4,9,2,500,10
-            //};
-
-            //    formsPlot1.Plot.Add.Signal(values);
-
             formsPlot1.Refresh();
             //сохраняем ссылки
             pictureBoxesList = new List<PictureBox>
@@ -109,6 +95,8 @@ namespace PromVesClient
                 pictureBox1
             };
             //var f = Properties.Resources._00;
+
+            //задаем изначальное на табло (все нули)
             pictureBox1.Image = Properties.Resources._00;
             pictureBox2.Image = Properties.Resources._00;
             pictureBox3.Image = Properties.Resources._00;
@@ -119,7 +107,7 @@ namespace PromVesClient
 
         private void pictureBox1_Click(object sender, EventArgs e)
         {
-            pictureBox1.Image = Properties.Resources._1t;
+            //pictureBox1.Image = Properties.Resources._1t;
         }
 
         private void StaticWeighing_Load(object sender, EventArgs e)
@@ -159,20 +147,23 @@ namespace PromVesClient
             {
                 try
                 {
-                    _client = new TcpClient();
+                    //_client = new TcpClient();
                     //подключение локального ip адреса
-                    IPAddress ipAddress = GetLocalIPAddress();
+                    //IPAddress ipAddress = await _staticWeighingService.GetLocalIPAddressAsync();
                     //подключение в серверу
-                    await _client.ConnectAsync(ipAddress, 5002)
-             .WaitAsync(TimeSpan.FromSeconds(5));
+                    //await _client.ConnectAsync(ipAddress, 5002)
+                    //.WaitAsync(TimeSpan.FromSeconds(5));
+                    await _tcpService.ConnectAsync();
+                    // _stream = _client.GetStream();
 
-                    _stream = _client.GetStream();
+                    // _cts = new CancellationTokenSource();
 
-                    _cts = new CancellationTokenSource();
-                    //ожидание новых данных
-                    _ = ReceiveMessagesAsync(_cts.Token);
+                    
+
+                    //_ = _tcpService.ReceiveMessagesAsync(_tcpService.Token);
                     //для отладки
-                    MessageBox.Show("Подключено");
+                    //MessageBox.Show("Подключено");
+
                     //начали взвешивание - данные можно сохранить
                     btnSaveWeight.Enabled = true;
                     graphTimer.Start();
@@ -182,7 +173,13 @@ namespace PromVesClient
                 catch (Exception ex)
                 {
                     _logger.LogError("Ошибка: " + ex.Message.ToString());
+                    //_cts?.Cancel();
 
+                    //_stream?.Close();
+                    //_client?.Close();
+                    await _tcpService.DisconnectAsync();
+                    //MessageBox.Show("Соединение закрыто");
+                    graphTimer.Stop();
                     MessageBox.Show(
                     ex.Message,
                     "Ошибка",
@@ -193,81 +190,148 @@ namespace PromVesClient
             }
             else
             {
-                _cts?.Cancel();
+                //_cts?.Cancel();
 
-                _stream?.Close();
-                _client?.Close();
+                //_stream?.Close();
+                //_client?.Close();
+                await _tcpService.DisconnectAsync();
 
                 //MessageBox.Show("Соединение закрыто");
                 graphTimer.Stop();
                 btnWeighing.Text = "Начать взвешивание";
             }
         }
-        private static IPAddress GetLocalIPAddress()
-        {
-            var host = Dns.GetHostEntry(Dns.GetHostName());
 
-            foreach (IPAddress ip in host.AddressList)
-            {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
-                    return ip;
-            }
-
-            throw new Exception("Локальный IPv4 адрес не найден.");
-        }
         //получение значения с весов
-        private async Task ReceiveMessagesAsync(CancellationToken token)
+        //private async Task ReceiveMessagesAsync(CancellationToken token)
+        //{
+        //    byte[] buffer = new byte[4096];
+
+        //    try
+        //    {
+        //        while (!token.IsCancellationRequested)
+        //        {
+        //            int count = await _stream.ReadAsync(buffer, 0, buffer.Length, token);
+
+        //            if (count == 0)
+        //                break;
+
+        //            string message = Encoding.UTF8.GetString(buffer, 0, count);
+
+        //            string[] parts = message.Split(';');
+        //            for (int i = 0; i < 4; i++)
+        //            {
+        //                cartSideWeights[i] = double.Parse(parts[i]) / 1000;
+        //            }
+        //            lblPlatform1Left.Text = "Платформа 1 левый борт: " + cartSideWeights[0].ToString("F2") + " Т.";
+        //            lblPlatform1Right.Text = "Платформа 1 правый борт: "+cartSideWeights[1].ToString("F2")+" Т.";
+        //            lblPlatform2Left.Text = "Платформа 2 левый борт: " + cartSideWeights[2].ToString("F2") + " Т.";
+        //            lblPlatform2Right.Text = "Платформа 2 правый борт: " + cartSideWeights[3].ToString("F2") + " Т.";
+        //            //вызов метода по вывода значения на табло
+        //            _ = DisplayingValue(cartSideWeights.Sum());
+        //            stable(cartSideWeights.Sum());
+        //           //AddPoint(cartSideWeights[0]);
+        //            //BeginInvoke(() =>
+        //            //{
+        //            //    listBox1.Items.Add(message);
+        //            //    // либо:
+        //            //    // textBox1.AppendText(message + Environment.NewLine);
+        //            //});
+        //        }
+        //    }
+        //    //сервер разорвал соединение
+        //    catch (IOException ex)
+        //    {
+        //        MessageBox.Show("Ошибка: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //        _logger.LogError(ex, "Ошибка ввода-вывода. Сервер разорвал соединение");
+        //    }
+        //    //ошибка потока/работа с закрытым потоком, обьектом которго больше нет
+        //    catch (ObjectDisposedException ex)
+        //    {
+        //        _logger.LogError(ex, "Попытка считывания закрытого потока");
+        //    }
+        //    //ошибка сокета
+        //    catch (SocketException ex)
+        //    {
+        //        MessageBox.Show("Ошибка", $"Ошибка сокета: {ex.SocketErrorCode}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //        _logger.LogError(ex, "Ошибка сокета");
+        //    }
+        //    catch (OperationCanceledException)
+        //    {
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        BeginInvoke(() =>
+        //        {
+        //            //MessageBox.Show(ex.Message);
+        //        });
+        //        _logger.LogError("Ошибка: " + ex.Message.ToString());
+        //    }
+        //}
+        //private async Task CreateGraphAsync(double coordinatePoint)
+        //{ 
+
+        //}
+
+        //событие ошибки
+        private void OnConnectionError(Exception ex)
         {
-            byte[] buffer = new byte[4096];
-
-            try
+            BeginInvoke(() =>
             {
-                while (!token.IsCancellationRequested)
+                graphTimer.Stop();
+                btnSaveWeight.Enabled = false;
+                btnWeighing.Text = "Начать взвешивание";
+
+                MessageBox.Show(
+                    ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            });
+        }
+        //метод для события(получения данных с сервака) по обработке полцченных данных
+        private void ProcessMessage(string message)
+        {
+            try 
+            {
+                //Console.WriteLine("мы находится в событии");
+                string[] parts = message.Split(';');
+                //обработка 4 графиков
+                for (int i = 0; i < 4; i++)
                 {
-                    int count = await _stream.ReadAsync(buffer, 0, buffer.Length, token);
-
-                    if (count == 0)
-                        break;
-
-                    string message = Encoding.UTF8.GetString(buffer, 0, count);
-
-                    string[] parts = message.Split(';');
-                    for (int i = 0; i < 4; i++)
-                    {
-                        cartSideWeights[i] = double.Parse(parts[i]) / 1000;
-                    }
-                    lblPlatform1Left.Text = "Платформа 1 левый борт: " + cartSideWeights[0].ToString("F2") + " Т.";
-                    lblPlatform1Right.Text = "Платформа 1 правый борт: "+cartSideWeights[1].ToString("F2")+" Т.";
-                    lblPlatform2Left.Text = "Платформа 2 левый борт: " + cartSideWeights[2].ToString("F2") + " Т.";
-                    lblPlatform2Right.Text = "Платформа 2 правый борт: " + cartSideWeights[3].ToString("F2") + " Т.";
-                    //вызов метода по вывода значения на табло
-                    _ = DisplayingValue(cartSideWeights.Sum());
-                    stable(cartSideWeights.Sum());
-                   //AddPoint(cartSideWeights[0]);
-                    //BeginInvoke(() =>
-                    //{
-                    //    listBox1.Items.Add(message);
-                    //    // либо:
-                    //    // textBox1.AppendText(message + Environment.NewLine);
-                    //});
+                    cartSideWeights[i] = double.Parse(parts[i]) / 1000;
                 }
+                lblPlatform1Left.Text = "Платформа 1 левый борт: " + cartSideWeights[0].ToString("F2") + " Т.";
+                lblPlatform1Right.Text = "Платформа 1 правый борт: " + cartSideWeights[1].ToString("F2") + " Т.";
+                lblPlatform2Left.Text = "Платформа 2 левый борт: " + cartSideWeights[2].ToString("F2") + " Т.";
+                lblPlatform2Right.Text = "Платформа 2 правый борт: " + cartSideWeights[3].ToString("F2") + " Т.";
+                //вызов метода по вывода значения на табло
+                _ = DisplayingValue(cartSideWeights.Sum());
+                stable(cartSideWeights.Sum());
             }
-            catch (OperationCanceledException)
+            catch (FormatException ex)
             {
+                _logger.LogWarning(ex, "Некорректный формат данных");
+            }
+            catch (IndexOutOfRangeException ex)
+            {
+                _logger.LogWarning(ex, "Получено неполное сообщение");
             }
             catch (Exception ex)
             {
-                BeginInvoke(() =>
-                {
-                    MessageBox.Show(ex.Message);
-                });
-                _logger.LogError("Ошибка: " + ex.Message.ToString());
+                _logger.LogError(ex, "Ошибка обработки сообщения");
             }
+
+            //AddPoint(cartSideWeights[0]);
+            //BeginInvoke(() =>
+            //{
+            //    listBox1.Items.Add(message);
+            //    // либо:
+            //    // textBox1.AppendText(message + Environment.NewLine);
+            //});
         }
-        private async Task CreateGraphAsync(double coordinatePoint)
-        { 
-            
-        }
+
+
         //расчет стабильности вагона
         private void stable(double data)
         {
@@ -287,18 +351,35 @@ namespace PromVesClient
                 }
             }
         }
+        //сохранение
         private async void btnSaveWeight_Click(object sender, EventArgs e)
         {
+            if (comboBoxVagonNumber.Text.Length != 8)
+            {
+                MessageBox.Show("Перед сохранением введите корректный номер вагона", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            //проверка на стабильность веса перед сохранением
+            if (pictureBoxStabilityFalse.Visible == true && pictureBoxStabilityTrue.Visible == false)
+            {
+                MessageBox.Show("Перед сохранением дождитесь, чтобы вес был стабилен", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
             var resultt = await _staticWeighingService.saveReceiptAsync(IdReceipt, cBoxTypeWeighing.Text, "123");
             if (cBoxTypeWeighing.Text == "Тара")
             {
                 TareWeight = cartSideWeights.Sum();
                 GrossWeight = 0;
             }
-            else if(cBoxTypeWeighing.Text =="Брутто")
+            else if (cBoxTypeWeighing.Text == "Брутто")
             {
                 GrossWeight = cartSideWeights.Sum();
                 TareWeight = 0;
+            }
+            else
+            {
+                MessageBox.Show("Выберите тип взвешивания", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
             WeighingDto dto = new WeighingDto
             {
@@ -312,7 +393,17 @@ namespace PromVesClient
                 IdReceipt = IdReceipt
             };
             var result = await _staticWeighingService.saveWeighingAsync(dto);
+            //проерка на сохранение данных
+            if (result.Success == false)
+            {
+                MessageBox.Show("Данные взвешивания не были сохранены в БД. Причина: "+ result.Message, "Возникла ошибки при сохранении в БД", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else 
+            {
+                MessageBox.Show("Данные успешно сохранены в БД", "Данные сохранены", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
+        //создание точек на графике
         private void AddPoint(int indexObject, double value)
         {
             //foreach (var plot in plots)
@@ -337,11 +428,16 @@ namespace PromVesClient
             //}
             
         }
+        //ивент на закрытие формы, если взвешивание активно - форма не будет закрыта и будет предупреждение
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (!btnWeighing.Text.Equals("Начать взвешивание", StringComparison.OrdinalIgnoreCase))
             {
-                MessageBox.Show("Сначала закончите взвешивание!");
+                MessageBox.Show(
+                "Сначала закончите взвешивание!",
+                "Предупреждение",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
 
                 e.Cancel = true;
             }
@@ -359,7 +455,7 @@ namespace PromVesClient
                 
             }
         }
-
+        //метод таймера
         private void GraphTimer_Tick(object? sender, EventArgs e)
         {
             AddPoint(0, cartSideWeights[0]);

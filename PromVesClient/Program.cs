@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using PromVesClient.Service;
 using PromVesClient.Service.AppInfoService;
 using PromVesClient.Service.StaticWeighingService;
+using PromVesClient.Service.TcpService;
 using PromVesClient.Service.UserService;
 using Serilog;
 
@@ -54,6 +55,7 @@ namespace PromVesClient
             services.AddScoped<AppInfoService>();
             services.AddScoped<StaticWeighingService>();
             services.AddSingleton<ComPortService>();
+            services.AddScoped<TcpService>();
             //регистрация одного экземпляра, чтобы все формы работали именно с ним
             services.AddSingleton<CurrentUserService>();
 
