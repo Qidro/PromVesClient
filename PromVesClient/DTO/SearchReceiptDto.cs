@@ -12,8 +12,8 @@ namespace PromVesClient.DTO
         //период по
         public DateTime periodEnd { get; set; }
         //логин оператора
-        public string operatorName { get; set; }
+        public string? operatorName { get; set; }
         //номер вагона
-        public string vagonNumber { get; set; }
+        public string? vagonNumber { get; set; }
     }
 }

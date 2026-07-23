@@ -4,7 +4,7 @@ using System.Text;
 
 namespace PromVesClient.DTO
 {
-    public  class СardsDto
+    public  class CardsDto 
     {
         public Guid Id { get; set; }
         public string VagonNumber { get; set; }

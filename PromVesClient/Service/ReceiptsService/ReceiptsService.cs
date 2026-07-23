@@ -5,6 +5,7 @@ using PromVesClient.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using static System.Net.WebRequestMethods;
 namespace PromVesClient.Service.ReceiptsService
 {
     public class ReceiptsService
@@ -72,12 +73,12 @@ namespace PromVesClient.Service.ReceiptsService
             };
         }
         //метод предназначен для поиска взвешиваний с квитанции
-        public async Task<ServiceResult<List<СardsDto>>> GetWeighingAsync(Guid IdReceipt)
+        public async Task<ServiceResult<List<CardsDto>>> GetCardsAsync(Guid IdReceipt)
         {
             //заполняем данные
             var weighing = await _dbContext.Weighings
                 .Where(w => w.ReceiptId == IdReceipt)
-                .Select(r => new СardsDto
+                .Select(r => new CardsDto
                 {
                     Id = r.Id,
                     VagonNumber = r.VagonNumber,
@@ -97,10 +98,49 @@ namespace PromVesClient.Service.ReceiptsService
 
                 }).ToListAsync();
 
-            return new ServiceResult<List<СardsDto>>
+            return new ServiceResult<List<CardsDto>>
             {
                 Success = true,
                 Data = weighing
+            };
+        }
+
+        public async Task<ServiceResult<List<ReceiptDto>>> GetReceiptFilter(SearchReceiptDto filter)
+        {
+            var query = _dbContext.Receipts.AsQueryable();
+
+            // Период
+            query = query.Where(r =>
+                r.DateTime >= filter.periodStart &&
+                r.DateTime <= filter.periodEnd);
+
+            // Оператор
+            if (!string.IsNullOrWhiteSpace(filter.operatorName))
+            {
+                query = query.Where(o => o.Operator == filter.operatorName);
+            }
+
+            // Номер вагона
+            if (!string.IsNullOrWhiteSpace(filter.vagonNumber))
+            {
+                query = query.Where(r =>
+                r.Weighings.Any(w => w.VagonNumber == filter.vagonNumber));
+            }
+
+            var receipts = await query
+                .Select(r => new ReceiptDto
+                {
+                    Id = r.Id,
+                    DateTime = r.DateTime,
+                    TypeWeighng = r.TypeWeighng,
+                    Operator = r.Operator
+                })
+                .ToListAsync();
+
+            return new ServiceResult<List<ReceiptDto>>
+            {
+                Success = true,
+                Data = receipts
             };
         }
 

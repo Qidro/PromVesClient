@@ -40,11 +40,13 @@
             label1 = new Label();
             dateTimePicker1 = new DateTimePicker();
             dataGridViewСards = new DataGridView();
-            button1 = new Button();
-            button2 = new Button();
-            button3 = new Button();
-            button4 = new Button();
+            btnResetFilter = new Button();
+            btnChangeReceipt = new Button();
+            btnDeleteCard = new Button();
+            btnDeleteReceipt = new Button();
             receiptInfoLabel = new Label();
+            btnSaveReceipt = new Button();
+            btnPrintReceipt = new Button();
             ((System.ComponentModel.ISupportInitialize)dataGridViewReceipts).BeginInit();
             groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewСards).BeginInit();
@@ -170,50 +172,52 @@
             dataGridViewСards.Size = new Size(1097, 417);
             dataGridViewСards.TabIndex = 3;
             // 
-            // button1
+            // btnResetFilter
             // 
-            button1.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            button1.Location = new Point(1132, 375);
-            button1.Name = "button1";
-            button1.Size = new Size(321, 36);
-            button1.TabIndex = 4;
-            button1.Text = "Сбросить фильтр";
-            button1.UseVisualStyleBackColor = true;
-            button1.Click += button1_Click_1;
+            btnResetFilter.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            btnResetFilter.Location = new Point(1132, 375);
+            btnResetFilter.Name = "btnResetFilter";
+            btnResetFilter.Size = new Size(321, 36);
+            btnResetFilter.TabIndex = 4;
+            btnResetFilter.Text = "Сбросить фильтр";
+            btnResetFilter.UseVisualStyleBackColor = true;
+            btnResetFilter.Click += button1_Click_1;
             // 
-            // button2
+            // btnChangeReceipt
             // 
-            button2.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            button2.Location = new Point(1132, 417);
-            button2.Name = "button2";
-            button2.Size = new Size(321, 36);
-            button2.TabIndex = 5;
-            button2.Text = "Изменить квитанцию";
-            button2.UseVisualStyleBackColor = true;
+            btnChangeReceipt.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            btnChangeReceipt.Location = new Point(1132, 417);
+            btnChangeReceipt.Name = "btnChangeReceipt";
+            btnChangeReceipt.Size = new Size(321, 36);
+            btnChangeReceipt.TabIndex = 5;
+            btnChangeReceipt.Text = "Изменить квитанцию";
+            btnChangeReceipt.UseVisualStyleBackColor = true;
+            btnChangeReceipt.Click += btnChangeReceipt_Click;
             // 
-            // button3
+            // btnDeleteCard
             // 
-            button3.BackColor = Color.Red;
-            button3.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            button3.ForeColor = SystemColors.ControlLightLight;
-            button3.Location = new Point(1132, 459);
-            button3.Name = "button3";
-            button3.Size = new Size(321, 36);
-            button3.TabIndex = 6;
-            button3.Text = "Удалить карточку вагона";
-            button3.UseVisualStyleBackColor = false;
+            btnDeleteCard.BackColor = Color.Red;
+            btnDeleteCard.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            btnDeleteCard.ForeColor = SystemColors.ControlLightLight;
+            btnDeleteCard.Location = new Point(1132, 543);
+            btnDeleteCard.Name = "btnDeleteCard";
+            btnDeleteCard.Size = new Size(321, 36);
+            btnDeleteCard.TabIndex = 6;
+            btnDeleteCard.Text = "Удалить карточку вагона";
+            btnDeleteCard.UseVisualStyleBackColor = false;
             // 
-            // button4
+            // btnDeleteReceipt
             // 
-            button4.BackColor = Color.Red;
-            button4.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            button4.ForeColor = SystemColors.ControlLightLight;
-            button4.Location = new Point(1132, 501);
-            button4.Name = "button4";
-            button4.Size = new Size(321, 36);
-            button4.TabIndex = 7;
-            button4.Text = "Удалить квитанцию";
-            button4.UseVisualStyleBackColor = false;
+            btnDeleteReceipt.BackColor = Color.Red;
+            btnDeleteReceipt.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            btnDeleteReceipt.ForeColor = SystemColors.ControlLightLight;
+            btnDeleteReceipt.Location = new Point(1132, 585);
+            btnDeleteReceipt.Name = "btnDeleteReceipt";
+            btnDeleteReceipt.Size = new Size(321, 36);
+            btnDeleteReceipt.TabIndex = 7;
+            btnDeleteReceipt.Text = "Удалить квитанцию";
+            btnDeleteReceipt.UseVisualStyleBackColor = false;
+            btnDeleteReceipt.Click += button4_Click;
             // 
             // receiptInfoLabel
             // 
@@ -225,22 +229,45 @@
             receiptInfoLabel.TabIndex = 8;
             receiptInfoLabel.Text = "Квитанция от";
             // 
+            // btnSaveReceipt
+            // 
+            btnSaveReceipt.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            btnSaveReceipt.Location = new Point(1132, 459);
+            btnSaveReceipt.Name = "btnSaveReceipt";
+            btnSaveReceipt.Size = new Size(321, 36);
+            btnSaveReceipt.TabIndex = 9;
+            btnSaveReceipt.Text = "Сохранить квитанцию";
+            btnSaveReceipt.UseVisualStyleBackColor = true;
+            // 
+            // btnPrintReceipt
+            // 
+            btnPrintReceipt.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            btnPrintReceipt.Location = new Point(1132, 501);
+            btnPrintReceipt.Name = "btnPrintReceipt";
+            btnPrintReceipt.Size = new Size(321, 36);
+            btnPrintReceipt.TabIndex = 10;
+            btnPrintReceipt.Text = "Распечатать квитанцию";
+            btnPrintReceipt.UseVisualStyleBackColor = true;
+            // 
             // frmWeighingReceipts
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1518, 909);
+            Controls.Add(btnPrintReceipt);
+            Controls.Add(btnSaveReceipt);
             Controls.Add(receiptInfoLabel);
-            Controls.Add(button4);
-            Controls.Add(button3);
-            Controls.Add(button2);
-            Controls.Add(button1);
+            Controls.Add(btnDeleteReceipt);
+            Controls.Add(btnDeleteCard);
+            Controls.Add(btnChangeReceipt);
+            Controls.Add(btnResetFilter);
             Controls.Add(dataGridViewСards);
             Controls.Add(groupBox1);
             Controls.Add(dataGridViewReceipts);
             Controls.Add(btnReportFilter);
             Name = "frmWeighingReceipts";
             Text = "Квитанции взвешивания";
+            Load += frmWeighingReceipts_Load;
             ((System.ComponentModel.ISupportInitialize)dataGridViewReceipts).EndInit();
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
@@ -255,10 +282,10 @@
         private DataGridView dataGridViewReceipts;
         private GroupBox groupBox1;
         private DataGridView dataGridViewСards;
-        private Button button1;
-        private Button button2;
-        private Button button3;
-        private Button button4;
+        private Button btnResetFilter;
+        private Button btnChangeReceipt;
+        private Button btnDeleteCard;
+        private Button btnDeleteReceipt;
         private TextBox vagonNumberTextBox;
         private DateTimePicker dateTimePicker2;
         private Label label2;
@@ -268,5 +295,7 @@
         private CheckBox vagonNumberBox;
         private TextBox operatorTextBox;
         private Label receiptInfoLabel;
+        private Button btnSaveReceipt;
+        private Button btnPrintReceipt;
     }
 }

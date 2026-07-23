@@ -21,17 +21,55 @@ namespace PromVesClient
 
         private List<ReceiptDto> receiptList;
 
-        private List<СardsDto> cardsList;
+        private List<CardsDto> cardsList;
+
+        private string VagonNumber;
+
+        private string Operator;
         public frmWeighingReceipts(ReceiptsService receiptsService)
         {
             _receiptsService = receiptsService;
             InitializeComponent();
             dataGridViewСards.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
             this.Load += Form1_Load;
+            receiptInfoLabel.Text = "";
         }
         //метод нажатия на кнопку фильтра поиска квитанции
         private async void btnReportFilter_Click(object sender, EventArgs e)
         {
+
+            //проверка на поиск фильтра с номером вагона
+            if (vagonNumberBox.Checked == true)
+            {
+                if (vagonNumberTextBox.Text != null)
+                {
+                    VagonNumber = vagonNumberTextBox.Text;
+                }
+            }
+            //проверка на поиск фильтра с именем оператора
+            if (operatorCheckBox.Checked == true)
+            {
+                if (operatorTextBox.Text != null)
+                {
+                    Operator = operatorTextBox.Text;
+                }
+            }
+            SearchReceiptDto searchReceiptDto = new SearchReceiptDto
+            {
+                periodStart = dateTimePicker1.Value.ToUniversalTime(),
+                periodEnd = dateTimePicker2.Value.ToUniversalTime(),
+                vagonNumber = VagonNumber,
+                operatorName = Operator
+            };
+            var result = await _receiptsService.GetReceiptFilter(searchReceiptDto);
+
+            receiptList = result.Data;
+            dataGridViewReceipts.DataSource = result.Data;
+            VagonNumber = null;
+            Operator = null;
+            dataGridViewСards.DataSource = null;
+            receiptInfoLabel.Text = "";
+            //GetReceiptFilter
             //WeighingDto dto = new WeighingDto
             //{
             //    Platform1Left = 32,
@@ -73,9 +111,11 @@ namespace PromVesClient
             dataGridViewReceipts.Columns["Operator"].HeaderText = "Оператор";
         }
 
-        private void button1_Click_1(object sender, EventArgs e)
+        private async void button1_Click_1(object sender, EventArgs e)
         {
-
+            await loadingTableData();
+            dataGridViewСards.DataSource = null;
+            receiptInfoLabel.Text = "";
         }
 
         private void label2_Click(object sender, EventArgs e)
@@ -125,17 +165,17 @@ namespace PromVesClient
                 //выводим информацию о времени создания квитанции
                 receiptInfoLabel.Text = "Квитанция от " + receiptList[e.RowIndex].DateTime.ToString();
 
-                var result = await _receiptsService.GetWeighingAsync(receiptList[e.RowIndex].Id);
+                var result = await _receiptsService.GetCardsAsync(receiptList[e.RowIndex].Id);
                 if (result.Success == true)
                 {
                     cardsList = result.Data;
                     dataGridViewСards.DataSource = result.Data;
                     settingViewTable();
-                    
+
                 }
-                else 
-                { 
-                    
+                else
+                {
+
                 }
             }
         }
@@ -158,6 +198,21 @@ namespace PromVesClient
             dataGridViewСards.Columns["DifferenceSides"].HeaderText = "разница бортов т.";
             dataGridViewСards.Columns["TypeWeighing"].HeaderText = "Тип взвешивания";
 
+
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void frmWeighingReceipts_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnChangeReceipt_Click(object sender, EventArgs e)
+        {
 
         }
     }
