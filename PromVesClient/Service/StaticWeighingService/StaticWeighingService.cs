@@ -69,13 +69,13 @@ namespace PromVesClient.Service.StaticWeighingService
                     //вычесление нетто, если есть Тара и сохраняем Брутто в текущую запись
                     if (dtoWeighing.TareWeight != 0 && lastWeighing.GrossWeight != 0)
                     {
-                        NetWeight = lastWeighing.GrossWeight - dtoWeighing.TareWeight;
+                        NetWeight =  Math.Floor((lastWeighing.GrossWeight - dtoWeighing.TareWeight) * 100) / 100.0; ;
                         dtoWeighing.GrossWeight = lastWeighing.GrossWeight;
                     }
                     //вычесление нетто, если есть Брутто и сохраняем Тару в текущую запись
                     else if (dtoWeighing.GrossWeight != 0 && lastWeighing.TareWeight != 0)
                     {
-                        NetWeight = dtoWeighing.GrossWeight - lastWeighing.TareWeight;
+                        NetWeight = Math.Floor((dtoWeighing.GrossWeight - lastWeighing.TareWeight) * 100) / 100.0; ;
                         dtoWeighing.TareWeight = lastWeighing.TareWeight;
                     }
                 }
@@ -109,6 +109,7 @@ namespace PromVesClient.Service.StaticWeighingService
                 LeftSide = LeftSide,
                 RightSide = RightSide,
                 DifferenceSides = DifferenceSides,
+                TypeWeighing = dtoWeighing.TypeWeighing,
                 ReceiptId = dtoWeighing.IdReceipt
             };
             //сохраняем данные

@@ -71,6 +71,38 @@ namespace PromVesClient.Service.ReceiptsService
                 Data = receipts
             };
         }
+        //метод предназначен для поиска взвешиваний с квитанции
+        public async Task<ServiceResult<List<СardsDto>>> GetWeighingAsync(Guid IdReceipt)
+        {
+            //заполняем данные
+            var weighing = await _dbContext.Weighings
+                .Where(w => w.ReceiptId == IdReceipt)
+                .Select(r => new СardsDto
+                {
+                    Id = r.Id,
+                    VagonNumber = r.VagonNumber,
+                    TareWeight = r.TareWeight,
+                    GrossWeight = r.GrossWeight,
+                    NetWeight = r.NetWeight,
+                    LoadCapacity = r.LoadCapacity,
+                    LoadDeviation = r.LoadDeviation,
+                    FirstCart = r.FirstCart,
+                    SecondCart = r.SecondCart,
+                    DifferenceCarts = r.DifferenceCarts,
+                    LeftSide = r.LeftSide,
+                    RightSide = r.RightSide,
+                    DifferenceSides = r.DifferenceSides,
+                    TypeWeighing = r.TypeWeighing,
+                    ReceiptId = IdReceipt
+
+                }).ToListAsync();
+
+            return new ServiceResult<List<СardsDto>>
+            {
+                Success = true,
+                Data = weighing
+            };
+        }
 
     }
 }

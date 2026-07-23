@@ -44,6 +44,7 @@
             button2 = new Button();
             button3 = new Button();
             button4 = new Button();
+            receiptInfoLabel = new Label();
             ((System.ComponentModel.ISupportInitialize)dataGridViewReceipts).BeginInit();
             groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewСards).BeginInit();
@@ -70,6 +71,8 @@
             dataGridViewReceipts.ReadOnly = true;
             dataGridViewReceipts.Size = new Size(1097, 294);
             dataGridViewReceipts.TabIndex = 1;
+            dataGridViewReceipts.CellClick += dataGridViewReceipts_CellClick;
+            dataGridViewReceipts.CellContentClick += dataGridViewReceipts_CellContentClick;
             // 
             // groupBox1
             // 
@@ -162,7 +165,7 @@
             // 
             dataGridViewСards.AllowUserToOrderColumns = true;
             dataGridViewСards.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewСards.Location = new Point(12, 333);
+            dataGridViewСards.Location = new Point(12, 365);
             dataGridViewСards.Name = "dataGridViewСards";
             dataGridViewСards.Size = new Size(1097, 417);
             dataGridViewСards.TabIndex = 3;
@@ -212,11 +215,22 @@
             button4.Text = "Удалить квитанцию";
             button4.UseVisualStyleBackColor = false;
             // 
+            // receiptInfoLabel
+            // 
+            receiptInfoLabel.AutoSize = true;
+            receiptInfoLabel.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            receiptInfoLabel.Location = new Point(356, 323);
+            receiptInfoLabel.Name = "receiptInfoLabel";
+            receiptInfoLabel.Size = new Size(107, 21);
+            receiptInfoLabel.TabIndex = 8;
+            receiptInfoLabel.Text = "Квитанция от";
+            // 
             // frmWeighingReceipts
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1518, 909);
+            Controls.Add(receiptInfoLabel);
             Controls.Add(button4);
             Controls.Add(button3);
             Controls.Add(button2);
@@ -232,6 +246,7 @@
             groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewСards).EndInit();
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
@@ -252,5 +267,6 @@
         private CheckBox operatorCheckBox;
         private CheckBox vagonNumberBox;
         private TextBox operatorTextBox;
+        private Label receiptInfoLabel;
     }
 }

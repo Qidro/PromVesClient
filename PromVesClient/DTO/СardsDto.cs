@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace PromVesClient.Models
+namespace PromVesClient.DTO
 {
-    public class Weighing
+    public  class СardsDto
     {
         public Guid Id { get; set; }
         public string VagonNumber { get; set; }
@@ -26,17 +26,15 @@ namespace PromVesClient.Models
         //разница тележек
         public double DifferenceCarts { get; set; }
         //вес левого борта
-        public double LeftSide { get; set; } 
+        public double LeftSide { get; set; }
         //вес правого борта
         public double RightSide { get; set; }
         //разница бортов
         public double DifferenceSides { get; set; }
-        //тип взвегивания - тара или брутто
-        public string  TypeWeighing { get; set; }
+        //тип взвешивания
+        public string TypeWeighing { get; set; }
         // Внешний ключ
         public Guid ReceiptId { get; set; }
 
-        // Навигационное свойство
-        public Receipt Receipt { get; set; } = null!;
     }
 }

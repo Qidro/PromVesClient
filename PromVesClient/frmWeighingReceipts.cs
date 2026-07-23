@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Logging;
 using PromVesClient.DTO;
 using PromVesClient.Models;
 using PromVesClient.Service.ReceiptsService;
@@ -15,10 +16,17 @@ namespace PromVesClient
     public partial class frmWeighingReceipts : Form
     {
         private readonly ReceiptsService _receiptsService;
+
+        private readonly ILogger<StaticWeighing> _logger;
+
+        private List<ReceiptDto> receiptList;
+
+        private List<СardsDto> cardsList;
         public frmWeighingReceipts(ReceiptsService receiptsService)
         {
             _receiptsService = receiptsService;
             InitializeComponent();
+            dataGridViewСards.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
             this.Load += Form1_Load;
         }
         //метод нажатия на кнопку фильтра поиска квитанции
@@ -41,15 +49,21 @@ namespace PromVesClient
         {
             await loadingTableData();
         }
+        //загрузка первоначальных (всех) данных таблицы квитанций
         private async Task loadingTableData()
         {
             var result = await _receiptsService.GetReceiptsAsync();
             //var resulet = await _receiptsService.GetWeighingAsync();
-
+            if (result.Success == false)
+            {
+                MessageBox.Show($"Данные не были найдены, причина: {result.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
             //List <WeighingDto> receipts = new List<WeighingDto>();
             //receipts.Add(dto);
             //dataGridView1.AutoGenerateColumns = false;
 
+            //копируем результат запроса в поле
+            receiptList = result.Data;
             dataGridViewReceipts.DataSource = result.Data;
             //dataGridView2.DataSource = resulet.Data;
             dataGridViewReceipts.Columns["Id"].Visible = false;
@@ -81,6 +95,69 @@ namespace PromVesClient
 
         private void vagonNumberBox_CheckedChanged(object sender, EventArgs e)
         {
+
+        }
+
+        private void dataGridViewReceipts_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            //if (e.RowIndex >= 0 && e.RowIndex < receiptList.Count)
+            //{
+            //    MessageBox.Show(
+            //        $"Столбец: {e.ColumnIndex}\n" +
+            //        $"Строка: {e.RowIndex}\n" +
+            //        $"Id: {receiptList[e.RowIndex].Id}\n" +
+            //        $"Дата: {receiptList[e.RowIndex].DateTime}"
+            //    );
+            //}
+        }
+
+        private async void dataGridViewReceipts_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0 && e.RowIndex < receiptList.Count)
+            {
+                //MessageBox.Show(
+                //    //$"Столбец: {e.ColumnIndex}\n" +
+                //   // $"Строка: {e.RowIndex}\n" +
+                //    $"Id: {receiptList[e.RowIndex].Id}\n" +
+                //    $"Дата: {receiptList[e.RowIndex].DateTime}"
+                //);
+
+                //выводим информацию о времени создания квитанции
+                receiptInfoLabel.Text = "Квитанция от " + receiptList[e.RowIndex].DateTime.ToString();
+
+                var result = await _receiptsService.GetWeighingAsync(receiptList[e.RowIndex].Id);
+                if (result.Success == true)
+                {
+                    cardsList = result.Data;
+                    dataGridViewСards.DataSource = result.Data;
+                    settingViewTable();
+                    
+                }
+                else 
+                { 
+                    
+                }
+            }
+        }
+
+        private void settingViewTable()
+        {
+            dataGridViewСards.Columns["Id"].Visible = false;
+            dataGridViewСards.Columns["ReceiptId"].Visible = false;
+            dataGridViewСards.Columns["VagonNumber"].HeaderText = "Номер вагона";
+            dataGridViewСards.Columns["TareWeight"].HeaderText = "Тара т.";
+            dataGridViewСards.Columns["GrossWeight"].HeaderText = "Брутто т.";
+            dataGridViewСards.Columns["NetWeight"].HeaderText = "Нетто т.";
+            dataGridViewСards.Columns["LoadCapacity"].HeaderText = "Грузоподъемность";
+            dataGridViewСards.Columns["LoadDeviation"].HeaderText = "недогруз/перегруз т.";
+            dataGridViewСards.Columns["FirstCart"].HeaderText = "первая тележка т.";
+            dataGridViewСards.Columns["SecondCart"].HeaderText = "вторая тележка т.";
+            dataGridViewСards.Columns["DifferenceCarts"].HeaderText = "разница тележек т.";
+            dataGridViewСards.Columns["LeftSide"].HeaderText = "левый борт т.";
+            dataGridViewСards.Columns["RightSide"].HeaderText = "правый борт т.";
+            dataGridViewСards.Columns["DifferenceSides"].HeaderText = "разница бортов т.";
+            dataGridViewСards.Columns["TypeWeighing"].HeaderText = "Тип взвешивания";
+
 
         }
     }

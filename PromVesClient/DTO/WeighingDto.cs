@@ -15,6 +15,8 @@ namespace PromVesClient.DTO
         public string VagonNumber { get; set; }
         public double TareWeight { get; set; }
         public double GrossWeight { get; set; }
+
+        public string TypeWeighing { get; set; }
         public Guid IdReceipt { get; set; }
     }
 }

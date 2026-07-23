@@ -365,7 +365,7 @@ namespace PromVesClient
                 MessageBox.Show("Перед сохранением дождитесь, чтобы вес был стабилен", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            var resultt = await _staticWeighingService.saveReceiptAsync(IdReceipt, cBoxTypeWeighing.Text, "123");
+            
             if (cBoxTypeWeighing.Text == "Тара")
             {
                 TareWeight = cartSideWeights.Sum();
@@ -381,6 +381,7 @@ namespace PromVesClient
                 MessageBox.Show("Выберите тип взвешивания", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+            var resultt = await _staticWeighingService.saveReceiptAsync(IdReceipt, "Статическое взвешивание", "123");
             WeighingDto dto = new WeighingDto
             {
                 Platform1Left = cartSideWeights[0],
@@ -390,6 +391,7 @@ namespace PromVesClient
                 VagonNumber = comboBoxVagonNumber.Text,
                 TareWeight = TareWeight,
                 GrossWeight = GrossWeight,
+                TypeWeighing = cBoxTypeWeighing.Text,
                 IdReceipt = IdReceipt
             };
             var result = await _staticWeighingService.saveWeighingAsync(dto);
