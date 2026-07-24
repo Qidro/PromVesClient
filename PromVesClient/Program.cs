@@ -35,10 +35,10 @@ namespace PromVesClient
                 builder.AddSerilog(Log.Logger);
             });
 
-    //        var connectionString =
-    //"Host=localhost;Port=5432;Database=PromVesDb;Username=postgres;Password=6767669";
+            //        var connectionString =
+            //"Host=localhost;Port=5432;Database=PromVesDb;Username=postgres;Password=6767669";
 
-            services.AddDbContext<ApplicationDbContext>(options =>
+            services.AddDbContextFactory<ApplicationDbContext>(options =>
             {
                 options.UseNpgsql(
                     "Host=localhost;Port=5432;Database=PromVesDb;Username=postgres;Password=6767669");
@@ -48,6 +48,8 @@ namespace PromVesClient
             services.AddTransient<MainMenu>();
             services.AddTransient<StaticWeighing>();
             services.AddTransient<ComPortSettingsForm>();
+            services.AddTransient<UserManagementForm>();
+            services.AddTransient<ChangeUserForm>();
 
             //регистрация сервисов
             services.AddScoped<UserService>();

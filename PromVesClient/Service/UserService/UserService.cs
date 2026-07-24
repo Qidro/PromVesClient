@@ -11,32 +11,38 @@ namespace PromVesClient.Service.UserService
     public class UserService
     {
         private readonly ILogger<UserService> _logger;
-
-        private readonly ApplicationDbContext _dbContext;
+        private readonly IDbContextFactory<ApplicationDbContext> _dbContext;
+        //private readonly ApplicationDbContext _dbContext;
 
         private readonly HashPasswordService _hashPasswordService;
-        public UserService(ILogger<UserService> logger, ApplicationDbContext dbcontext, HashPasswordService hashPasswordService)
+        public UserService(ILogger<UserService> logger, IDbContextFactory<ApplicationDbContext> dbcontext, HashPasswordService hashPasswordService)
         {
             _logger = logger;
             _dbContext = dbcontext;
             _hashPasswordService = hashPasswordService;
         }
 
-        public async Task<ServiceResult<User>> userAuthorizationAsync(string userName, string password)
+        public async Task<ServiceResult<User>> UserAuthorizationAsync(string userName, string password)
         {
             try
             {
+                await using var db = await _dbContext.CreateDbContextAsync();
                 //проверка: пустой ли userName
                 if (string.IsNullOrWhiteSpace(userName))
                     return ServiceResult<User>.Fail("Логин пустой");
                 // поиск пользователя
-                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Name == userName);
+                var user = await db.Users.FirstOrDefaultAsync(u => u.Name == userName);
 
                 
                 //проверяем результат поиска
                 if (user == null)
                     return ServiceResult<User>.Fail("Пользователь не найден");
-                
+                // проверка активности пользователя
+                if (!user.IsActive)
+                {
+                    return ServiceResult<User>.Fail("Пользователь неактивен. Обратитесь к администратору.");
+                }
+
                 //проверка введенего пароля пользователя
                 if (!_hashPasswordService.passwordСheck(password ,user.PasswordHash))
                 {
@@ -52,7 +58,7 @@ namespace PromVesClient.Service.UserService
             
         }
         //метод создания пользователя
-        public async Task<ServiceResult> createUserAsync(string login, string password, string role)
+        public async Task<ServiceResult> CreateUserAsync(string login, string password, string role)
         {
             //проверяет пустые ли строки лоигна и пароля
             if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
@@ -60,8 +66,12 @@ namespace PromVesClient.Service.UserService
                 return ServiceResult.Fail("Логин или пароль пустой");
             }
             //проверка есть ли уже такой пользователь
-            if (await UserExistsAsync(login))
-                return ServiceResult.Fail("Пользователь уже существует.");
+            var reasultSearchUser = await UserExistsAsync(login);
+            if (reasultSearchUser.Success == false)
+            {
+                return ServiceResult.Fail($"{reasultSearchUser.Message}");
+            }
+                
 
             try
             {
@@ -72,8 +82,10 @@ namespace PromVesClient.Service.UserService
                     Role = role,
                     PasswordHash = _hashPasswordService.getHashPasswordUser(password)
                 };
-                _dbContext.Users.Add(user);
-                await _dbContext.SaveChangesAsync();
+                await using var db = await _dbContext.CreateDbContextAsync();
+
+                db.Users.Add(user);
+                await db.SaveChangesAsync();
                 //string hashPassword = _hashPasswordService.getHashPasswordUser(password);
 
                 return ServiceResult.Ok();
@@ -98,37 +110,95 @@ namespace PromVesClient.Service.UserService
             
         }
         //метод получения всех пользователей
-        public async Task<List<User>> GetUsersAsync()
+        public async Task<ServiceResult<List<User>>> GetUsersAsync()
         {
-            return await _dbContext.Users
-                .OrderBy(u => u.Name)
-                .ToListAsync();
+            try
+            {
+                await using var db = await _dbContext.CreateDbContextAsync();
+
+                var users = await db.Users
+                    .AsNoTracking()
+                    .OrderBy(u => u.Name)
+                    .ToListAsync();
+
+                return ServiceResult<List<User>>.Ok(users);
+            }
+            catch (TimeoutException ex)
+            {
+                _logger.LogError(ex, "Ошибка получения списка пользователей");
+                return ServiceResult<List<User>>.Fail("Неизвестная ошибка: " + ex.Message);
+            }
+            catch (NpgsqlException ex)
+            {
+                _logger.LogError(ex, "Ошибка получения списка пользователей");
+                return ServiceResult<List<User>>.Fail("Неизвестная ошибка: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка получения списка пользователей");
+
+                return ServiceResult<List<User>>.Fail("Не удалось получить список пользователей" + ex.Message);
+            }
         }
         // проверка существования пользователя
-        public async Task<bool> UserExistsAsync(string login)
+        public async Task<ServiceResult> UserExistsAsync(string login)
         {
-            return await _dbContext.Users
-                .AnyAsync(u => u.Name == login);
+            try
+            {
+                await using var db = await _dbContext.CreateDbContextAsync();
+
+                var user =  await db.Users
+                    .AnyAsync(u => u.Name == login);
+                if (user == null)
+                {
+                    return ServiceResult.Ok();
+                }
+                else
+                {
+                    return ServiceResult.Fail("Пользователь существует");
+                }
+            }
+            catch (TimeoutException ex)
+            {
+                _logger.LogError(ex, "Ошибка получения списка пользователей");
+                return ServiceResult.Fail("Неизвестная ошибка: " + ex.Message);
+            }
+            catch (NpgsqlException ex)
+            {
+                _logger.LogError(ex, "Ошибка получения списка пользователей");
+                return ServiceResult.Fail("Неизвестная ошибка: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка получения списка пользователей");
+
+                return ServiceResult.Fail("Не удалось получить список пользователей" + ex.Message);
+            }
         }
         //получения пользователя по id
         public async Task<User?> GetUserAsync(Guid id)
         {
-            return await _dbContext.Users
-                .FirstOrDefaultAsync(u => u.Id == id);
+            await using var db = await _dbContext.CreateDbContextAsync();
+
+            var user = await db.Users.FindAsync(id);
+
+            return user;
         }
         //метод удаления пользователя
         public async Task<ServiceResult> DeleteUserAsync(Guid id)
         {
             try
             {
-                var user = await _dbContext.Users.FindAsync(id);
+                await using var db = await _dbContext.CreateDbContextAsync();
+
+                var user = await db.Users.FindAsync(id);
 
                 if (user == null)
                     return ServiceResult.Fail("Пользователь не найден.");
 
-                _dbContext.Users.Remove(user);
+                db.Users.Remove(user);
 
-                await _dbContext.SaveChangesAsync();
+                await db.SaveChangesAsync();
 
                 return ServiceResult.Ok();
             }
@@ -139,26 +209,31 @@ namespace PromVesClient.Service.UserService
         }
         //изменение пользователя
         public async Task<ServiceResult> UpdateUserAsync(
-    Guid id,
+     Guid id,
     string login,
     string password,
-    string role)
+    string role,
+    bool isActive)
         {
             try
             {
-                var user = await _dbContext.Users.FindAsync(id);
+                await using var db = await _dbContext.CreateDbContextAsync();
+
+                var user = await db.Users.FindAsync(id);
 
                 if (user == null)
                     return ServiceResult.Fail("Пользователь не найден.");
 
-                var userWithSameName = await _dbContext.Users
-    .FirstOrDefaultAsync(u => u.Name == login && u.Id != id);
+                var userWithSameName =
+     await db.Users
+     .FirstOrDefaultAsync(u => u.Name == login && u.Id != id);
 
                 if (userWithSameName != null)
                     return ServiceResult.Fail("Пользователь уже существует.");
 
                 user.Name = login;
                 user.Role = role;
+                user.IsActive = isActive;
 
                 if (!string.IsNullOrWhiteSpace(password))
                 {
@@ -166,7 +241,7 @@ namespace PromVesClient.Service.UserService
                         _hashPasswordService.getHashPasswordUser(password);
                 }
 
-                await _dbContext.SaveChangesAsync();
+                await db.SaveChangesAsync();
 
                 return ServiceResult.Ok();
             }
@@ -175,5 +250,7 @@ namespace PromVesClient.Service.UserService
                 return ServiceResult.Fail(ex.Message);
             }
         }
+        
+
     }
 }

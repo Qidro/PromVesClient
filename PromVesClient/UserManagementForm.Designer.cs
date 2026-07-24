@@ -29,10 +29,17 @@
         private void InitializeComponent()
         {
             dgvUser = new DataGridView();
+            colLogin = new DataGridViewTextBoxColumn();
+            colPassword = new DataGridViewTextBoxColumn();
+            colNewRole = new DataGridViewComboBoxColumn();
             dgvUserList = new DataGridView();
             btnCreateUser = new Button();
-            btnEditUser = new Button();
+            btnChangeUser = new Button();
             btnDeleteUser = new Button();
+            colId = new DataGridViewTextBoxColumn();
+            colName = new DataGridViewTextBoxColumn();
+            colRole = new DataGridViewTextBoxColumn();
+            colIsActive = new DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)dgvUser).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dgvUserList).BeginInit();
             SuspendLayout();
@@ -40,18 +47,41 @@
             // dgvUser
             // 
             dgvUser.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvUser.Columns.AddRange(new DataGridViewColumn[] { colLogin, colPassword, colNewRole });
             dgvUser.Location = new Point(12, 12);
             dgvUser.Name = "dgvUser";
             dgvUser.Size = new Size(621, 82);
             dgvUser.TabIndex = 0;
             // 
+            // colLogin
+            // 
+            colLogin.HeaderText = "Логин";
+            colLogin.Name = "colLogin";
+            // 
+            // colPassword
+            // 
+            colPassword.HeaderText = "Пароль";
+            colPassword.Name = "colPassword";
+            // 
+            // colNewRole
+            // 
+            colNewRole.HeaderText = "Роль";
+            colNewRole.Items.AddRange(new object[] { "admin", "operator" });
+            colNewRole.Name = "colNewRole";
+            // 
             // dgvUserList
             // 
+            dgvUserList.AllowUserToAddRows = false;
             dgvUserList.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvUserList.Location = new Point(12, 122);
+            dgvUserList.Columns.AddRange(new DataGridViewColumn[] { colId, colName, colRole, colIsActive });
+            dgvUserList.Location = new Point(12, 131);
+            dgvUserList.MultiSelect = false;
             dgvUserList.Name = "dgvUserList";
+            dgvUserList.ReadOnly = true;
+            dgvUserList.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvUserList.Size = new Size(621, 252);
             dgvUserList.TabIndex = 1;
+            dgvUserList.CellContentClick += dgvUserList_CellContentClick;
             // 
             // btnCreateUser
             // 
@@ -59,17 +89,19 @@
             btnCreateUser.Name = "btnCreateUser";
             btnCreateUser.Size = new Size(125, 61);
             btnCreateUser.TabIndex = 2;
-            btnCreateUser.Text = "button1";
+            btnCreateUser.Text = "Добавить пользователя";
             btnCreateUser.UseVisualStyleBackColor = true;
+            btnCreateUser.Click += btnCreateUser_Click;
             // 
-            // btnEditUser
+            // btnChangeUser
             // 
-            btnEditUser.Location = new Point(663, 153);
-            btnEditUser.Name = "btnEditUser";
-            btnEditUser.Size = new Size(125, 61);
-            btnEditUser.TabIndex = 3;
-            btnEditUser.Text = "button2";
-            btnEditUser.UseVisualStyleBackColor = true;
+            btnChangeUser.Location = new Point(663, 153);
+            btnChangeUser.Name = "btnChangeUser";
+            btnChangeUser.Size = new Size(125, 61);
+            btnChangeUser.TabIndex = 3;
+            btnChangeUser.Text = "Изменить пользователя";
+            btnChangeUser.UseVisualStyleBackColor = true;
+            btnChangeUser.Click += btnChangeUser_Click;
             // 
             // btnDeleteUser
             // 
@@ -77,8 +109,38 @@
             btnDeleteUser.Name = "btnDeleteUser";
             btnDeleteUser.Size = new Size(125, 61);
             btnDeleteUser.TabIndex = 4;
-            btnDeleteUser.Text = "button3";
+            btnDeleteUser.Text = "Удалить пользователя";
             btnDeleteUser.UseVisualStyleBackColor = true;
+            btnDeleteUser.Click += btnDeleteUser_Click;
+            // 
+            // colId
+            // 
+            colId.DataPropertyName = "Id";
+            colId.HeaderText = "Id\n";
+            colId.Name = "colId";
+            colId.ReadOnly = true;
+            colId.Visible = false;
+            // 
+            // colName
+            // 
+            colName.DataPropertyName = "Name";
+            colName.HeaderText = "Логин";
+            colName.Name = "colName";
+            colName.ReadOnly = true;
+            // 
+            // colRole
+            // 
+            colRole.DataPropertyName = "Role";
+            colRole.HeaderText = "Роль";
+            colRole.Name = "colRole";
+            colRole.ReadOnly = true;
+            // 
+            // colIsActive
+            // 
+            colIsActive.DataPropertyName = "IsActive";
+            colIsActive.HeaderText = "Статус";
+            colIsActive.Name = "colIsActive";
+            colIsActive.ReadOnly = true;
             // 
             // UserManagementForm
             // 
@@ -86,12 +148,13 @@
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 395);
             Controls.Add(btnDeleteUser);
-            Controls.Add(btnEditUser);
+            Controls.Add(btnChangeUser);
             Controls.Add(btnCreateUser);
             Controls.Add(dgvUserList);
             Controls.Add(dgvUser);
             Name = "UserManagementForm";
             Text = "UserForm";
+            Load += UserManagementForm_Load;
             ((System.ComponentModel.ISupportInitialize)dgvUser).EndInit();
             ((System.ComponentModel.ISupportInitialize)dgvUserList).EndInit();
             ResumeLayout(false);
@@ -102,7 +165,14 @@
         private DataGridView dgvUser;
         private DataGridView dgvUserList;
         private Button btnCreateUser;
-        private Button btnEditUser;
+        private Button btnChangeUser;
         private Button btnDeleteUser;
+        private DataGridViewTextBoxColumn colLogin;
+        private DataGridViewTextBoxColumn colPassword;
+        private DataGridViewComboBoxColumn colNewRole;
+        private DataGridViewTextBoxColumn colId;
+        private DataGridViewTextBoxColumn colName;
+        private DataGridViewTextBoxColumn colRole;
+        private DataGridViewTextBoxColumn colIsActive;
     }
 }
