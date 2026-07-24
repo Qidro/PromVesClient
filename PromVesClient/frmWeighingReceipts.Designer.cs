@@ -238,6 +238,7 @@
             btnPrintReceipt.TabIndex = 10;
             btnPrintReceipt.Text = "Распечатать квитанцию";
             btnPrintReceipt.UseVisualStyleBackColor = true;
+            btnPrintReceipt.Click += btnPrintReceipt_Click;
             // 
             // frmWeighingReceipts
             // 

@@ -18,24 +18,28 @@ namespace PromVesClient
     {
         private readonly ReceiptsService _receiptsService;
         private readonly CurrentUserService _currentUserService;
+        private readonly ExcelReportService _excelReportService;
         private readonly ILogger<frmWeighingReceipts> _logger;
 
         private List<ReceiptDto> receiptList;
 
         private List<CardsDto> cardsList;
-
+        private List<ReceiptDtoExcel> ListReceiptExcel = new();
         private string VagonNumber;
 
         private string Operator;
-        public frmWeighingReceipts(ReceiptsService receiptsService, CurrentUserService currentUserService, ILogger<frmWeighingReceipts> logger)
+        public frmWeighingReceipts(ReceiptsService receiptsService, CurrentUserService currentUserService, ILogger<frmWeighingReceipts> logger, ExcelReportService excelReportService)
         {
             _receiptsService = receiptsService;
             _currentUserService = currentUserService;
+            _excelReportService = excelReportService;
             _logger = logger;
             InitializeComponent();
             dataGridViewСards.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
             this.Load += Form1_Load;
             receiptInfoLabel.Text = "";
+            _excelReportService = excelReportService;
+
         }
         //метод нажатия на кнопку фильтра поиска квитанции
         private async void btnReportFilter_Click(object sender, EventArgs e)
@@ -294,8 +298,8 @@ namespace PromVesClient
                     if (result.Success == true)
                     {
                         MessageBox.Show(
-                        "Квитанция успешно удалена",
-                        "Удаление квитанции",
+                        "Каточка успешно удалена",
+                        "Удаление карточки",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Information);
                         cardsList.RemoveAt(dataGridViewСards.CurrentRow.Index);
@@ -309,7 +313,7 @@ namespace PromVesClient
                     else
                     {
                         MessageBox.Show(
-                        $"Квитанция не удалина, причина: {result.Message}",
+                        $"Карточка не удалина, причина: {result.Message}",
                         "Ошибка удаления квитанции",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Error);
@@ -319,12 +323,30 @@ namespace PromVesClient
                 else
                 {
                     // Пользователь нажал "Нет"
+                    MessageBox.Show(
+                        "В начале выберите карточку",
+                        "Предупреждение",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
                 }
             }
             else
             {
                 MessageBox.Show("Перед удалением выберите карточку, которую хотели бы удалить", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
+        }
+
+        private void btnPrintReceipt_Click(object sender, EventArgs e)
+        {
+            ReceiptDtoExcel receiptExcel = new ReceiptDtoExcel
+            {
+                VagonNumber = "VagonNumber1",
+                TareWeight = "TareWeight2",
+                GrossWeight = "GrossWeight3",
+                NetWeight = "NetWeight4"
+            };
+             ListReceiptExcel.Add(receiptExcel);
+            _excelReportService.CreateReport(ListReceiptExcel);
         }
     }
 }

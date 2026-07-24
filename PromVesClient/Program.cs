@@ -57,6 +57,7 @@ namespace PromVesClient
             services.AddScoped<StaticWeighingService>();
             services.AddScoped<TcpService>();
             services.AddScoped<ReceiptsService>();
+            services.AddScoped<ExcelReportService>();
             //регистрация одного экземпляра, чтобы все формы работали именно с ним
             services.AddSingleton<CurrentUserService>();
 
