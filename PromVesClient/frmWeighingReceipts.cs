@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using PromVesClient.DTO;
 using PromVesClient.Models;
+using PromVesClient.Service;
 using PromVesClient.Service.ReceiptsService;
 using System;
 using System.Collections.Generic;
@@ -16,8 +17,8 @@ namespace PromVesClient
     public partial class frmWeighingReceipts : Form
     {
         private readonly ReceiptsService _receiptsService;
-
-        private readonly ILogger<StaticWeighing> _logger;
+        private readonly CurrentUserService _currentUserService;
+        private readonly ILogger<frmWeighingReceipts> _logger;
 
         private List<ReceiptDto> receiptList;
 
@@ -26,9 +27,11 @@ namespace PromVesClient
         private string VagonNumber;
 
         private string Operator;
-        public frmWeighingReceipts(ReceiptsService receiptsService)
+        public frmWeighingReceipts(ReceiptsService receiptsService, CurrentUserService currentUserService, ILogger<frmWeighingReceipts> logger)
         {
             _receiptsService = receiptsService;
+            _currentUserService = currentUserService;
+            _logger = logger;
             InitializeComponent();
             dataGridViewСards.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
             this.Load += Form1_Load;
@@ -37,7 +40,7 @@ namespace PromVesClient
         //метод нажатия на кнопку фильтра поиска квитанции
         private async void btnReportFilter_Click(object sender, EventArgs e)
         {
-
+            _logger.LogInformation($"Пользователь {_currentUserService.CurrentUser?.Name} нажал на кнопку формирование фильтра");
             //проверка на поиск фильтра с номером вагона
             if (vagonNumberBox.Checked == true)
             {
@@ -54,6 +57,7 @@ namespace PromVesClient
                     Operator = operatorTextBox.Text;
                 }
             }
+            //заполнение DTO
             SearchReceiptDto searchReceiptDto = new SearchReceiptDto
             {
                 periodStart = dateTimePicker1.Value.ToUniversalTime(),
@@ -61,8 +65,13 @@ namespace PromVesClient
                 vagonNumber = VagonNumber,
                 operatorName = Operator
             };
+            //выполнение запроса на получений квитанций с помощью фильтра
             var result = await _receiptsService.GetReceiptFilter(searchReceiptDto);
-
+            //проверка запроса
+            if (result.Success == false)
+            {
+                MessageBox.Show($"Ошибка поиска квитанций, причина: {result.Message}", "Произошла ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
             receiptList = result.Data;
             dataGridViewReceipts.DataSource = result.Data;
             VagonNumber = null;
@@ -95,6 +104,7 @@ namespace PromVesClient
             if (result.Success == false)
             {
                 MessageBox.Show($"Данные не были найдены, причина: {result.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
             //List <WeighingDto> receipts = new List<WeighingDto>();
             //receipts.Add(dto);
@@ -200,9 +210,54 @@ namespace PromVesClient
 
 
         }
-
-        private void button4_Click(object sender, EventArgs e)
+        //метод нажатия на кнопку для удаления карточки
+        private async void button4_Click(object sender, EventArgs e)
         {
+            if (dataGridViewReceipts.CurrentRow != null)
+            {
+                //MessageBox.Show($"Номер строки: {dataGridViewСards.CurrentRow.Index}");
+                DialogResult resultConfirmation = MessageBox.Show(
+                "Вы действительно хотите удалить карточку вагона?",
+                "Подтверждение",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+                //проверка на выбор пользователя
+                if (resultConfirmation == DialogResult.Yes)
+                {
+                    // Выполнить удаление
+                    var result = await _receiptsService.deletingReceipt(receiptList[dataGridViewReceipts.CurrentRow.Index].Id);
+                    if (result.Success == true)
+                    {
+                        MessageBox.Show(
+                        "Квитанция успешно удалена",
+                        "Удаление квитанции",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                        await loadingTableData();
+                        dataGridViewСards.DataSource = null;
+                        receiptInfoLabel.Text = "";
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                        $"Квитанция не удалина, причина: {result.Message}",
+                        "Ошибка удаления квитанции",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                    }
+
+                }
+                else
+                {
+                    // Пользователь нажал "Нет"
+                }
+            }
+            else
+            {
+                MessageBox.Show("Перед удалением выберите квитанцию, которую хотели бы удалить", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+
+
 
         }
 
@@ -214,6 +269,62 @@ namespace PromVesClient
         private void btnChangeReceipt_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void btnSaveReceipt_Click(object sender, EventArgs e)
+        {
+
+        }
+        //Метод уаления карточки вагона
+        private async void btnDeleteCard_Click(object sender, EventArgs e)
+        {
+            if (dataGridViewСards.CurrentRow != null)
+            {
+                //MessageBox.Show($"Номер строки: {dataGridViewСards.CurrentRow.Index}");
+                DialogResult resultConfirmation = MessageBox.Show(
+                "Вы действительно хотите удалить карточку вагона?",
+                "Подтверждение",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+                //проверка на выбор пользователя
+                if (resultConfirmation == DialogResult.Yes)
+                {
+                    // Выполнить удаление
+                    var result = await _receiptsService.deletingCard(cardsList[dataGridViewСards.CurrentRow.Index].Id);
+                    if (result.Success == true)
+                    {
+                        MessageBox.Show(
+                        "Квитанция успешно удалена",
+                        "Удаление квитанции",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                        cardsList.RemoveAt(dataGridViewСards.CurrentRow.Index);
+                        dataGridViewСards.DataSource = null;
+                        dataGridViewСards.DataSource = cardsList;
+                        settingViewTable();
+                        //await loadingTableData();
+                        //dataGridViewСards.DataSource = null;
+                        //receiptInfoLabel.Text = "";
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                        $"Квитанция не удалина, причина: {result.Message}",
+                        "Ошибка удаления квитанции",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                    }
+
+                }
+                else
+                {
+                    // Пользователь нажал "Нет"
+                }
+            }
+            else
+            {
+                MessageBox.Show("Перед удалением выберите карточку, которую хотели бы удалить", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
     }
 }

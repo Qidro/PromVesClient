@@ -16,5 +16,16 @@ namespace PromVesClient
         public DbSet<User> Users => Set<User>();
         public DbSet<Receipt> Receipts => Set<Receipt>();
         public DbSet<Weighing> Weighings => Set<Weighing>();
+        //настрйока каскадного удаления
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Weighing>()
+                .HasOne(w => w.Receipt)
+                .WithMany(r => r.Weighings)
+                .HasForeignKey(w => w.ReceiptId)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
     }
 }
