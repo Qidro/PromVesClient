@@ -338,15 +338,40 @@ namespace PromVesClient
 
         private void btnPrintReceipt_Click(object sender, EventArgs e)
         {
-            ReceiptDtoExcel receiptExcel = new ReceiptDtoExcel
+            //ListReceiptExcel.Add 
+            if (cardsList.Count != null || cardsList.Count != 0)
             {
-                VagonNumber = "VagonNumber1",
-                TareWeight = "TareWeight2",
-                GrossWeight = "GrossWeight3",
-                NetWeight = "NetWeight4"
-            };
-             ListReceiptExcel.Add(receiptExcel);
-            _excelReportService.CreateReport(ListReceiptExcel);
+                foreach (var _cardsList in cardsList)
+                {
+                    ReceiptDtoExcel receiptExcel = new ReceiptDtoExcel
+                    {
+                        VagonNumber = _cardsList.VagonNumber,
+                        TareWeight = _cardsList.TareWeight,
+                        GrossWeight = _cardsList.GrossWeight,
+                        NetWeight = _cardsList.NetWeight,
+                        LoadCapacity = _cardsList.LoadCapacity,
+                        LoadDeviation = _cardsList.LoadDeviation,
+                        FirstCart = _cardsList.FirstCart,
+                        SecondCart = _cardsList.SecondCart,
+                        DifferenceCarts = _cardsList.DifferenceCarts,
+                        LeftSide = _cardsList.LeftSide,
+                        RightSide = _cardsList.RightSide,
+                        DifferenceSides = _cardsList.DifferenceSides
+                    };
+                    ListReceiptExcel.Add(receiptExcel);
+                }
+            }
+            //ReceiptDtoExcel receiptExcel = new ReceiptDtoExcel
+            //{
+            //    VagonNumber = "VagonNumber1",
+            //    TareWeight = "TareWeight2",
+            //    GrossWeight = "GrossWeight3",
+            //    NetWeight = "NetWeight4"
+            //};
+            // ListReceiptExcel.Add(receiptExcel);
+           // ListReceiptExcel.Add(receiptExcel);
+            _excelReportService.CreateReport(ListReceiptExcel, _currentUserService.CurrentUser.Name);
+            ListReceiptExcel.Clear();
         }
     }
 }

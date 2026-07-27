@@ -152,7 +152,7 @@ namespace PromVesClient.Service.UserService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Ошибка получения списка пользователей");
-
+                 
                 return ServiceResult<List<User>>.Fail("Не удалось получить список пользователей" + ex.Message);
             }
         }
@@ -165,7 +165,7 @@ namespace PromVesClient.Service.UserService
 
                 var user =  await db.Users
                     .AnyAsync(u => u.Name == login);
-                if (user == null)
+                if (user == false)
                 {
                     return ServiceResult.Ok();
                 }
