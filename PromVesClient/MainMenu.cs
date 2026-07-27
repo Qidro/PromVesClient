@@ -38,7 +38,8 @@ namespace PromVesClient
 
         private void r23r23rToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
+            var form = _serviceProvider.GetRequiredService<UserManagementForm>();
+            form.ShowDialog();
         }
 
         private void r23r23rToolStripMenuItem1_Click(object sender, EventArgs e)
