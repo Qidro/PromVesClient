@@ -168,6 +168,7 @@
             dataGridViewСards.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridViewСards.Location = new Point(12, 365);
             dataGridViewСards.Name = "dataGridViewСards";
+            dataGridViewСards.ReadOnly = true;
             dataGridViewСards.Size = new Size(1097, 417);
             dataGridViewСards.TabIndex = 3;
             // 

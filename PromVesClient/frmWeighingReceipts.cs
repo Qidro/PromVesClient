@@ -23,11 +23,13 @@ namespace PromVesClient
 
         private List<ReceiptDto> receiptList;
 
-        private List<CardsDto> cardsList;
+        private List<CardsDto> cardsList = new();
         private List<ReceiptDtoExcel> ListReceiptExcel = new();
         private string VagonNumber;
-
+        //Поле для фмльтра
         private string Operator;
+        //поле для печати квитанции
+        private string OperatorReceipt;
         public frmWeighingReceipts(ReceiptsService receiptsService, CurrentUserService currentUserService, ILogger<frmWeighingReceipts> logger, ExcelReportService excelReportService)
         {
             _receiptsService = receiptsService;
@@ -178,7 +180,8 @@ namespace PromVesClient
 
                 //выводим информацию о времени создания квитанции
                 receiptInfoLabel.Text = "Квитанция от " + receiptList[e.RowIndex].DateTime.ToString();
-
+                //сохраняем выбранную квитанцию в поле
+                OperatorReceipt = receiptList[e.RowIndex].Operator;
                 var result = await _receiptsService.GetCardsAsync(receiptList[e.RowIndex].Id);
                 if (result.Success == true)
                 {
@@ -335,12 +338,13 @@ namespace PromVesClient
                 MessageBox.Show("Перед удалением выберите карточку, которую хотели бы удалить", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
-
+        //метод нажатия на кнопку для печати квитанции взвешивания
         private void btnPrintReceipt_Click(object sender, EventArgs e)
         {
-            //ListReceiptExcel.Add 
-            if (cardsList.Count != null || cardsList.Count != 0)
+            //проверка на выбора квитанции
+            if (cardsList?.Count > 0)
             {
+                //перебор данных квитанции для значений DTO
                 foreach (var _cardsList in cardsList)
                 {
                     ReceiptDtoExcel receiptExcel = new ReceiptDtoExcel
@@ -360,6 +364,12 @@ namespace PromVesClient
                     };
                     ListReceiptExcel.Add(receiptExcel);
                 }
+                _excelReportService.CreateReport(ListReceiptExcel, OperatorReceipt);
+                ListReceiptExcel.Clear();
+            }
+            else
+            {
+                MessageBox.Show("Выберите квитанцию для печати","Предупрждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             //ReceiptDtoExcel receiptExcel = new ReceiptDtoExcel
             //{
@@ -370,8 +380,7 @@ namespace PromVesClient
             //};
             // ListReceiptExcel.Add(receiptExcel);
            // ListReceiptExcel.Add(receiptExcel);
-            _excelReportService.CreateReport(ListReceiptExcel, _currentUserService.CurrentUser.Name);
-            ListReceiptExcel.Clear();
+            
         }
     }
 }

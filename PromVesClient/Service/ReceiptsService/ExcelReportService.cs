@@ -42,6 +42,11 @@ namespace PromVesClient.Service.ReceiptsService
                 ws.Cell(row+1, 1).Value = $"Дата: {DateTime.Today.ToString("dd.MM.yyyy")}";
                 ws.Cell(row+2, 1).Value = $"Время: {DateTime.Now:HH:mm:ss}";
                 ws.Cell(row+3, 1).Value = $"Оператор: {operatorName}";
+
+                ws.Cell(row, 1).Style.Font.FontSize = 16;
+                ws.Cell(row + 1, 1).Style.Font.FontSize = 16;
+                ws.Cell(row + 2, 1).Style.Font.FontSize = 16;
+                ws.Cell(row + 3, 1).Style.Font.FontSize = 16;
                 range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
                 range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
                 //ws.Columns(1, 4).AdjustToContents();
