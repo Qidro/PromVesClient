@@ -9,6 +9,7 @@ using System.IO.Ports;
 using System.Text;
 using System.Windows.Forms;
 
+
 namespace PromVesClient
 {
     public partial class ComPortSettingsForm : Form
@@ -16,6 +17,7 @@ namespace PromVesClient
         private readonly ComPortService _comPortService;
         //для портов, чтобы не повторялись
         private bool _updatingPorts;
+     
 
         private List<ComboBox> _portBoxes;
         private List<ComboBox> _baudRateBoxes;
@@ -28,9 +30,9 @@ namespace PromVesClient
             InitializeComponent();
 
             _comPortService = comPortService;
-
+            //иницилизация настроек компрта
             InitializeCollections();
-
+            //подгрузка данных для компротов
             SubscribePortEvents();
         }
 
@@ -175,7 +177,20 @@ namespace PromVesClient
         // заполнение одного порта
         private void LoadSettings()
         {
-            var configuration = _comPortService.Load();
+            var result = _comPortService.Load();
+
+            if (!result.Success)
+            {
+                MessageBox.Show(
+                    result.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
+                return;
+            }
+
+            var configuration = result.Data;
 
             for (int i = 0; i < configuration.SerialPorts.Count; i++)
             {
@@ -257,7 +272,16 @@ namespace PromVesClient
                         i + 1));
             }
 
-            _comPortService.Save(configuration);
+            var result = _comPortService.Save(configuration);
+
+            if (!result.Success)
+            {
+                MessageBox.Show(
+                    result.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
         //метод исключения ком портов
         private void SubscribePortEvents()
@@ -272,7 +296,7 @@ namespace PromVesClient
         {
             UpdateAvailablePorts();
         }
-        //сам метод
+        //сам метод сброса компортов в форме
         private void UpdateAvailablePorts()
         {
             if (_updatingPorts)
@@ -314,7 +338,7 @@ namespace PromVesClient
                 _updatingPorts = false;
             }
         }
-
+        // кнопка сохранения заданных настроек
         private void btnSave_Click(object sender, EventArgs e)
         {
             SaveSettings();
@@ -325,7 +349,7 @@ namespace PromVesClient
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
         }
-
+        // кнопка востановления дефолтных настроек
         private void btnRestoreDefaults_Click(object sender, EventArgs e)
         {
             var result = MessageBox.Show(

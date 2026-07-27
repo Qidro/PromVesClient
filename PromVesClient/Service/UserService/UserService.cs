@@ -27,54 +27,63 @@ namespace PromVesClient.Service.UserService
             try
             {
                 await using var db = await _dbContext.CreateDbContextAsync();
-                //проверка: пустой ли userName
+
+                // Проверка логина
                 if (string.IsNullOrWhiteSpace(userName))
                     return ServiceResult<User>.Fail("Логин пустой");
-                // поиск пользователя
-                var user = await db.Users.FirstOrDefaultAsync(u => u.Name == userName);
 
-                
-                //проверяем результат поиска
+                // Поиск пользователя
+                var user = await db.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Name == userName);
+
                 if (user == null)
-                    return ServiceResult<User>.Fail("Пользователь не найден");
-                // проверка активности пользователя
-                if (!user.IsActive)
-                {
-                    return ServiceResult<User>.Fail("Пользователь неактивен. Обратитесь к администратору.");
-                }
+                    return ServiceResult<User>.Fail("Пользователь не найден.");
 
-                //проверка введенего пароля пользователя
-                if (!_hashPasswordService.passwordСheck(password ,user.PasswordHash))
-                {
-                    return ServiceResult<User>.Fail("Неверный пароль");
-                }
+                // Проверка активности
+                if (!user.IsActive)
+                    return ServiceResult<User>.Fail("Пользователь неактивен. Обратитесь к администратору.");
+
+                // Проверка пароля
+                if (!_hashPasswordService.passwordСheck(password, user.PasswordHash))
+                    return ServiceResult<User>.Fail("Неверный пароль.");
 
                 return ServiceResult<User>.Ok(user);
             }
+            catch (TimeoutException ex)
+            {
+                _logger.LogError(ex, "Превышено время ожидания при авторизации пользователя {UserName}.", userName);
+
+                return ServiceResult<User>.Fail("Превышено время ожидания при обращении к базе данных.");
+            }
+            catch (NpgsqlException ex)
+            {
+                _logger.LogError(ex, "Ошибка базы данных при авторизации пользователя {UserName}.", userName);
+
+                return ServiceResult<User>.Fail("Ошибка базы данных.");
+            }
             catch (Exception ex)
             {
-                return ServiceResult<User>.Fail("Неизвестная ошибка: "+ ex.ToString());
+                _logger.LogError(ex, "Неизвестная ошибка при авторизации пользователя {UserName}.", userName);
+
+                return ServiceResult<User>.Fail("Не удалось выполнить авторизацию.");
             }
-            
         }
-        //метод создания пользователя
+
+        // метод создания пользователя
         public async Task<ServiceResult> CreateUserAsync(string login, string password, string role)
         {
-            //проверяет пустые ли строки лоигна и пароля
-            if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
-            {
-                return ServiceResult.Fail("Логин или пароль пустой");
-            }
-            //проверка есть ли уже такой пользователь
-            var reasultSearchUser = await UserExistsAsync(login);
-            if (reasultSearchUser.Success == false)
-            {
-                return ServiceResult.Fail($"{reasultSearchUser.Message}");
-            }
-                
-
             try
             {
+                // Проверка пустых полей
+                if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
+                    return ServiceResult.Fail("Логин или пароль пустой.");
+
+                // Проверка существования пользователя
+                var resultSearchUser = await UserExistsAsync(login);
+                if (!resultSearchUser.Success)
+                    return ServiceResult.Fail(resultSearchUser.Message);
+
                 var user = new User
                 {
                     Id = Guid.NewGuid(),
@@ -82,32 +91,39 @@ namespace PromVesClient.Service.UserService
                     Role = role,
                     PasswordHash = _hashPasswordService.getHashPasswordUser(password)
                 };
+
                 await using var db = await _dbContext.CreateDbContextAsync();
 
                 db.Users.Add(user);
+
                 await db.SaveChangesAsync();
-                //string hashPassword = _hashPasswordService.getHashPasswordUser(password);
 
                 return ServiceResult.Ok();
             }
             catch (DbUpdateException ex)
             {
-                return ServiceResult.Fail("Неизвестная ошибка: " + ex.ToString());
+                _logger.LogError(ex, "Ошибка сохранения пользователя {Login}.", login);
+
+                return ServiceResult.Fail("Не удалось сохранить пользователя.");
             }
             catch (TimeoutException ex)
             {
-                return ServiceResult.Fail("Неизвестная ошибка: " + ex.ToString());
+                _logger.LogError(ex, "Превышено время ожидания при создании пользователя {Login}.", login);
+
+                return ServiceResult.Fail("Превышено время ожидания при создании пользователя.");
             }
             catch (NpgsqlException ex)
             {
-                return ServiceResult.Fail("Неизвестная ошибка: " + ex.ToString());
+                _logger.LogError(ex, "Ошибка базы данных при создании пользователя {Login}.", login);
+
+                return ServiceResult.Fail("Ошибка базы данных.");
             }
             catch (Exception ex)
             {
-                return ServiceResult.Fail("Неизвестная ошибка: "+ex.ToString());
-            }
+                _logger.LogError(ex, "Неизвестная ошибка при создании пользователя {Login}.", login);
 
-            
+                return ServiceResult.Fail("Не удалось создать пользователя.");
+            }
         }
         //метод получения всех пользователей
         public async Task<ServiceResult<List<User>>> GetUsersAsync()
@@ -178,11 +194,27 @@ namespace PromVesClient.Service.UserService
         //получения пользователя по id
         public async Task<User?> GetUserAsync(Guid id)
         {
-            await using var db = await _dbContext.CreateDbContextAsync();
+            try
+            {
+                await using var db = await _dbContext.CreateDbContextAsync();
 
-            var user = await db.Users.FindAsync(id);
-
-            return user;
+                return await db.Users.FindAsync(id);
+            }
+            catch (TimeoutException ex)
+            {
+                _logger.LogError(ex, "Ошибка получения пользователя {Id}: превышено время ожидания.", id);
+                return null;
+            }
+            catch (NpgsqlException ex)
+            {
+                _logger.LogError(ex, "Ошибка базы данных при получении пользователя {Id}.", id);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Неизвестная ошибка при получении пользователя {Id}.", id);
+                return null;
+            }
         }
         //метод удаления пользователя
         public async Task<ServiceResult> DeleteUserAsync(Guid id)
@@ -202,18 +234,38 @@ namespace PromVesClient.Service.UserService
 
                 return ServiceResult.Ok();
             }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Ошибка при удалении пользователя {Id}.", id);
+
+                return ServiceResult.Fail("Не удалось удалить пользователя.");
+            }
+            catch (TimeoutException ex)
+            {
+                _logger.LogError(ex, "Превышено время ожидания при удалении пользователя {Id}.", id);
+
+                return ServiceResult.Fail("Превышено время ожидания при удалении пользователя.");
+            }
+            catch (NpgsqlException ex)
+            {
+                _logger.LogError(ex, "Ошибка базы данных при удалении пользователя {Id}.", id);
+
+                return ServiceResult.Fail("Ошибка базы данных.");
+            }
             catch (Exception ex)
             {
-                return ServiceResult.Fail(ex.Message);
+                _logger.LogError(ex, "Неизвестная ошибка при удалении пользователя {Id}.", id);
+
+                return ServiceResult.Fail("Не удалось удалить пользователя.");
             }
         }
-        //изменение пользователя
+        // изменение пользователя
         public async Task<ServiceResult> UpdateUserAsync(
-     Guid id,
-    string login,
-    string password,
-    string role,
-    bool isActive)
+            Guid id,
+            string login,
+            string password,
+            string role,
+            bool isActive)
         {
             try
             {
@@ -224,9 +276,8 @@ namespace PromVesClient.Service.UserService
                 if (user == null)
                     return ServiceResult.Fail("Пользователь не найден.");
 
-                var userWithSameName =
-     await db.Users
-     .FirstOrDefaultAsync(u => u.Name == login && u.Id != id);
+                var userWithSameName = await db.Users
+                    .FirstOrDefaultAsync(u => u.Name == login && u.Id != id);
 
                 if (userWithSameName != null)
                     return ServiceResult.Fail("Пользователь уже существует.");
@@ -237,20 +288,37 @@ namespace PromVesClient.Service.UserService
 
                 if (!string.IsNullOrWhiteSpace(password))
                 {
-                    user.PasswordHash =
-                        _hashPasswordService.getHashPasswordUser(password);
+                    user.PasswordHash = _hashPasswordService.getHashPasswordUser(password);
                 }
 
                 await db.SaveChangesAsync();
 
                 return ServiceResult.Ok();
             }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Ошибка обновления пользователя {Id}.", id);
+
+                return ServiceResult.Fail("Не удалось сохранить изменения.");
+            }
+            catch (TimeoutException ex)
+            {
+                _logger.LogError(ex, "Превышено время ожидания при обновлении пользователя {Id}.", id);
+
+                return ServiceResult.Fail("Превышено время ожидания при обновлении пользователя.");
+            }
+            catch (NpgsqlException ex)
+            {
+                _logger.LogError(ex, "Ошибка базы данных при обновлении пользователя {Id}.", id);
+
+                return ServiceResult.Fail("Ошибка базы данных.");
+            }
             catch (Exception ex)
             {
-                return ServiceResult.Fail(ex.Message);
+                _logger.LogError(ex, "Неизвестная ошибка при обновлении пользователя {Id}.", id);
+
+                return ServiceResult.Fail("Не удалось обновить пользователя.");
             }
         }
-        
-
     }
 }

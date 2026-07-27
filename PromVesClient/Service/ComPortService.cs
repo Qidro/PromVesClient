@@ -1,9 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text.Json;
+﻿using Microsoft.Extensions.Logging;
 using PromVesClient.Models;
+using Serilog.Core;
+using System;
+using System.Collections.Generic;
 using System.IO.Ports;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace PromVesClient.Service
@@ -11,6 +13,7 @@ namespace PromVesClient.Service
 
     public class ComPortService
     {
+        private readonly ILogger<ComPortService> _logger;
         private readonly SerialPort _serialPort = new();
         private readonly string _configurationPath;
         private readonly string _defaultSettingsPath;
@@ -26,8 +29,10 @@ namespace PromVesClient.Service
     }
         };
 
-        public ComPortService()
+        public ComPortService(ILogger<ComPortService> logger)
         {
+            _logger = logger;
+
             _configurationPath = Path.Combine(
                 AppContext.BaseDirectory,
                 "Configuration");
@@ -44,59 +49,211 @@ namespace PromVesClient.Service
         /// Загружает текущие настройки.
         /// Если файла нет — создает его из defaultSettings.json.
         /// </summary>
-        public SerialPortConfiguration Load()
+        public ServiceResult<SerialPortConfiguration> Load()
         {
-            if (!File.Exists(_serverSettingsPath))
+            try
             {
-                return LoadDefaults();
-            }
+                if (!File.Exists(_serverSettingsPath))
+                {
+                    _logger.LogWarning(
+                        "Файл настроек {Path} не найден. Загружаются настройки по умолчанию.",
+                        _serverSettingsPath);
 
-            string json = File.ReadAllText(_serverSettingsPath);
+                    return LoadDefaults();
+                }
 
-            if (string.IsNullOrWhiteSpace(json))
-            {
-                return LoadDefaults();
-            }
+                string json = File.ReadAllText(_serverSettingsPath);
 
-            return JsonSerializer.Deserialize<SerialPortConfiguration>(
+                if (string.IsNullOrWhiteSpace(json))
+                {
+                    _logger.LogWarning(
+                        "Файл настроек {Path} пустой. Загружаются настройки по умолчанию.",
+                        _serverSettingsPath);
+
+                    return LoadDefaults();
+                }
+
+                var configuration = JsonSerializer.Deserialize<SerialPortConfiguration>(
      json,
-     _jsonOptions)
-     ?? LoadDefaults();
+     _jsonOptions);
+
+                if (configuration == null)
+                {
+                    _logger.LogWarning(
+                        "Не удалось десериализовать файл настроек. Загружаются настройки по умолчанию.");
+
+                    return LoadDefaults();
+                }
+
+                return ServiceResult<SerialPortConfiguration>.Ok(configuration);
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex,
+                    "Ошибка десериализации файла настроек.");
+
+                return ServiceResult<SerialPortConfiguration>.Fail(
+                    "Файл настроек поврежден.");
+            }
+            catch (IOException ex)
+            {
+                _logger.LogError(ex,
+                    "Ошибка чтения файла настроек.");
+
+                return ServiceResult<SerialPortConfiguration>.Fail(
+                    "Не удалось прочитать файл настроек.");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogError(ex,
+                    "Нет доступа к файлу настроек.");
+
+                return ServiceResult<SerialPortConfiguration>.Fail(
+                    "Нет доступа к файлу настроек.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Неизвестная ошибка при загрузке настроек.");
+
+                return ServiceResult<SerialPortConfiguration>.Fail(
+                    "Не удалось загрузить настройки.");
+            }
         }
 
         /// <summary>
         /// Загружает настройки по умолчанию.
         /// </summary>
-        public SerialPortConfiguration LoadDefaults()
+        public ServiceResult<SerialPortConfiguration> LoadDefaults()
         {
-            string json = File.ReadAllText(_defaultSettingsPath);
+            try
+            {
+                string json = File.ReadAllText(_defaultSettingsPath);
 
-            return JsonSerializer.Deserialize<SerialPortConfiguration>(
-    json,
-    _jsonOptions)
-    ?? new SerialPortConfiguration();
+                var configuration = JsonSerializer.Deserialize<SerialPortConfiguration>(
+                    json,
+                    _jsonOptions);
+
+                if (configuration == null)
+                {
+                    _logger.LogWarning(
+                        "Не удалось загрузить настройки по умолчанию из файла {Path}.",
+                        _defaultSettingsPath);
+
+                    return ServiceResult<SerialPortConfiguration>.Fail(
+                        "Файл настроек по умолчанию поврежден.");
+                }
+
+                return ServiceResult<SerialPortConfiguration>.Ok(configuration);
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex,
+                    "Ошибка десериализации файла настроек по умолчанию.");
+
+                return ServiceResult<SerialPortConfiguration>.Fail(
+                    "Файл настроек по умолчанию поврежден.");
+            }
+            catch (IOException ex)
+            {
+                _logger.LogError(ex,
+                    "Ошибка чтения файла настроек по умолчанию.");
+
+                return ServiceResult<SerialPortConfiguration>.Fail(
+                    "Не удалось прочитать файл настроек по умолчанию.");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogError(ex,
+                    "Нет доступа к файлу настроек по умолчанию.");
+
+                return ServiceResult<SerialPortConfiguration>.Fail(
+                    "Нет доступа к файлу настроек по умолчанию.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Неизвестная ошибка при загрузке настроек по умолчанию.");
+
+                return ServiceResult<SerialPortConfiguration>.Fail(
+                    "Не удалось загрузить настройки по умолчанию.");
+            }
         }
 
         /// <summary>
         /// Сохраняет настройки.
         /// </summary>
-        public void Save(SerialPortConfiguration configuration)
+        public ServiceResult Save(SerialPortConfiguration configuration)
         {
-            string json = JsonSerializer.Serialize(
-    configuration,
-    _jsonOptions);
+            try
+            {
+                string json = JsonSerializer.Serialize(
+                    configuration,
+                    _jsonOptions);
 
-            File.WriteAllText(_serverSettingsPath, json);
+                File.WriteAllText(_serverSettingsPath, json);
+
+                return ServiceResult.Ok();
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex,
+                    "Ошибка сериализации настроек COM-портов.");
+
+                return ServiceResult.Fail(
+                    "Не удалось подготовить настройки к сохранению.");
+            }
+            catch (IOException ex)
+            {
+                _logger.LogError(ex,
+                    "Ошибка записи файла настроек {Path}.",
+                    _serverSettingsPath);
+
+                return ServiceResult.Fail(
+                    "Не удалось сохранить настройки.");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogError(ex,
+                    "Нет доступа к файлу настроек {Path}.",
+                    _serverSettingsPath);
+
+                return ServiceResult.Fail(
+                    "Нет доступа к файлу настроек.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Неизвестная ошибка при сохранении настроек.");
+
+                return ServiceResult.Fail(
+                    "Не удалось сохранить настройки.");
+            }
         }
-
         /// <summary>
         /// Восстанавливает настройки по умолчанию.
         /// </summary>
-        public void RestoreDefaults()
+        public ServiceResult RestoreDefaults()
         {
-            var configuration = LoadDefaults();
+            try
+            {
+                var result = LoadDefaults();
 
-            Save(configuration);
+                if (!result.Success)
+                {
+                    return ServiceResult.Fail(result.Message);
+                }
+
+                return Save(result.Data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Неизвестная ошибка при восстановлении настроек по умолчанию.");
+
+                return ServiceResult.Fail(
+                    "Не удалось восстановить настройки по умолчанию.");
+            }
         }
         /// <summary>
         /// Возвращает список доступных COM-портов.
@@ -121,49 +278,224 @@ namespace PromVesClient.Service
             }
         }
         // открытие порта
-        public void Open(SerialPortSettings settings)
+        public ServiceResult Open(SerialPortSettings settings)
         {
-            if (_serialPort.IsOpen)
+            try
             {
-                _serialPort.Close();
+                if (_serialPort.IsOpen)
+                {
+                    _serialPort.Close();
+                }
+
+                _serialPort.PortName = settings.PortName;
+                _serialPort.BaudRate = settings.BaudRate;
+                _serialPort.DataBits = settings.DataBits;
+                _serialPort.Parity = settings.Parity;
+                _serialPort.StopBits = settings.StopBits;
+                _serialPort.Handshake = settings.Handshake;
+
+                _serialPort.Open();
+
+                _logger.LogInformation(
+                    "COM-порт {PortName} успешно открыт.",
+                    settings.PortName);
+
+                return ServiceResult.Ok();
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogError(ex,
+                    "Нет доступа к COM-порту {PortName}.",
+                    settings.PortName);
 
-            _serialPort.PortName = settings.PortName;
-            _serialPort.BaudRate = settings.BaudRate;
-            _serialPort.DataBits = settings.DataBits;
-            _serialPort.Parity = settings.Parity;
-            _serialPort.StopBits = settings.StopBits;
-            _serialPort.Handshake = settings.Handshake;
+                return ServiceResult.Fail("Нет доступа к COM-порту.");
+            }
+            catch (IOException ex)
+            {
+                _logger.LogError(ex,
+                    "Ошибка ввода-вывода при открытии COM-порта {PortName}.",
+                    settings.PortName);
 
-            _serialPort.Open();
+                return ServiceResult.Fail("Ошибка ввода-вывода при открытии COM-порта.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex,
+                    "Ошибка открытия COM-порта {PortName}.",
+                    settings.PortName);
+
+                return ServiceResult.Fail("COM-порт уже открыт или находится в недопустимом состоянии.");
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex,
+                    "Некорректные параметры COM-порта {PortName}.",
+                    settings.PortName);
+
+                return ServiceResult.Fail("Некорректные параметры COM-порта.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Неизвестная ошибка при открытии COM-порта {PortName}.",
+                    settings.PortName);
+
+                return ServiceResult.Fail("Не удалось открыть COM-порт.");
+            }
         }
         // закрытие
-        public void Close()
+        public ServiceResult Close()
         {
-            if (_serialPort.IsOpen)
+            try
             {
-                _serialPort.Close();
+                if (_serialPort.IsOpen)
+                {
+                    _serialPort.Close();
+
+                    _logger.LogInformation(
+                        "COM-порт {PortName} успешно закрыт.",
+                        _serialPort.PortName);
+                }
+                else
+                {
+                    _logger.LogInformation(
+                        "Попытка закрыть COM-порт, но он уже закрыт.");
+                }
+
+                return ServiceResult.Ok();
+            }
+            catch (IOException ex)
+            {
+                _logger.LogError(ex,
+                    "Ошибка ввода-вывода при закрытии COM-порта.");
+
+                return ServiceResult.Fail("Ошибка при закрытии COM-порта.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex,
+                    "Ошибка закрытия COM-порта.");
+
+                return ServiceResult.Fail("Не удалось закрыть COM-порт.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Неизвестная ошибка при закрытии COM-порта.");
+
+                return ServiceResult.Fail("Не удалось закрыть COM-порт.");
             }
         }
         //запись
-        public void Write(string text)
+        public ServiceResult Write(string text)
         {
-            if (!_serialPort.IsOpen)
+            try
             {
-                throw new InvalidOperationException("COM-порт не открыт.");
-            }
+                if (!_serialPort.IsOpen)
+                {
+                    _logger.LogWarning(
+                        "Попытка записи в COM-порт, который не открыт.");
 
-            _serialPort.Write(text);
+                    return ServiceResult.Fail("COM-порт не открыт.");
+                }
+
+                _serialPort.Write(text);
+
+                _logger.LogInformation(
+                    "Данные успешно отправлены в COM-порт {PortName}.",
+                    _serialPort.PortName);
+
+                return ServiceResult.Ok();
+            }
+            catch (TimeoutException ex)
+            {
+                _logger.LogError(ex,
+                    "Превышено время ожидания при записи в COM-порт {PortName}.",
+                    _serialPort.PortName);
+
+                return ServiceResult.Fail("Превышено время ожидания при записи в COM-порт.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex,
+                    "Ошибка записи в COM-порт {PortName}.",
+                    _serialPort.PortName);
+
+                return ServiceResult.Fail("COM-порт недоступен.");
+            }
+            catch (IOException ex)
+            {
+                _logger.LogError(ex,
+                    "Ошибка ввода-вывода при записи в COM-порт {PortName}.",
+                    _serialPort.PortName);
+
+                return ServiceResult.Fail("Ошибка ввода-вывода при записи в COM-порт.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Неизвестная ошибка при записи в COM-порт {PortName}.",
+                    _serialPort.PortName);
+
+                return ServiceResult.Fail("Не удалось выполнить запись в COM-порт.");
+            }
         }
         //чтение
-        public string ReadLine()
+        public ServiceResult<string> ReadLine()
         {
-            if (!_serialPort.IsOpen)
+            try
             {
-                throw new InvalidOperationException("COM-порт не открыт.");
-            }
+                if (!_serialPort.IsOpen)
+                {
+                    _logger.LogWarning(
+                        "Попытка чтения из COM-порта, который не открыт.");
 
-            return _serialPort.ReadLine();
+                    return ServiceResult<string>.Fail("COM-порт не открыт.");
+                }
+
+                string data = _serialPort.ReadLine();
+
+                _logger.LogInformation(
+                    "Данные успешно получены из COM-порта {PortName}.",
+                    _serialPort.PortName);
+
+                return ServiceResult<string>.Ok(data);
+            }
+            catch (TimeoutException ex)
+            {
+                _logger.LogError(ex,
+                    "Превышено время ожидания при чтении из COM-порта {PortName}.",
+                    _serialPort.PortName);
+
+                return ServiceResult<string>.Fail(
+                    "Превышено время ожидания при чтении из COM-порта.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex,
+                    "Ошибка чтения из COM-порта {PortName}.",
+                    _serialPort.PortName);
+
+                return ServiceResult<string>.Fail("COM-порт недоступен.");
+            }
+            catch (IOException ex)
+            {
+                _logger.LogError(ex,
+                    "Ошибка ввода-вывода при чтении из COM-порта {PortName}.",
+                    _serialPort.PortName);
+
+                return ServiceResult<string>.Fail(
+                    "Ошибка ввода-вывода при чтении из COM-порта.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Неизвестная ошибка при чтении из COM-порта {PortName}.",
+                    _serialPort.PortName);
+
+                return ServiceResult<string>.Fail(
+                    "Не удалось прочитать данные из COM-порта.");
+            }
         }
 
     }
