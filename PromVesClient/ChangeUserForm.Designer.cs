@@ -100,7 +100,7 @@
             Controls.Add(txtLogin);
             Controls.Add(btnSave);
             Name = "ChangeUserForm";
-            Text = "ChangeUserForm";
+            Text = "Изменение пользователя";
             Load += ChangeUserForm_Load;
             ResumeLayout(false);
             PerformLayout();
