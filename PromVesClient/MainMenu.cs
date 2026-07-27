@@ -46,6 +46,13 @@ namespace PromVesClient
 
         }
 
+        private void ComSetitem_Click(object sender, EventArgs e)
+        {
+            var form = _serviceProvider.GetRequiredService<ComPortSettingsForm>();
+
+            form.ShowDialog();
+        }
+
         private void button1_Click_1(object sender, EventArgs e)
         {
             var form = _serviceProvider.GetRequiredService<frmWeighingReceipts>();

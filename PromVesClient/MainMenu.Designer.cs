@@ -36,7 +36,7 @@
             r23r23rToolStripMenuItem = new ToolStripMenuItem();
             r23r23rToolStripMenuItem1 = new ToolStripMenuItem();
             ServiceToolStrip = new ToolStripMenuItem();
-            наладкаToolStripMenuItem = new ToolStripMenuItem();
+            ComSetitem = new ToolStripMenuItem();
             label1 = new Label();
             menuStrip1.SuspendLayout();
             SuspendLayout();
@@ -106,16 +106,17 @@
             // 
             // ServiceToolStrip
             // 
-            ServiceToolStrip.DropDownItems.AddRange(new ToolStripItem[] { наладкаToolStripMenuItem });
+            ServiceToolStrip.DropDownItems.AddRange(new ToolStripItem[] { ComSetitem });
             ServiceToolStrip.Name = "ServiceToolStrip";
             ServiceToolStrip.Size = new Size(59, 20);
             ServiceToolStrip.Text = "Сервис";
             // 
-            // наладкаToolStripMenuItem
+            // ComSetitem
             // 
-            наладкаToolStripMenuItem.Name = "наладкаToolStripMenuItem";
-            наладкаToolStripMenuItem.Size = new Size(120, 22);
-            наладкаToolStripMenuItem.Text = "Наладка";
+            ComSetitem.Name = "ComSetitem";
+            ComSetitem.Size = new Size(180, 22);
+            ComSetitem.Text = "Наладка";
+            ComSetitem.Click += ComSetitem_Click;
             // 
             // label1
             // 
@@ -155,7 +156,7 @@
         private ToolStripMenuItem r23r23rToolStripMenuItem;
         private ToolStripMenuItem r23r23rToolStripMenuItem1;
         private ToolStripMenuItem ServiceToolStrip;
-        private ToolStripMenuItem наладкаToolStripMenuItem;
+        private ToolStripMenuItem ComSetitem;
         private Label label1;
     }
 }

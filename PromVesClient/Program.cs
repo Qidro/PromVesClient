@@ -49,12 +49,13 @@ namespace PromVesClient
             services.AddTransient<MainMenu>();
             services.AddTransient<StaticWeighing>();
             services.AddTransient<frmWeighingReceipts>();
-
+            services.AddTransient<ComPortSettingsForm>();
             //регистрация сервисов
             services.AddScoped<UserService>();
             services.AddScoped<HashPasswordService>();
             services.AddScoped<AppInfoService>();
             services.AddScoped<StaticWeighingService>();
+            services.AddSingleton<ComPortService>();
             services.AddScoped<TcpService>();
             services.AddScoped<ReceiptsService>();
             services.AddScoped<ExcelReportService>();
