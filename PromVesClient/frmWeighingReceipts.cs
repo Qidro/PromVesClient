@@ -285,9 +285,21 @@ namespace PromVesClient
                 receiptExcel.Add(new ReceiptDtoExcel
                 {
                     VagonNumber = card.VagonNumber,
-                    TareWeight = card.TareWeight.ToString(),
-                    GrossWeight = card.GrossWeight.ToString(),
-                    NetWeight = card.NetWeight.ToString()
+
+                    TareWeight = card.TareWeight,
+                    GrossWeight = card.GrossWeight,
+                    NetWeight = card.NetWeight,
+
+                    LoadCapacity = card.LoadCapacity,
+                    LoadDeviation = card.LoadDeviation,
+
+                    FirstCart = card.FirstCart,
+                    SecondCart = card.SecondCart,
+                    DifferenceCarts = card.DifferenceCarts,
+
+                    LeftSide = card.LeftSide,
+                    RightSide = card.RightSide,
+                    DifferenceSides = card.DifferenceSides
                 });
             }
 
@@ -378,10 +390,10 @@ namespace PromVesClient
         {
             ReceiptDtoExcel receiptExcel = new ReceiptDtoExcel
             {
-                VagonNumber = "VagonNumber1",
-                TareWeight = "TareWeight2",
-                GrossWeight = "GrossWeight3",
-                NetWeight = "NetWeight4"
+                //VagonNumber = "VagonNumber1",
+                //TareWeight = "TareWeight2",
+                //GrossWeight = "GrossWeight3",
+                //NetWeight = "NetWeight4"
             };
              ListReceiptExcel.Add(receiptExcel);
             _excelReportService.CreateReport(ListReceiptExcel);

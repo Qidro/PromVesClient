@@ -99,7 +99,7 @@ namespace PromVesClient.Service.ReceiptsService
 
                 var ws = workbook.Worksheet(1);
 
-                int row = 2;
+                int row = 3;
 
                 foreach (var card in cards)
                 {
@@ -107,14 +107,31 @@ namespace PromVesClient.Service.ReceiptsService
                     ws.Cell(row, 2).Value = card.TareWeight;
                     ws.Cell(row, 3).Value = card.GrossWeight;
                     ws.Cell(row, 4).Value = card.NetWeight;
+                    ws.Cell(row, 5).Value = card.LoadCapacity;
+                    ws.Cell(row, 6).Value = card.LoadDeviation;
+                    ws.Cell(row, 7).Value = card.FirstCart;
+                    ws.Cell(row, 8).Value = card.SecondCart;
+                    ws.Cell(row, 9).Value = card.DifferenceCarts;
+                    ws.Cell(row, 10).Value = card.LeftSide;
+                    ws.Cell(row, 11).Value = card.RightSide;
+                    ws.Cell(row, 12).Value = card.DifferenceSides;
 
                     row++;
                 }
 
                 if (row > 2)
                 {
-                    var range = ws.Range(2, 1, row - 1, 4);
+                    // Границы для всех заполненных строк
+                    var range = ws.Range(2, 1, row - 1, 12);
+                    ws.Cell(row, 1).Value = $"Сумма Нетто: {cards[cards.Count - 1].NetWeight} т.";
+                    ws.Cell(row + 1, 1).Value = $"Дата: {DateTime.Today.ToString("dd.MM.yyyy")}";
+                    ws.Cell(row + 2, 1).Value = $"Время: {DateTime.Now:HH:mm:ss}";
+                    //ws.Cell(row + 3, 1).Value = $"Оператор: {operatorName}";
 
+                    ws.Cell(row, 1).Style.Font.FontSize = 16;
+                    ws.Cell(row + 1, 1).Style.Font.FontSize = 16;
+                    ws.Cell(row + 2, 1).Style.Font.FontSize = 16;
+                    ws.Cell(row + 3, 1).Style.Font.FontSize = 16;
                     range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
                     range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
                     range.Style.Alignment.ShrinkToFit = true;
