@@ -12,6 +12,7 @@ namespace PromVesClient.Service.UserService
     {
         private readonly ILogger<UserService> _logger;
         private readonly IDbContextFactory<ApplicationDbContext> _dbContext;
+        private readonly CurrentUserService _currentUserService;
         //private readonly ApplicationDbContext _dbContext;
 
         private readonly HashPasswordService _hashPasswordService;
@@ -221,6 +222,10 @@ namespace PromVesClient.Service.UserService
         {
             try
             {
+                if (_currentUserService.CurrentUser?.Id == id)
+                {
+                    return ServiceResult.Fail("Нельзя удалить текущего пользователя.");
+                }
                 await using var db = await _dbContext.CreateDbContextAsync();
 
                 var user = await db.Users.FindAsync(id);

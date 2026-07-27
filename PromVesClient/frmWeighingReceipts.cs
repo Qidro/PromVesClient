@@ -272,7 +272,45 @@ namespace PromVesClient
 
         private void btnChangeReceipt_Click(object sender, EventArgs e)
         {
+            if (cardsList == null || cardsList.Count == 0)
+            {
+                MessageBox.Show("Сначала выберите квитанцию.");
+                return;
+            }
 
+            List<ReceiptDtoExcel> receiptExcel = new();
+
+            foreach (var card in cardsList)
+            {
+                receiptExcel.Add(new ReceiptDtoExcel
+                {
+                    VagonNumber = card.VagonNumber,
+                    TareWeight = card.TareWeight.ToString(),
+                    GrossWeight = card.GrossWeight.ToString(),
+                    NetWeight = card.NetWeight.ToString()
+                });
+            }
+
+            using SaveFileDialog dialog = new SaveFileDialog
+            {
+                Title = "Сохранить квитанцию",
+                Filter = "Excel (*.xlsx)|*.xlsx",
+                DefaultExt = "xlsx",
+                FileName = $"Квитанция_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx"
+            };
+
+            if (dialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            var result = _excelReportService.SaveReport(receiptExcel, dialog.FileName);
+
+            if (!result.Success)
+            {
+                MessageBox.Show(result.Message);
+                return;
+            }
+
+            MessageBox.Show("Квитанция успешно сохранена.");
         }
 
         private void btnSaveReceipt_Click(object sender, EventArgs e)

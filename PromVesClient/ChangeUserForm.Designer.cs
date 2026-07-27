@@ -76,6 +76,7 @@
             btnDelete.TabIndex = 4;
             btnDelete.Text = "Удалить";
             btnDelete.UseVisualStyleBackColor = true;
+            btnDelete.Click += btnDelete_Click;
             // 
             // cbStatus
             // 
