@@ -114,7 +114,7 @@
             // ComSetitem
             // 
             ComSetitem.Name = "ComSetitem";
-            ComSetitem.Size = new Size(180, 22);
+            ComSetitem.Size = new Size(120, 22);
             ComSetitem.Text = "Наладка";
             ComSetitem.Click += ComSetitem_Click;
             // 
@@ -140,6 +140,7 @@
             MainMenuStrip = menuStrip1;
             Name = "MainMenu";
             Text = "Главное меню";
+            Load += MainMenu_Load;
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             ResumeLayout(false);
