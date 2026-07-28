@@ -19,8 +19,12 @@ namespace PromVesClient
             InitializeComponent();
             _serviceProvider = serviceProvider;
             _currentUserService = currentUserService;
-            label1.Text =
-       $"Пользователь: {_currentUserService.CurrentUser?.Name}";
+            if (_currentUserService.CurrentUser?.Role != "admin")
+            {
+                menuStrip1.Enabled = false;
+            }
+            //     label1.Text =
+       //$"Пользователь: {_currentUserService.CurrentUser?.Name}";
         }
 
         private void button1_Click(object sender, EventArgs e)

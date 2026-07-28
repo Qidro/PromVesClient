@@ -129,6 +129,7 @@ namespace PromVesClient
 
         private async void button1_Click_1(object sender, EventArgs e)
         {
+            _logger.LogInformation($"Пользователь {_currentUserService.CurrentUser?.Name} нажал на кнопку cброса фильтра");
             await loadingTableData();
             dataGridViewСards.DataSource = null;
             receiptInfoLabel.Text = "";
@@ -217,7 +218,7 @@ namespace PromVesClient
 
 
         }
-        //метод нажатия на кнопку для удаления карточки
+        //метод нажатия на кнопку для удаления квитанции
         private async void button4_Click(object sender, EventArgs e)
         {
             if (dataGridViewReceipts.CurrentRow != null)
@@ -231,6 +232,7 @@ namespace PromVesClient
                 //проверка на выбор пользователя
                 if (resultConfirmation == DialogResult.Yes)
                 {
+                    _logger.LogInformation($"Пользователь {_currentUserService.CurrentUser?.Name} нажал кнопку удаления квитанции");
                     // Выполнить удаление
                     var result = await _receiptsService.deletingReceipt(receiptList[dataGridViewReceipts.CurrentRow.Index].Id);
                     if (result.Success == true)
@@ -272,15 +274,15 @@ namespace PromVesClient
         {
 
         }
-
-        private void btnChangeReceipt_Click(object sender, EventArgs e)
+        //метод кнопки сохранения отчетов
+        private async void btnChangeReceipt_Click(object sender, EventArgs e)
         {
             if (cardsList == null || cardsList.Count == 0)
             {
                 MessageBox.Show("Сначала выберите квитанцию.");
                 return;
             }
-
+            _logger.LogInformation($"Пользователь {_currentUserService.CurrentUser?.Name} нажал на кнопку сохранения квитанции");
             List<ReceiptDtoExcel> receiptExcel = new();
 
             foreach (var card in cardsList)
@@ -316,16 +318,16 @@ namespace PromVesClient
 
             if (dialog.ShowDialog() != DialogResult.OK)
                 return;
-
-            var result = _excelReportService.SaveReport(receiptExcel, dialog.FileName);
-
+            //получаем результат операции по сохранению отчета
+            var result = await _excelReportService.SaveReport(receiptExcel, dialog.FileName);
+            //проверка результата
             if (!result.Success)
             {
                 MessageBox.Show(result.Message);
                 return;
             }
 
-            MessageBox.Show("Квитанция успешно сохранена.");
+            MessageBox.Show("Квитанция успешно сохранена", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void btnSaveReceipt_Click(object sender, EventArgs e)
@@ -337,6 +339,7 @@ namespace PromVesClient
         {
             if (dataGridViewСards.CurrentRow != null)
             {
+               
                 //MessageBox.Show($"Номер строки: {dataGridViewСards.CurrentRow.Index}");
                 DialogResult resultConfirmation = MessageBox.Show(
                 "Вы действительно хотите удалить карточку вагона?",
@@ -346,6 +349,7 @@ namespace PromVesClient
                 //проверка на выбор пользователя
                 if (resultConfirmation == DialogResult.Yes)
                 {
+                    _logger.LogInformation($"Пользователь {_currentUserService.CurrentUser?.Name} нажал кнопку удаления карточки вагона");
                     // Выполнить удаление
                     var result = await _receiptsService.deletingCard(cardsList[dataGridViewСards.CurrentRow.Index].Id);
                     if (result.Success == true)
@@ -389,11 +393,12 @@ namespace PromVesClient
             }
         }
         //метод нажатия на кнопку для печати квитанции взвешивания
-        private void btnPrintReceipt_Click(object sender, EventArgs e)
+        private async void btnPrintReceipt_Click(object sender, EventArgs e)
         {
             //проверка на выбора квитанции
             if (cardsList?.Count > 0)
             {
+                _logger.LogInformation($"Пользователь {_currentUserService.CurrentUser?.Name} нажал кнопку печати квитанции");
                 //перебор данных квитанции для значений DTO
                 foreach (var _cardsList in cardsList)
                 {
@@ -414,7 +419,11 @@ namespace PromVesClient
                     };
                     ListReceiptExcel.Add(receiptExcel);
                 }
-                _excelReportService.CreateReport(ListReceiptExcel, OperatorReceipt);
+                var result = await _excelReportService.CreateReport(ListReceiptExcel, OperatorReceipt);
+                if (result.Success == false)
+                { 
+                    
+                }
                 ListReceiptExcel.Clear();
             }
             else

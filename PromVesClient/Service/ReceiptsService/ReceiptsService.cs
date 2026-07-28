@@ -192,14 +192,14 @@ namespace PromVesClient.Service.ReceiptsService
                     .Select(r => new ReceiptDto
                     {
                         Id = r.Id,
-                        DateTime = r.DateTime,
+                        DateTime = DateTime.SpecifyKind(r.DateTime, DateTimeKind.Utc).ToLocalTime(),
                         TypeWeighng = r.TypeWeighng,
                         Operator = r.Operator
                     })
                     .ToListAsync();
 
                 return new ServiceResult<List<ReceiptDto>>
-                {
+                {   
                     Success = true,
                     Data = receipts
                 };

@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ComPortSettingsForm));
             groupBox1 = new GroupBox();
             label6 = new Label();
             label5 = new Label();
@@ -459,9 +460,9 @@
             // 
             // btnSave
             // 
-            btnSave.Location = new Point(596, 55);
+            btnSave.Location = new Point(581, 72);
             btnSave.Name = "btnSave";
-            btnSave.Size = new Size(131, 55);
+            btnSave.Size = new Size(146, 39);
             btnSave.TabIndex = 4;
             btnSave.Text = "Сохранить";
             btnSave.UseVisualStyleBackColor = true;
@@ -469,9 +470,9 @@
             // 
             // btnRestoreDefaults
             // 
-            btnRestoreDefaults.Location = new Point(596, 162);
+            btnRestoreDefaults.Location = new Point(581, 117);
             btnRestoreDefaults.Name = "btnRestoreDefaults";
-            btnRestoreDefaults.Size = new Size(131, 55);
+            btnRestoreDefaults.Size = new Size(146, 39);
             btnRestoreDefaults.TabIndex = 5;
             btnRestoreDefaults.Text = "По умолчанию";
             btnRestoreDefaults.UseVisualStyleBackColor = true;
@@ -611,6 +612,7 @@
             Controls.Add(groupBox3);
             Controls.Add(groupBox2);
             Controls.Add(groupBox1);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "ComPortSettingsForm";
             Text = "ComPortSettingsForm";
             Load += ComPortSettingsForm_Load;

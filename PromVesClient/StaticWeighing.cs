@@ -381,7 +381,7 @@ namespace PromVesClient
                 MessageBox.Show("Выберите тип взвешивания", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            var resultt = await _staticWeighingService.saveReceiptAsync(IdReceipt, "Статическое взвешивание", "123");
+            var resultt = await _staticWeighingService.saveReceiptAsync(IdReceipt, "Статическое взвешивание", _currentUserService.CurrentUser.Name);
             WeighingDto dto = new WeighingDto
             {
                 Platform1Left = cartSideWeights[0],

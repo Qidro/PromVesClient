@@ -28,18 +28,19 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UserManagementForm));
             dgvUser = new DataGridView();
+            colLogin = new DataGridViewTextBoxColumn();
+            colPassword = new DataGridViewTextBoxColumn();
+            colNewRole = new DataGridViewComboBoxColumn();
             dgvUserList = new DataGridView();
-            btnCreateUser = new Button();
-            btnChangeUser = new Button();
-            btnDeleteUser = new Button();
             colId = new DataGridViewTextBoxColumn();
             colName = new DataGridViewTextBoxColumn();
             colRole = new DataGridViewTextBoxColumn();
             colIsActive = new DataGridViewTextBoxColumn();
-            colLogin = new DataGridViewTextBoxColumn();
-            colPassword = new DataGridViewTextBoxColumn();
-            colNewRole = new DataGridViewComboBoxColumn();
+            btnCreateUser = new Button();
+            btnChangeUser = new Button();
+            btnDeleteUser = new Button();
             ((System.ComponentModel.ISupportInitialize)dgvUser).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dgvUserList).BeginInit();
             SuspendLayout();
@@ -52,6 +53,25 @@
             dgvUser.Name = "dgvUser";
             dgvUser.Size = new Size(610, 82);
             dgvUser.TabIndex = 0;
+            // 
+            // colLogin
+            // 
+            colLogin.HeaderText = "Логин";
+            colLogin.Name = "colLogin";
+            colLogin.Width = 190;
+            // 
+            // colPassword
+            // 
+            colPassword.HeaderText = "Пароль";
+            colPassword.Name = "colPassword";
+            colPassword.Width = 190;
+            // 
+            // colNewRole
+            // 
+            colNewRole.HeaderText = "Роль";
+            colNewRole.Items.AddRange(new object[] { "admin", "operator" });
+            colNewRole.Name = "colNewRole";
+            colNewRole.Width = 190;
             // 
             // dgvUserList
             // 
@@ -66,36 +86,6 @@
             dgvUserList.Size = new Size(610, 252);
             dgvUserList.TabIndex = 1;
             dgvUserList.CellContentClick += dgvUserList_CellContentClick;
-            // 
-            // btnCreateUser
-            // 
-            btnCreateUser.Location = new Point(649, 23);
-            btnCreateUser.Name = "btnCreateUser";
-            btnCreateUser.Size = new Size(125, 61);
-            btnCreateUser.TabIndex = 2;
-            btnCreateUser.Text = "Добавить пользователя";
-            btnCreateUser.UseVisualStyleBackColor = true;
-            btnCreateUser.Click += btnCreateUser_Click;
-            // 
-            // btnChangeUser
-            // 
-            btnChangeUser.Location = new Point(649, 158);
-            btnChangeUser.Name = "btnChangeUser";
-            btnChangeUser.Size = new Size(125, 61);
-            btnChangeUser.TabIndex = 3;
-            btnChangeUser.Text = "Изменить пользователя";
-            btnChangeUser.UseVisualStyleBackColor = true;
-            btnChangeUser.Click += btnChangeUser_Click;
-            // 
-            // btnDeleteUser
-            // 
-            btnDeleteUser.Location = new Point(649, 286);
-            btnDeleteUser.Name = "btnDeleteUser";
-            btnDeleteUser.Size = new Size(125, 61);
-            btnDeleteUser.TabIndex = 4;
-            btnDeleteUser.Text = "Удалить пользователя";
-            btnDeleteUser.UseVisualStyleBackColor = true;
-            btnDeleteUser.Click += btnDeleteUser_Click;
             // 
             // colId
             // 
@@ -130,35 +120,53 @@
             colIsActive.ReadOnly = true;
             colIsActive.Width = 190;
             // 
-            // colLogin
+            // btnCreateUser
             // 
-            colLogin.HeaderText = "Логин";
-            colLogin.Name = "colLogin";
-            colLogin.Width = 190;
+            btnCreateUser.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            btnCreateUser.Location = new Point(648, 12);
+            btnCreateUser.Name = "btnCreateUser";
+            btnCreateUser.Size = new Size(168, 45);
+            btnCreateUser.TabIndex = 2;
+            btnCreateUser.Text = "Добавить пользователя";
+            btnCreateUser.UseVisualStyleBackColor = true;
+            btnCreateUser.Click += btnCreateUser_Click;
             // 
-            // colPassword
+            // btnChangeUser
             // 
-            colPassword.HeaderText = "Пароль";
-            colPassword.Name = "colPassword";
-            colPassword.Width = 190;
+            btnChangeUser.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            btnChangeUser.Location = new Point(648, 63);
+            btnChangeUser.Name = "btnChangeUser";
+            btnChangeUser.Size = new Size(168, 48);
+            btnChangeUser.TabIndex = 3;
+            btnChangeUser.Text = "Изменить пользователя";
+            btnChangeUser.UseVisualStyleBackColor = true;
+            btnChangeUser.Click += btnChangeUser_Click;
             // 
-            // colNewRole
+            // btnDeleteUser
             // 
-            colNewRole.HeaderText = "Роль";
-            colNewRole.Items.AddRange(new object[] { "admin", "operator" });
-            colNewRole.Name = "colNewRole";
-            colNewRole.Width = 190;
+            btnDeleteUser.BackColor = Color.Red;
+            btnDeleteUser.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            btnDeleteUser.ForeColor = SystemColors.ButtonHighlight;
+            btnDeleteUser.ImageAlign = ContentAlignment.TopCenter;
+            btnDeleteUser.Location = new Point(648, 117);
+            btnDeleteUser.Name = "btnDeleteUser";
+            btnDeleteUser.Size = new Size(168, 46);
+            btnDeleteUser.TabIndex = 4;
+            btnDeleteUser.Text = "Удалить пользователя";
+            btnDeleteUser.UseVisualStyleBackColor = false;
+            btnDeleteUser.Click += btnDeleteUser_Click;
             // 
             // UserManagementForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(789, 395);
+            ClientSize = new Size(848, 395);
             Controls.Add(btnDeleteUser);
             Controls.Add(btnChangeUser);
             Controls.Add(btnCreateUser);
             Controls.Add(dgvUserList);
             Controls.Add(dgvUser);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "UserManagementForm";
             Text = "Пользователи";
             Load += UserManagementForm_Load;

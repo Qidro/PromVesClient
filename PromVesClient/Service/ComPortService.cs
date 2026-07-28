@@ -37,7 +37,7 @@ namespace PromVesClient.Service
                 AppContext.BaseDirectory,
                 "Configuration");
 
-            _serverSettingsPath = @"C:\Users\Илья\Desktop\server\settings.json";
+            _serverSettingsPath = @"C:\PromVesNew\PromVesServer\ConfigPort.json";
 
             _defaultSettingsPath = Path.Combine(
                 _configurationPath,
@@ -180,9 +180,7 @@ namespace PromVesClient.Service
             }
         }
 
-        /// <summary>
         /// Сохраняет настройки.
-        /// </summary>
         public ServiceResult Save(SerialPortConfiguration configuration)
         {
             try

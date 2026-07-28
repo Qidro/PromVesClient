@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainMenu));
             staticWeighing = new Button();
             dynamicWeighing = new Button();
             button1 = new Button();
@@ -126,6 +127,7 @@
             label1.Size = new Size(38, 15);
             label1.TabIndex = 4;
             label1.Text = "label1";
+            label1.Visible = false;
             // 
             // MainMenu
             // 
@@ -137,6 +139,7 @@
             Controls.Add(dynamicWeighing);
             Controls.Add(staticWeighing);
             Controls.Add(menuStrip1);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MainMenuStrip = menuStrip1;
             Name = "MainMenu";
             Text = "Главное меню";
