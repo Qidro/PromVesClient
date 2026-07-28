@@ -56,6 +56,7 @@ namespace PromVesClient.Service.StaticWeighingService
             double DifferenceSides = Math.Abs(LeftSide - RightSide);
             try
             {
+
                 //поиск последней записи по номеру вагона
                 var lastWeighing = await _dbContext.Weighings
             .Include(w => w.Receipt)
@@ -66,16 +67,25 @@ namespace PromVesClient.Service.StaticWeighingService
                 //если запись есть вычисляем нетто
                 if (lastWeighing != null)
                 {
+                    _logger.LogInformation(
+                    "Расчет нетто: Gross={Gross}, Tare={Tare}, Result={Result}",
+                    dtoWeighing.GrossWeight,
+                    lastWeighing.TareWeight,
+                    dtoWeighing.GrossWeight - lastWeighing.TareWeight);
                     //вычесление нетто, если есть Тара и сохраняем Брутто в текущую запись
                     if (dtoWeighing.TareWeight != 0 && lastWeighing.GrossWeight != 0)
                     {
-                        NetWeight =  Math.Floor((lastWeighing.GrossWeight - dtoWeighing.TareWeight) * 100) / 100.0; ;
+                        NetWeight =  Math.Round(lastWeighing.GrossWeight - dtoWeighing.TareWeight, 2,
+                        MidpointRounding.AwayFromZero); 
                         dtoWeighing.GrossWeight = lastWeighing.GrossWeight;
                     }
                     //вычесление нетто, если есть Брутто и сохраняем Тару в текущую запись
                     else if (dtoWeighing.GrossWeight != 0 && lastWeighing.TareWeight != 0)
                     {
-                        NetWeight = Math.Floor((dtoWeighing.GrossWeight - lastWeighing.TareWeight) * 100) / 100.0; ;
+                        NetWeight = Math.Round(dtoWeighing.GrossWeight - lastWeighing.TareWeight,
+                        2,
+                        MidpointRounding.AwayFromZero);
+                        //NetWeight = Math.Truncate((dtoWeighing.GrossWeight - lastWeighing.TareWeight) * 100) / 100.0; ;
                         dtoWeighing.TareWeight = lastWeighing.TareWeight;
                     }
                 }
