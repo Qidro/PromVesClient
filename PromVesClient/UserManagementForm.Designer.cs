@@ -29,9 +29,6 @@
         private void InitializeComponent()
         {
             dgvUser = new DataGridView();
-            colLogin = new DataGridViewTextBoxColumn();
-            colPassword = new DataGridViewTextBoxColumn();
-            colNewRole = new DataGridViewComboBoxColumn();
             dgvUserList = new DataGridView();
             btnCreateUser = new Button();
             btnChangeUser = new Button();
@@ -40,6 +37,9 @@
             colName = new DataGridViewTextBoxColumn();
             colRole = new DataGridViewTextBoxColumn();
             colIsActive = new DataGridViewTextBoxColumn();
+            colLogin = new DataGridViewTextBoxColumn();
+            colPassword = new DataGridViewTextBoxColumn();
+            colNewRole = new DataGridViewComboBoxColumn();
             ((System.ComponentModel.ISupportInitialize)dgvUser).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dgvUserList).BeginInit();
             SuspendLayout();
@@ -50,24 +50,8 @@
             dgvUser.Columns.AddRange(new DataGridViewColumn[] { colLogin, colPassword, colNewRole });
             dgvUser.Location = new Point(12, 12);
             dgvUser.Name = "dgvUser";
-            dgvUser.Size = new Size(621, 82);
+            dgvUser.Size = new Size(610, 82);
             dgvUser.TabIndex = 0;
-            // 
-            // colLogin
-            // 
-            colLogin.HeaderText = "Логин";
-            colLogin.Name = "colLogin";
-            // 
-            // colPassword
-            // 
-            colPassword.HeaderText = "Пароль";
-            colPassword.Name = "colPassword";
-            // 
-            // colNewRole
-            // 
-            colNewRole.HeaderText = "Роль";
-            colNewRole.Items.AddRange(new object[] { "admin", "operator" });
-            colNewRole.Name = "colNewRole";
             // 
             // dgvUserList
             // 
@@ -79,13 +63,13 @@
             dgvUserList.Name = "dgvUserList";
             dgvUserList.ReadOnly = true;
             dgvUserList.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvUserList.Size = new Size(621, 252);
+            dgvUserList.Size = new Size(610, 252);
             dgvUserList.TabIndex = 1;
             dgvUserList.CellContentClick += dgvUserList_CellContentClick;
             // 
             // btnCreateUser
             // 
-            btnCreateUser.Location = new Point(663, 22);
+            btnCreateUser.Location = new Point(649, 23);
             btnCreateUser.Name = "btnCreateUser";
             btnCreateUser.Size = new Size(125, 61);
             btnCreateUser.TabIndex = 2;
@@ -95,7 +79,7 @@
             // 
             // btnChangeUser
             // 
-            btnChangeUser.Location = new Point(663, 153);
+            btnChangeUser.Location = new Point(649, 158);
             btnChangeUser.Name = "btnChangeUser";
             btnChangeUser.Size = new Size(125, 61);
             btnChangeUser.TabIndex = 3;
@@ -105,7 +89,7 @@
             // 
             // btnDeleteUser
             // 
-            btnDeleteUser.Location = new Point(663, 289);
+            btnDeleteUser.Location = new Point(649, 286);
             btnDeleteUser.Name = "btnDeleteUser";
             btnDeleteUser.Size = new Size(125, 61);
             btnDeleteUser.TabIndex = 4;
@@ -120,6 +104,7 @@
             colId.Name = "colId";
             colId.ReadOnly = true;
             colId.Visible = false;
+            colId.Width = 42;
             // 
             // colName
             // 
@@ -127,6 +112,7 @@
             colName.HeaderText = "Логин";
             colName.Name = "colName";
             colName.ReadOnly = true;
+            colName.Width = 190;
             // 
             // colRole
             // 
@@ -134,6 +120,7 @@
             colRole.HeaderText = "Роль";
             colRole.Name = "colRole";
             colRole.ReadOnly = true;
+            colRole.Width = 190;
             // 
             // colIsActive
             // 
@@ -141,19 +128,39 @@
             colIsActive.HeaderText = "Статус";
             colIsActive.Name = "colIsActive";
             colIsActive.ReadOnly = true;
+            colIsActive.Width = 190;
+            // 
+            // colLogin
+            // 
+            colLogin.HeaderText = "Логин";
+            colLogin.Name = "colLogin";
+            colLogin.Width = 190;
+            // 
+            // colPassword
+            // 
+            colPassword.HeaderText = "Пароль";
+            colPassword.Name = "colPassword";
+            colPassword.Width = 190;
+            // 
+            // colNewRole
+            // 
+            colNewRole.HeaderText = "Роль";
+            colNewRole.Items.AddRange(new object[] { "admin", "operator" });
+            colNewRole.Name = "colNewRole";
+            colNewRole.Width = 190;
             // 
             // UserManagementForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 395);
+            ClientSize = new Size(789, 395);
             Controls.Add(btnDeleteUser);
             Controls.Add(btnChangeUser);
             Controls.Add(btnCreateUser);
             Controls.Add(dgvUserList);
             Controls.Add(dgvUser);
             Name = "UserManagementForm";
-            Text = "UserForm";
+            Text = "Пользователи";
             Load += UserManagementForm_Load;
             ((System.ComponentModel.ISupportInitialize)dgvUser).EndInit();
             ((System.ComponentModel.ISupportInitialize)dgvUserList).EndInit();

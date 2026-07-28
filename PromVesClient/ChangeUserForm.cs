@@ -21,7 +21,7 @@ namespace PromVesClient
             InitializeComponent();
 
             _userService = userService;
-            
+
 
             cbRole.Items.Add("admin");
             cbRole.Items.Add("operator");
@@ -33,7 +33,7 @@ namespace PromVesClient
         private async void ChangeUserForm_Load(object sender, EventArgs e)
         {
             var user = await _userService.GetUserAsync(UserId);
-            
+
             if (user == null)
             {
                 MessageBox.Show("Пользователь не найден.");
@@ -50,7 +50,7 @@ namespace PromVesClient
         }
 
         private async void btnSave_Click(object sender, EventArgs e)
-        { 
+        {
             var login = txtLogin.Text.Trim();
             var password = txtPassword.Text;
             var role = cbRole.SelectedItem?.ToString();
@@ -87,6 +87,39 @@ namespace PromVesClient
             DialogResult = DialogResult.OK;
             Close();
         }
-    
+
+        private async void btnDelete_Click(object sender, EventArgs e)
+        {
+            DialogResult result = MessageBox.Show(
+        "Вы действительно хотите удалить пользователя?",
+        "Подтверждение удаления",
+        MessageBoxButtons.YesNo,
+        MessageBoxIcon.Question);
+
+            if (result != DialogResult.Yes)
+                return;
+
+            var serviceResult = await _userService.DeleteUserAsync(UserId);
+
+            if (!serviceResult.Success)
+            {
+                MessageBox.Show(
+                    serviceResult.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
+                return;
+            }
+
+            MessageBox.Show(
+                "Пользователь успешно удален.",
+                "Удаление",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+
+            DialogResult = DialogResult.OK;
+            Close();
+        }
     }
 }

@@ -61,5 +61,10 @@ namespace PromVesClient
 
             form.ShowDialog();
         }
+
+        private void MainMenu_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }
