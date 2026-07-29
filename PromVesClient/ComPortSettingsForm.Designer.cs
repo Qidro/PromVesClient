@@ -614,7 +614,7 @@
             Controls.Add(groupBox1);
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "ComPortSettingsForm";
-            Text = "ComPortSettingsForm";
+            Text = "Настройка COM портов";
             Load += ComPortSettingsForm_Load;
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();

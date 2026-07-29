@@ -325,7 +325,7 @@
             Controls.Add(pictureBoxStabilityTrue);
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "StaticWeighing";
-            Text = "StaticWeighing";
+            Text = "Статическое взвешивание";
             Load += StaticWeighing_Load;
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).EndInit();

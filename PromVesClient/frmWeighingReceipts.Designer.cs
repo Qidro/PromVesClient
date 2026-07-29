@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmWeighingReceipts));
             btnReportFilter = new Button();
             dataGridViewReceipts = new DataGridView();
             groupBox1 = new GroupBox();
@@ -256,6 +257,7 @@
             Controls.Add(groupBox1);
             Controls.Add(dataGridViewReceipts);
             Controls.Add(btnReportFilter);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "frmWeighingReceipts";
             Text = "Квитанции взвешивания";
             Load += frmWeighingReceipts_Load;
