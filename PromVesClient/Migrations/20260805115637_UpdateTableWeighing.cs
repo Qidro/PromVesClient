@@ -5,7 +5,7 @@
 namespace PromVesClient.Migrations
 {
     /// <inheritdoc />
-    public partial class CreateCascadDelete : Migration
+    public partial class UpdateTableWeighing : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

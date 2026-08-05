@@ -41,22 +41,22 @@ namespace PromVesClient
         //сохранение ссылок на обьекты графиков
         private List<ScottPlot.WinForms.FormsPlot> plots;
         //Предназначен для создания точек на графике
-        private readonly Queue<double>[] values =
+        private readonly Queue<decimal>[] values =
         {
-            new Queue<double>(),
-            new Queue<double>(),
-            new Queue<double>(),
-            new Queue<double>()
+            new Queue<decimal>(),
+            new Queue<decimal>(),
+            new Queue<decimal>(),
+            new Queue<decimal>()
         };
         //таймер предназначен для создания точек для 4 графиков
         private readonly System.Windows.Forms.Timer graphTimer = new();
         //переменная предназначенная для соханения данных веса с бортов
-        private double[] cartSideWeights = new double[4];
+        private decimal[] cartSideWeights = new decimal[4];
         //переменная, которая сохраняет полученные значения для расчета стабильности
-        private double[] stableWeight = new double[100];
+        private decimal[] stableWeight = new decimal[100];
         //поля предназначенные для передачи данных в методы сохранения данных  в БД
-        private double TareWeight;
-        private double GrossWeight;
+        private decimal TareWeight;
+        private decimal GrossWeight;
         private Guid IdReceipt;
 
         public StaticWeighing(ILogger<StaticWeighing> logger, StaticWeighingService staticWeighingService, CurrentUserService currentUserService, TcpService tcpService)
@@ -274,20 +274,45 @@ namespace PromVesClient
         //}
 
         //событие ошибки
-        private void OnConnectionError(Exception ex)
+        private async void OnConnectionError(Exception ex)
         {
             BeginInvoke(() =>
             {
                 graphTimer.Stop();
-                btnSaveWeight.Enabled = false;
-                btnWeighing.Text = "Начать взвешивание";
+                //btnSaveWeight.Enabled = false;
+                //btnWeighing.Text = "Начать взвешивание";
 
                 MessageBox.Show(
-                    ex.Message,
-                    "Ошибка",
+                    ex.Message + ". Пытаемся переподключиться",
+                    "Ошибка сервера",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             });
+            //переподключение к серверу
+            while (true)
+            {
+                try
+                {
+                    await _tcpService.DisconnectAsync();
+
+                    await Task.Delay(5000);
+
+                    await _tcpService.ConnectAsync();
+
+                    BeginInvoke(() =>
+                    {
+                        graphTimer.Start();
+                        //btnSaveWeight.Enabled = true;
+                    });
+
+                    break;
+                }
+                catch (Exception reconnectEx)
+                {
+                    _logger.LogWarning(reconnectEx,
+                        "Не удалось подключиться. Повтор через 5 секунд.");
+                }
+            }
         }
         //метод для события(получения данных с сервака) по обработке полцченных данных
         private void ProcessMessage(string message)
@@ -299,7 +324,7 @@ namespace PromVesClient
                 //обработка 4 графиков
                 for (int i = 0; i < 4; i++)
                 {
-                    cartSideWeights[i] = double.Parse(parts[i]) / 1000;
+                    cartSideWeights[i] = decimal.Parse(parts[i]) / 1000;
                 }
                 lblPlatform1Left.Text = "Платформа 1 левый борт: " + cartSideWeights[0].ToString("F2") + " Т.";
                 lblPlatform1Right.Text = "Платформа 1 правый борт: " + cartSideWeights[1].ToString("F2") + " Т.";
@@ -333,7 +358,7 @@ namespace PromVesClient
 
 
         //расчет стабильности вагона
-        private void stable(double data)
+        private void stable(decimal data)
         {
             for (int i = 0; i<stableWeight.Length; i++)
             {
@@ -406,7 +431,7 @@ namespace PromVesClient
             }
         }
         //создание точек на графике
-        private void AddPoint(int indexObject, double value)
+        private void AddPoint(int indexObject, decimal value)
         {
             //foreach (var plot in plots)
             //{
@@ -445,7 +470,7 @@ namespace PromVesClient
             }
         }
         //метод записи значений на табло
-        private async Task DisplayingValue(double sumeWeight)
+        private async Task DisplayingValue(decimal sumeWeight)
         {
             var ListValuesImage =  await _staticWeighingService.GetImageWeighingAsync(sumeWeight);
             for(int i = 0; ListValuesImage.Count > i; i++)

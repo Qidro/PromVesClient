@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace PromVesClient.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Inithial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -31,7 +31,9 @@ namespace PromVesClient.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    PasswordHash = table.Column<string>(type: "text", nullable: false)
+                    Role = table.Column<string>(type: "text", nullable: false),
+                    PasswordHash = table.Column<string>(type: "text", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -55,6 +57,7 @@ namespace PromVesClient.Migrations
                     LeftSide = table.Column<double>(type: "double precision", nullable: false),
                     RightSide = table.Column<double>(type: "double precision", nullable: false),
                     DifferenceSides = table.Column<double>(type: "double precision", nullable: false),
+                    TypeWeighing = table.Column<string>(type: "text", nullable: false),
                     ReceiptId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>

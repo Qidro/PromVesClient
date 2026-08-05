@@ -18,42 +18,42 @@ namespace PromVesClient.Service.StaticWeighingService
 
         private readonly ApplicationDbContext _dbContext;
 
-        private const double DefaultLoadCapacity = 70;
+        private const decimal DefaultLoadCapacity = 70;
 
         //private Guid IdReceipt;
-        //private double Platform1Left { get; set; }
-        //private double Platform1Right { get; set; }
-        //private double Platform2Left { get; set; }
-        //private double Platform2Right { get; set; }
+        //private decimal Platform1Left { get; set; }
+        //private decimal Platform1Right { get; set; }
+        //private decimal Platform2Left { get; set; }
+        //private decimal Platform2Right { get; set; }
         public StaticWeighingService(ILogger<StaticWeighingService> logger, ApplicationDbContext dbContext)
         { 
             _logger = logger;
             _dbContext = dbContext;
         }
         //метод отвечающий за сохранение данных взвешивания WeighingDto dto
-        //public async Task<ServiceResult> saveWeighingAsync(double Platform1Left, double Platform1Right, double Platform2Left, double Platform2Right, string VagonNumber, double TareWeight, double GrossWeight)
+        //public async Task<ServiceResult> saveWeighingAsync(decimal Platform1Left, decimal Platform1Right, decimal Platform2Left, decimal Platform2Right, string VagonNumber, decimal TareWeight, decimal GrossWeight)
         public async Task<ServiceResult> saveWeighingAsync(WeighingDto dtoWeighing)
         {
             //общая сумма в весов
-            double WeightSum = dtoWeighing.Platform1Left + dtoWeighing.Platform1Right + dtoWeighing.Platform2Left + dtoWeighing.Platform2Right;
+            decimal WeightSum = dtoWeighing.Platform1Left + dtoWeighing.Platform1Right + dtoWeighing.Platform2Left + dtoWeighing.Platform2Right;
             //грузопольемность
-            //double LoadCapacity = 70;
+            //decimal LoadCapacity = 70;
             //расчет переруза/недогруза
-            double LoadDeviation = DefaultLoadCapacity - WeightSum;
+            decimal LoadDeviation = DefaultLoadCapacity - WeightSum;
             //временно Нетто 0
-            double NetWeight = 0;
+            decimal NetWeight = 0;
             //первая тележка
-            double FirstCart = dtoWeighing.Platform1Left + dtoWeighing.Platform1Right;
+            decimal FirstCart = dtoWeighing.Platform1Left + dtoWeighing.Platform1Right;
             //вторая тележка
-            double SecondCart = dtoWeighing.Platform2Left + dtoWeighing.Platform2Right;
+            decimal SecondCart = dtoWeighing.Platform2Left + dtoWeighing.Platform2Right;
             //разница тележек
-            double DifferenceCarts = FirstCart - SecondCart;
+            decimal DifferenceCarts = FirstCart - SecondCart;
             //вес левого борта
-            double LeftSide = dtoWeighing.Platform1Left + dtoWeighing.Platform2Left;
+            decimal LeftSide = dtoWeighing.Platform1Left + dtoWeighing.Platform2Left;
             //вес правого борта
-            double RightSide = dtoWeighing.Platform1Right + dtoWeighing.Platform2Right;
+            decimal RightSide = dtoWeighing.Platform1Right + dtoWeighing.Platform2Right;
             //разница бортов
-            double DifferenceSides = Math.Abs(LeftSide - RightSide);
+            decimal DifferenceSides = Math.Abs(LeftSide - RightSide);
             try
             {
 
@@ -181,7 +181,7 @@ namespace PromVesClient.Service.StaticWeighingService
             
         }
         //метод предназначен для получения коллекции изображений для табла общего веса
-        public async Task<List<Image>> GetImageWeighingAsync(double weightSum)
+        public async Task<List<Image>> GetImageWeighingAsync(decimal weightSum)
         {
             List<Image> images = new List<Image>();
             //преобразуем массив в string формат

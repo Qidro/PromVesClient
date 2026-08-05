@@ -76,7 +76,13 @@ namespace PromVesClient.Service.TcpService
 
                 while (!token.IsCancellationRequested)
                 {
-                    int count = await _stream.ReadAsync(buffer, token);
+                    //создание токена отмены с задержкой 10 секунд
+                    using var timeoutCts =
+                    CancellationTokenSource.CreateLinkedTokenSource(token);
+                    timeoutCts.CancelAfter(TimeSpan.FromSeconds(10));
+
+                    int count =
+                        await _stream.ReadAsync(buffer, timeoutCts.Token);
 
                     if (count == 0)
                         break;

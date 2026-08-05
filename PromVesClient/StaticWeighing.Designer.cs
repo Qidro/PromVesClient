@@ -38,7 +38,6 @@
             label1 = new Label();
             pictureBoxStabilityFalse = new PictureBox();
             pictureBoxStabilityTrue = new PictureBox();
-            label2 = new Label();
             lblPlatform1Left = new Label();
             lblPlatform2Left = new Label();
             lblPlatform1Right = new Label();
@@ -53,6 +52,18 @@
             formsPlot2 = new ScottPlot.WinForms.FormsPlot();
             formsPlot3 = new ScottPlot.WinForms.FormsPlot();
             formsPlot4 = new ScottPlot.WinForms.FormsPlot();
+            label2 = new Label();
+            textBoxShipper = new TextBox();
+            textBoxСonsignee = new TextBox();
+            label5 = new Label();
+            textBoxСargo = new TextBox();
+            label6 = new Label();
+            textBoxInvoiceNumber = new TextBox();
+            label7 = new Label();
+            textBoxInvoiceWeighing = new TextBox();
+            dateTimePickerInvoice = new DateTimePicker();
+            label8 = new Label();
+            label9 = new Label();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox3).BeginInit();
@@ -150,17 +161,6 @@
             pictureBoxStabilityTrue.TabIndex = 8;
             pictureBoxStabilityTrue.TabStop = false;
             // 
-            // label2
-            // 
-            label2.AutoSize = true;
-            label2.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            label2.Location = new Point(910, 86);
-            label2.Name = "label2";
-            label2.Size = new Size(109, 21);
-            label2.TabIndex = 9;
-            label2.Text = "Стабильность";
-            label2.Click += label2_Click;
-            // 
             // lblPlatform1Left
             // 
             lblPlatform1Left.AutoSize = true;
@@ -218,7 +218,7 @@
             comboBoxVagonNumber.FormattingEnabled = true;
             comboBoxVagonNumber.Location = new Point(1232, 168);
             comboBoxVagonNumber.Name = "comboBoxVagonNumber";
-            comboBoxVagonNumber.Size = new Size(142, 25);
+            comboBoxVagonNumber.Size = new Size(200, 25);
             comboBoxVagonNumber.TabIndex = 19;
             // 
             // label4
@@ -239,7 +239,7 @@
             cBoxTypeWeighing.Items.AddRange(new object[] { "Тара", "Брутто" });
             cBoxTypeWeighing.Location = new Point(1232, 201);
             cBoxTypeWeighing.Name = "cBoxTypeWeighing";
-            cBoxTypeWeighing.Size = new Size(142, 25);
+            cBoxTypeWeighing.Size = new Size(200, 25);
             cBoxTypeWeighing.TabIndex = 21;
             cBoxTypeWeighing.SelectedIndexChanged += comboBox2_SelectedIndexChanged;
             // 
@@ -247,9 +247,9 @@
             // 
             btnSaveWeight.Enabled = false;
             btnSaveWeight.Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            btnSaveWeight.Location = new Point(1091, 234);
+            btnSaveWeight.Location = new Point(1091, 408);
             btnSaveWeight.Name = "btnSaveWeight";
-            btnSaveWeight.Size = new Size(283, 28);
+            btnSaveWeight.Size = new Size(341, 32);
             btnSaveWeight.TabIndex = 22;
             btnSaveWeight.Text = "Сохранить вес";
             btnSaveWeight.UseVisualStyleBackColor = true;
@@ -294,11 +294,125 @@
             formsPlot4.Size = new Size(452, 301);
             formsPlot4.TabIndex = 27;
             // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            label2.Location = new Point(1091, 232);
+            label2.Name = "label2";
+            label2.Size = new Size(141, 21);
+            label2.TabIndex = 28;
+            label2.Text = "Грузоотправитель";
+            // 
+            // textBoxShipper
+            // 
+            textBoxShipper.Location = new Point(1232, 234);
+            textBoxShipper.Name = "textBoxShipper";
+            textBoxShipper.Size = new Size(200, 23);
+            textBoxShipper.TabIndex = 29;
+            // 
+            // textBoxСonsignee
+            // 
+            textBoxСonsignee.Location = new Point(1232, 263);
+            textBoxСonsignee.Name = "textBoxСonsignee";
+            textBoxСonsignee.Size = new Size(200, 23);
+            textBoxСonsignee.TabIndex = 30;
+            // 
+            // label5
+            // 
+            label5.AutoSize = true;
+            label5.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            label5.Location = new Point(1091, 265);
+            label5.Name = "label5";
+            label5.Size = new Size(133, 21);
+            label5.TabIndex = 31;
+            label5.Text = "Грузополучатель";
+            // 
+            // textBoxСargo
+            // 
+            textBoxСargo.Location = new Point(1232, 292);
+            textBoxСargo.Name = "textBoxСargo";
+            textBoxСargo.Size = new Size(200, 23);
+            textBoxСargo.TabIndex = 32;
+            // 
+            // label6
+            // 
+            label6.AutoSize = true;
+            label6.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            label6.Location = new Point(1091, 294);
+            label6.Name = "label6";
+            label6.Size = new Size(42, 21);
+            label6.TabIndex = 33;
+            label6.Text = "Груз";
+            // 
+            // textBoxInvoiceNumber
+            // 
+            textBoxInvoiceNumber.Location = new Point(1232, 321);
+            textBoxInvoiceNumber.Name = "textBoxInvoiceNumber";
+            textBoxInvoiceNumber.Size = new Size(200, 23);
+            textBoxInvoiceNumber.TabIndex = 34;
+            // 
+            // label7
+            // 
+            label7.AutoSize = true;
+            label7.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            label7.Location = new Point(1091, 323);
+            label7.Name = "label7";
+            label7.Size = new Size(109, 21);
+            label7.TabIndex = 35;
+            label7.Text = "№ накладной";
+            // 
+            // textBoxInvoiceWeighing
+            // 
+            textBoxInvoiceWeighing.Location = new Point(1232, 379);
+            textBoxInvoiceWeighing.Name = "textBoxInvoiceWeighing";
+            textBoxInvoiceWeighing.Size = new Size(200, 23);
+            textBoxInvoiceWeighing.TabIndex = 36;
+            // 
+            // dateTimePickerInvoice
+            // 
+            dateTimePickerInvoice.Location = new Point(1232, 350);
+            dateTimePickerInvoice.Name = "dateTimePickerInvoice";
+            dateTimePickerInvoice.Size = new Size(200, 23);
+            dateTimePickerInvoice.TabIndex = 37;
+            // 
+            // label8
+            // 
+            label8.AutoSize = true;
+            label8.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            label8.Location = new Point(1091, 350);
+            label8.Name = "label8";
+            label8.Size = new Size(125, 21);
+            label8.TabIndex = 38;
+            label8.Text = "Дата накладной";
+            // 
+            // label9
+            // 
+            label9.AutoSize = true;
+            label9.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            label9.Location = new Point(1091, 379);
+            label9.Name = "label9";
+            label9.Size = new Size(137, 21);
+            label9.TabIndex = 39;
+            label9.Text = "Вес по накладной";
+            // 
             // StaticWeighing
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1486, 801);
+            Controls.Add(label9);
+            Controls.Add(label8);
+            Controls.Add(dateTimePickerInvoice);
+            Controls.Add(textBoxInvoiceWeighing);
+            Controls.Add(label7);
+            Controls.Add(textBoxInvoiceNumber);
+            Controls.Add(label6);
+            Controls.Add(textBoxСargo);
+            Controls.Add(label5);
+            Controls.Add(textBoxСonsignee);
+            Controls.Add(textBoxShipper);
+            Controls.Add(label2);
             Controls.Add(formsPlot4);
             Controls.Add(formsPlot3);
             Controls.Add(formsPlot2);
@@ -313,7 +427,6 @@
             Controls.Add(lblPlatform1Right);
             Controls.Add(lblPlatform2Left);
             Controls.Add(lblPlatform1Left);
-            Controls.Add(label2);
             Controls.Add(pictureBoxStabilityFalse);
             Controls.Add(label1);
             Controls.Add(pictureBox4);
@@ -350,7 +463,6 @@
         private Label label1;
         private PictureBox pictureBoxStabilityFalse;
         private PictureBox pictureBoxStabilityTrue;
-        private Label label2;
         private Label lblPlatform1Left;
         private Label lblPlatform2Left;
         private Label lblPlatform1Right;
@@ -365,5 +477,17 @@
         private ScottPlot.WinForms.FormsPlot formsPlot2;
         private ScottPlot.WinForms.FormsPlot formsPlot3;
         private ScottPlot.WinForms.FormsPlot formsPlot4;
+        private Label label2;
+        private TextBox textBoxShipper;
+        private TextBox textBoxСonsignee;
+        private Label label5;
+        private TextBox textBoxСargo;
+        private Label label6;
+        private TextBox textBoxInvoiceNumber;
+        private Label label7;
+        private TextBox textBoxInvoiceWeighing;
+        private DateTimePicker dateTimePickerInvoice;
+        private Label label8;
+        private Label label9;
     }
 }

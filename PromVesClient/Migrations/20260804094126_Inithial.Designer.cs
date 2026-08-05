@@ -12,8 +12,8 @@ using PromVesClient;
 namespace PromVesClient.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260720052259_UpdateUser")]
-    partial class UpdateUser
+    [Migration("20260804094126_Inithial")]
+    partial class Inithial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -52,6 +52,9 @@ namespace PromVesClient.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -111,6 +114,10 @@ namespace PromVesClient.Migrations
 
                     b.Property<double>("TareWeight")
                         .HasColumnType("double precision");
+
+                    b.Property<string>("TypeWeighing")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("VagonNumber")
                         .IsRequired()

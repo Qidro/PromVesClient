@@ -12,8 +12,8 @@ using PromVesClient;
 namespace PromVesClient.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260716112425_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260805115637_UpdateTableWeighing")]
+    partial class UpdateTableWeighing
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -53,11 +53,18 @@ namespace PromVesClient.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -72,44 +79,66 @@ namespace PromVesClient.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<double>("DifferenceCarts")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("DifferenceCarts")
+                        .HasColumnType("numeric");
 
-                    b.Property<double>("DifferenceSides")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("DifferenceSides")
+                        .HasColumnType("numeric");
 
-                    b.Property<double>("FirstCart")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("FirstCart")
+                        .HasColumnType("numeric");
 
-                    b.Property<double>("GrossWeight")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("GrossWeight")
+                        .HasColumnType("numeric");
 
-                    b.Property<double>("LeftSide")
-                        .HasColumnType("double precision");
+                    b.Property<DateTime?>("InvoiceDataTime")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<double>("LoadCapacity")
-                        .HasColumnType("double precision");
+                    b.Property<string>("InvoiceNumber")
+                        .HasColumnType("text");
 
-                    b.Property<double>("LoadDeviation")
-                        .HasColumnType("double precision");
+                    b.Property<decimal?>("InvoiceWeighing")
+                        .HasColumnType("numeric");
 
-                    b.Property<double>("NetWeight")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("LeftSide")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("LoadCapacity")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("LoadDeviation")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("NetWeight")
+                        .HasColumnType("numeric");
 
                     b.Property<Guid>("ReceiptId")
                         .HasColumnType("uuid");
 
-                    b.Property<double>("RightSide")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("RightSide")
+                        .HasColumnType("numeric");
 
-                    b.Property<double>("SecondCart")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("SecondCart")
+                        .HasColumnType("numeric");
 
-                    b.Property<double>("TareWeight")
-                        .HasColumnType("double precision");
+                    b.Property<string>("Shipper")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("TareWeight")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("TypeWeighing")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("VagonNumber")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Сargo")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Сonsignee")
                         .HasColumnType("text");
 
                     b.HasKey("Id");

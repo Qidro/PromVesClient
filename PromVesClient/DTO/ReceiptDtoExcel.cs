@@ -9,27 +9,27 @@ namespace PromVesClient.DTO
         public string VagonNumber { get; set; }
         //public DateTime DateTime { get; set; }
         //Тара
-        public double TareWeight { get; set; }
+        public decimal TareWeight { get; set; }
         //Брутто
-        public double GrossWeight { get; set; }
+        public decimal GrossWeight { get; set; }
         //Нетто
-        public double NetWeight { get; set; }
+        public decimal NetWeight { get; set; }
         //грузоподьемность
-        public double LoadCapacity { get; set; }
+        public decimal LoadCapacity { get; set; }
         //недогруз, перегруз (отклонение нагрузки)
-        public double LoadDeviation { get; set; }
+        public decimal LoadDeviation { get; set; }
         //первая тележка
-        public double FirstCart { get; set; }
+        public decimal FirstCart { get; set; }
         //вторая тележка
-        public double SecondCart { get; set; }
+        public decimal SecondCart { get; set; }
         //разница тележек
-        public double DifferenceCarts { get; set; }
+        public decimal DifferenceCarts { get; set; }
         //вес левого борта
-        public double LeftSide { get; set; }
+        public decimal LeftSide { get; set; }
         //вес правого борта
-        public double RightSide { get; set; }
+        public decimal RightSide { get; set; }
         //разница бортов
-        public double DifferenceSides { get; set; }
+        public decimal DifferenceSides { get; set; }
 
 
     }
