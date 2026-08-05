@@ -341,6 +341,24 @@ namespace PromVesClient
         // кнопка сохранения заданных настроек
         private void btnSave_Click(object sender, EventArgs e)
         {
+            for (int i = 0; i < _portBoxes.Count; i++)
+            {
+                if (_portBoxes[i].SelectedItem == null ||
+                    _baudRateBoxes[i].SelectedItem == null ||
+                    _dataBitsBoxes[i].SelectedItem == null ||
+                    _parityBoxes[i].SelectedItem == null ||
+                    _stopBitsBoxes[i].SelectedItem == null ||
+                    _handshakeBoxes[i].SelectedItem == null)
+                {
+                    MessageBox.Show(
+                        $"Не заполнены настройки для COM-порта №{i + 1}.",
+                        "Ошибка",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+
+                    return;
+                }
+            }
             SaveSettings();
 
             MessageBox.Show(
@@ -352,23 +370,46 @@ namespace PromVesClient
         // кнопка востановления дефолтных настроек
         private void btnRestoreDefaults_Click(object sender, EventArgs e)
         {
-            var result = MessageBox.Show(
-        "Восстановить настройки по умолчанию?",
-        "Подтверждение",
-        MessageBoxButtons.YesNo,
-        MessageBoxIcon.Question);
+            var dialogResult = MessageBox.Show(
+                "Восстановить настройки по умолчанию?",
+                "Подтверждение",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
 
-            if (result != DialogResult.Yes)
+            if (dialogResult != DialogResult.Yes)
                 return;
 
-            _comPortService.RestoreDefaults();
+            var result = _comPortService.RestoreDefaults();
 
-            LoadSettings();
+            if (!result.Success)
+            {
+                MessageBox.Show(
+                    result.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
+                return;
+            }
+
+            var configuration = result.Data;
+
+            for (int i = 0; i < configuration.SerialPorts.Count; i++)
+            {
+                LoadPortToControls(
+                    configuration.SerialPorts[i],
+                    _portBoxes[i],
+                    _baudRateBoxes[i],
+                    _dataBitsBoxes[i],
+                    _parityBoxes[i],
+                    _stopBitsBoxes[i],
+                    _handshakeBoxes[i]);
+            }
 
             UpdateAvailablePorts();
 
             MessageBox.Show(
-                "Настройки успешно восстановлены.",
+                "Настройки по умолчанию загружены. Для применения нажмите «Сохранить».",
                 "COM-порты",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);

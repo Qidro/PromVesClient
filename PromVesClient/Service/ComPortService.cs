@@ -231,26 +231,19 @@ namespace PromVesClient.Service
         /// <summary>
         /// Восстанавливает настройки по умолчанию.
         /// </summary>
-        public ServiceResult RestoreDefaults()
+        public ServiceResult<SerialPortConfiguration> RestoreDefaults()
         {
             try
             {
-                var result = LoadDefaults();
-
-                if (!result.Success)
-                {
-                    return ServiceResult.Fail(result.Message);
-                }
-
-                return Save(result.Data);
+                return LoadDefaults();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex,
-                    "Неизвестная ошибка при восстановлении настроек по умолчанию.");
+                    "Неизвестная ошибка при загрузке настроек по умолчанию.");
 
-                return ServiceResult.Fail(
-                    "Не удалось восстановить настройки по умолчанию.");
+                return ServiceResult<SerialPortConfiguration>.Fail(
+                    "Не удалось загрузить настройки по умолчанию.");
             }
         }
         /// <summary>
