@@ -160,7 +160,7 @@ namespace PromVesClient
 
                     // _cts = new CancellationTokenSource();
 
-                    
+
 
                     //_ = _tcpService.ReceiveMessagesAsync(_tcpService.Token);
                     //для отладки
@@ -319,8 +319,9 @@ namespace PromVesClient
         //метод для события(получения данных с сервака) по обработке полцченных данных
         private void ProcessMessage(string message)
         {
-            try 
+            try
             {
+                ConnectionScalesCheck(message);
                 //Console.WriteLine("мы находится в событии");
                 string[] parts = message.Split(';');
                 //обработка 4 графиков
@@ -362,14 +363,14 @@ namespace PromVesClient
         //расчет стабильности вагона
         private void stable(decimal data)
         {
-            for (int i = 0; i<stableWeight.Length; i++)
+            for (int i = 0; i < stableWeight.Length; i++)
             {
                 if (stableWeight[i] == data && i == stableWeight.Length - 1)
                 {
                     pictureBoxStabilityTrue.Visible = true;
                     pictureBoxStabilityFalse.Visible = false;
                 }
-                else if(stableWeight[i] < data || stableWeight[i] > data)
+                else if (stableWeight[i] < data || stableWeight[i] > data)
                 {
                     pictureBoxStabilityTrue.Visible = false;
                     pictureBoxStabilityFalse.Visible = true;
@@ -392,7 +393,7 @@ namespace PromVesClient
                 MessageBox.Show("Перед сохранением дождитесь, чтобы вес был стабилен", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            
+
             if (cBoxTypeWeighing.Text == "Тара")
             {
                 TareWeight = cartSideWeights.Sum();
@@ -421,7 +422,7 @@ namespace PromVesClient
                 {
                     InvoiceWeighing = value;
                 }
-                else 
+                else
                 {
                     MessageBox.Show("Введите корректное значение веса по накладной", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
@@ -451,9 +452,9 @@ namespace PromVesClient
             //проерка на сохранение данных
             if (result.Success == false)
             {
-                MessageBox.Show("Данные взвешивания не были сохранены в БД. Причина: "+ result.Message, "Возникла ошибки при сохранении в БД", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Данные взвешивания не были сохранены в БД. Причина: " + result.Message, "Возникла ошибки при сохранении в БД", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            else 
+            else
             {
                 MessageBox.Show("Данные успешно сохранены в БД", "Данные сохранены", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -463,25 +464,25 @@ namespace PromVesClient
         {
             //foreach (var plot in plots)
             //{
-                if (values[indexObject].Count == 300)
-                    values[indexObject].Dequeue();
+            if (values[indexObject].Count == 300)
+                values[indexObject].Dequeue();
 
-                values[indexObject].Enqueue(value);
+            values[indexObject].Enqueue(value);
 
-                plots[indexObject].Plot.Clear();
-                plots[indexObject].Plot.Add.Signal(values[indexObject].ToArray());
+            plots[indexObject].Plot.Clear();
+            plots[indexObject].Plot.Add.Signal(values[indexObject].ToArray());
 
-                plots[indexObject].Plot.Axes.SetLimits(
-                    left: 0,
-                    right: values[indexObject].Count - 1);
+            plots[indexObject].Plot.Axes.SetLimits(
+                left: 0,
+                right: values[indexObject].Count - 1);
 
-                plots[indexObject].Plot.Axes.AutoScaleY();
+            plots[indexObject].Plot.Axes.AutoScaleY();
 
-                plots[indexObject].Refresh();
-                //plot.Plot.Clear();
-                //plot.Refresh();
+            plots[indexObject].Refresh();
+            //plot.Plot.Clear();
+            //plot.Refresh();
             //}
-            
+
         }
         //ивент на закрытие формы, если взвешивание активно - форма не будет закрыта и будет предупреждение
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -500,14 +501,14 @@ namespace PromVesClient
         //метод записи значений на табло
         private async Task DisplayingValue(decimal sumeWeight)
         {
-            var ListValuesImage =  await _staticWeighingService.GetImageWeighingAsync(sumeWeight);
-            for(int i = 0; ListValuesImage.Count > i; i++)
+            var ListValuesImage = await _staticWeighingService.GetImageWeighingAsync(sumeWeight);
+            for (int i = 0; ListValuesImage.Count > i; i++)
             {
-                if (pictureBoxesList.Count-1 >= i)
+                if (pictureBoxesList.Count - 1 >= i)
                 {
                     pictureBoxesList[i].Image = ListValuesImage[i];
                 }
-                
+
             }
         }
         //метод таймера
@@ -517,6 +518,29 @@ namespace PromVesClient
             AddPoint(1, cartSideWeights[1]);
             AddPoint(2, cartSideWeights[2]);
             AddPoint(3, cartSideWeights[3]);
+        }
+
+        private void label10_Click(object sender, EventArgs e)
+        {
+
+        }
+        //проверка сообщения от сервера на связь с весами
+        private bool ConnectionScalesCheck(string data)
+        {
+            string[] parts = data.Split(';');
+            for (int i = 0; parts.Length > i; i++)
+            {
+                //проверка на то, что сервер прислал, что соединения с весами нет - обозначаем это
+                if (parts[i] == "OFFLINE")
+                {
+                    //выводим, что соединение нет
+                    lblConnectScale.BackColor = Color.Red;
+                    return false;
+                }
+            }
+            //выводим, что соединение есть
+            lblConnectScale.BackColor = Color.Green;
+            return true;
         }
     }
 }
