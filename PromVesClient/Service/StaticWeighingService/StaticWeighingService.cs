@@ -5,6 +5,7 @@ using PromVesClient.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -34,6 +35,11 @@ namespace PromVesClient.Service.StaticWeighingService
         //public async Task<ServiceResult> saveWeighingAsync(decimal Platform1Left, decimal Platform1Right, decimal Platform2Left, decimal Platform2Right, string VagonNumber, decimal TareWeight, decimal GrossWeight)
         public async Task<ServiceResult> saveWeighingAsync(WeighingDto dtoWeighing)
         {
+            //Запись сторон платформы
+            decimal L1 = dtoWeighing.Platform1Left;
+            decimal R1 = dtoWeighing.Platform1Right;
+            decimal L2 = dtoWeighing.Platform2Left;
+            decimal R2 = dtoWeighing.Platform2Right;
             //общая сумма в весов
             decimal WeightSum = dtoWeighing.Platform1Left + dtoWeighing.Platform1Right + dtoWeighing.Platform2Left + dtoWeighing.Platform2Right;
             //грузопольемность
@@ -107,6 +113,10 @@ namespace PromVesClient.Service.StaticWeighingService
             var weighingResult = new Weighing
             { 
                 Id = Guid.NewGuid(),
+                L1 = L1,
+                R1 = R1,
+                L2 = L2,
+                R2 = R2,
                 VagonNumber = dtoWeighing.VagonNumber,
                 TareWeight = dtoWeighing.TareWeight,
                 GrossWeight = dtoWeighing.GrossWeight,
@@ -120,6 +130,12 @@ namespace PromVesClient.Service.StaticWeighingService
                 RightSide = RightSide,
                 DifferenceSides = DifferenceSides,
                 TypeWeighing = dtoWeighing.TypeWeighing,
+                Shipper = dtoWeighing.Shipper,
+                Сonsignee = dtoWeighing.Сonsignee,
+                Сargo = dtoWeighing.Сargo,
+                InvoiceNumber = dtoWeighing.InvoiceNumber,
+                InvoiceDataTime = dtoWeighing.InvoiceDataTime?.ToUniversalTime(),
+                InvoiceWeighing = dtoWeighing.InvoiceWeighing,
                 ReceiptId = dtoWeighing.IdReceipt
             };
             //сохраняем данные
@@ -299,5 +315,7 @@ namespace PromVesClient.Service.StaticWeighingService
 
             throw new Exception("Локальный IPv4 адрес не найден.");
         }
+
+       
     }
 }

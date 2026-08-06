@@ -10,6 +10,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -59,6 +60,7 @@ namespace PromVesClient
         private decimal GrossWeight;
         private Guid IdReceipt;
 
+        private decimal? InvoiceWeighing;
         public StaticWeighing(ILogger<StaticWeighing> logger, StaticWeighingService staticWeighingService, CurrentUserService currentUserService, TcpService tcpService)
         {
             _staticWeighingService = staticWeighingService;
@@ -406,6 +408,26 @@ namespace PromVesClient
                 MessageBox.Show("Выберите тип взвешивания", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+            //проверка и преобразования поля в decimal для записи в модель
+            if (string.IsNullOrWhiteSpace(textBoxInvoiceWeighing.Text))
+            {
+                InvoiceWeighing = null;
+            }
+            else
+            {
+                string text = textBoxInvoiceWeighing.Text.Trim().Replace(',', '.');
+
+                if (decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal value))
+                {
+                    InvoiceWeighing = value;
+                }
+                else 
+                {
+                    MessageBox.Show("Введите корректное значение веса по накладной", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+            }
+
             var resultt = await _staticWeighingService.saveReceiptAsync(IdReceipt, "Статическое взвешивание", _currentUserService.CurrentUser.Name);
             WeighingDto dto = new WeighingDto
             {
@@ -417,6 +439,12 @@ namespace PromVesClient
                 TareWeight = TareWeight,
                 GrossWeight = GrossWeight,
                 TypeWeighing = cBoxTypeWeighing.Text,
+                Shipper = textBoxShipper.Text,
+                Сonsignee = textBoxСonsignee.Text,
+                Сargo = textBoxСargo.Text,
+                InvoiceNumber = textBoxInvoiceNumber.Text,
+                InvoiceDataTime = dateTimePickerInvoice.Value,
+                InvoiceWeighing = InvoiceWeighing,
                 IdReceipt = IdReceipt
             };
             var result = await _staticWeighingService.saveWeighingAsync(dto);
