@@ -22,7 +22,7 @@ namespace PromVesClient.Services
             _logger = logger;
 
 
-            _settingsDirectory = Path.Combine(AppContext.BaseDirectory, "Settings");
+            _settingsDirectory = Path.Combine(AppContext.BaseDirectory, "Configuration");
             _settingsPath = Path.Combine(_settingsDirectory, "ReceiptPrintSettings.json");
         }
 
