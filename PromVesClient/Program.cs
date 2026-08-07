@@ -7,6 +7,7 @@ using PromVesClient.Service.ReceiptsService;
 using PromVesClient.Service.StaticWeighingService;
 using PromVesClient.Service.TcpService;
 using PromVesClient.Service.UserService;
+using PromVesClient.Services;
 using Serilog;
 
 namespace PromVesClient
@@ -52,6 +53,7 @@ namespace PromVesClient
             services.AddTransient<ComPortSettingsForm>();
             services.AddTransient<UserManagementForm>();
             services.AddTransient<ChangeUserForm>();
+            services.AddTransient<ReceiptPrintSettingsForm>();
 
             //регистрация сервисов
             services.AddScoped<UserService>();
@@ -62,6 +64,8 @@ namespace PromVesClient
             services.AddScoped<TcpService>();
             services.AddScoped<ReceiptsService>();
             services.AddScoped<ExcelReportService>();
+            services.AddSingleton<ReceiptPrintSettingsService>();
+
             //регистрация одного экземпляра, чтобы все формы работали именно с ним
             services.AddSingleton<CurrentUserService>();
 

@@ -38,6 +38,7 @@
             r23r23rToolStripMenuItem1 = new ToolStripMenuItem();
             ServiceToolStrip = new ToolStripMenuItem();
             ComSetitem = new ToolStripMenuItem();
+            отчетыToolStripMenuItem = new ToolStripMenuItem();
             label1 = new Label();
             menuStrip1.SuspendLayout();
             SuspendLayout();
@@ -107,7 +108,7 @@
             // 
             // ServiceToolStrip
             // 
-            ServiceToolStrip.DropDownItems.AddRange(new ToolStripItem[] { ComSetitem });
+            ServiceToolStrip.DropDownItems.AddRange(new ToolStripItem[] { ComSetitem, отчетыToolStripMenuItem });
             ServiceToolStrip.Name = "ServiceToolStrip";
             ServiceToolStrip.Size = new Size(59, 20);
             ServiceToolStrip.Text = "Сервис";
@@ -115,9 +116,16 @@
             // ComSetitem
             // 
             ComSetitem.Name = "ComSetitem";
-            ComSetitem.Size = new Size(120, 22);
+            ComSetitem.Size = new Size(195, 22);
             ComSetitem.Text = "Наладка";
             ComSetitem.Click += ComSetitem_Click;
+            // 
+            // отчетыToolStripMenuItem
+            // 
+            отчетыToolStripMenuItem.Name = "отчетыToolStripMenuItem";
+            отчетыToolStripMenuItem.Size = new Size(195, 22);
+            отчетыToolStripMenuItem.Text = "Настройки квитанции";
+            отчетыToolStripMenuItem.Click += отчетыToolStripMenuItem_Click;
             // 
             // label1
             // 
@@ -162,5 +170,6 @@
         private ToolStripMenuItem ServiceToolStrip;
         private ToolStripMenuItem ComSetitem;
         private Label label1;
+        private ToolStripMenuItem отчетыToolStripMenuItem;
     }
 }
