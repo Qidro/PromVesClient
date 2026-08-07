@@ -402,7 +402,25 @@ namespace PromVesClient
             else if (cBoxTypeWeighing.Text == "Брутто")
             {
                 GrossWeight = cartSideWeights.Sum();
-                TareWeight = 0;
+                if (string.IsNullOrWhiteSpace(textBoxTara.Text))
+                {
+                    //MessageBox.Show("Введите корректное значение тары", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    //MessageBox.Show("Введите корректное значение тары");
+                    //return;
+                    TareWeight = 0;
+                }
+                else
+                {
+                    string text = textBoxTara.Text.Trim()
+                    .Replace('.', ',');
+                    if (!decimal.TryParse(text.Trim(), out TareWeight))
+                    {
+                        MessageBox.Show("Введите корректное значение тары", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    TareWeight = Math.Round(TareWeight, 2);
+                    //TareWeight = decimal.TryParse()
+                }
             }
             else
             {
