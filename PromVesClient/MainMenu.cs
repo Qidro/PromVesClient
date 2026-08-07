@@ -14,17 +14,19 @@ namespace PromVesClient
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly CurrentUserService _currentUserService;
+       
         public MainMenu(CurrentUserService currentUserService, IServiceProvider serviceProvider)
         {
             InitializeComponent();
             _serviceProvider = serviceProvider;
             _currentUserService = currentUserService;
+          
             if (_currentUserService.CurrentUser?.Role != "admin")
             {
                 menuStrip1.Enabled = false;
             }
             //     label1.Text =
-       //$"Пользователь: {_currentUserService.CurrentUser?.Name}";
+            //$"Пользователь: {_currentUserService.CurrentUser?.Name}";
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -70,5 +72,13 @@ namespace PromVesClient
         {
 
         }
+
+           private void отчетыToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var form = _serviceProvider.GetRequiredService<ReceiptPrintSettingsForm>();
+
+            form.ShowDialog();
+        }
     }
+    
 }
