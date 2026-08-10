@@ -40,6 +40,7 @@
             ComSetitem = new ToolStripMenuItem();
             отчетыToolStripMenuItem = new ToolStripMenuItem();
             label1 = new Label();
+            справочникВагоновToolStripMenuItem = new ToolStripMenuItem();
             menuStrip1.SuspendLayout();
             SuspendLayout();
             // 
@@ -95,20 +96,20 @@
             // r23r23rToolStripMenuItem
             // 
             r23r23rToolStripMenuItem.Name = "r23r23rToolStripMenuItem";
-            r23r23rToolStripMenuItem.Size = new Size(152, 22);
+            r23r23rToolStripMenuItem.Size = new Size(180, 22);
             r23r23rToolStripMenuItem.Text = "Пользователи";
             r23r23rToolStripMenuItem.Click += r23r23rToolStripMenuItem_Click;
             // 
             // r23r23rToolStripMenuItem1
             // 
             r23r23rToolStripMenuItem1.Name = "r23r23rToolStripMenuItem1";
-            r23r23rToolStripMenuItem1.Size = new Size(152, 22);
+            r23r23rToolStripMenuItem1.Size = new Size(180, 22);
             r23r23rToolStripMenuItem1.Text = "Отчеты";
             r23r23rToolStripMenuItem1.Click += r23r23rToolStripMenuItem1_Click;
             // 
             // ServiceToolStrip
             // 
-            ServiceToolStrip.DropDownItems.AddRange(new ToolStripItem[] { ComSetitem, отчетыToolStripMenuItem });
+            ServiceToolStrip.DropDownItems.AddRange(new ToolStripItem[] { ComSetitem, отчетыToolStripMenuItem, справочникВагоновToolStripMenuItem });
             ServiceToolStrip.Name = "ServiceToolStrip";
             ServiceToolStrip.Size = new Size(59, 20);
             ServiceToolStrip.Text = "Сервис";
@@ -136,6 +137,13 @@
             label1.TabIndex = 4;
             label1.Text = "label1";
             label1.Visible = false;
+            // 
+            // справочникВагоновToolStripMenuItem
+            // 
+            справочникВагоновToolStripMenuItem.Name = "справочникВагоновToolStripMenuItem";
+            справочникВагоновToolStripMenuItem.Size = new Size(195, 22);
+            справочникВагоновToolStripMenuItem.Text = "Справочник вагонов";
+            справочникВагоновToolStripMenuItem.Click += справочникВагоновToolStripMenuItem_Click;
             // 
             // MainMenu
             // 
@@ -171,5 +179,6 @@
         private ToolStripMenuItem ComSetitem;
         private Label label1;
         private ToolStripMenuItem отчетыToolStripMenuItem;
+        private ToolStripMenuItem справочникВагоновToolStripMenuItem;
     }
 }
