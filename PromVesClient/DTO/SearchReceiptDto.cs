@@ -15,5 +15,9 @@ namespace PromVesClient.DTO
         public string? operatorName { get; set; }
         //номер вагона
         public string? vagonNumber { get; set; }
+        //груз
+        public string? cargo { get; set; }
+        //номер грузоотправителя
+        public string? shipper { get; set; }
     }
 }

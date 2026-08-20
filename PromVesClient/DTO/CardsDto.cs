@@ -9,6 +9,13 @@ namespace PromVesClient.DTO
         public Guid Id { get; set; }
         public string VagonNumber { get; set; }
         //public DateTime DateTime { get; set; }
+        public decimal L1 { get; set; }
+        //правая сторона первой тележки
+        public decimal R1 { get; set; }
+        //левая сторона второй тележки
+        public decimal L2 { get; set; }
+        //правая сторона второй тележки
+        public decimal R2 { get; set; }
         //Тара
         public decimal TareWeight { get; set; }
         //Брутто
@@ -33,6 +40,18 @@ namespace PromVesClient.DTO
         public decimal DifferenceSides { get; set; }
         //тип взвешивания
         public string TypeWeighing { get; set; }
+        //грузоотправитель
+        public string? Shipper { get; set; }
+        //грузополучатель
+        public string? Consignee { get; set; }
+        //груз
+        public string? Cargo { get; set; }
+        //номер накладной
+        public string? InvoiceNumber { get; set; }
+        //номер накладной
+        public DateTime? InvoiceDateTime { get; set; }
+        //вес по накладной
+        public decimal? InvoiceWeighing { get; set; }
         // Внешний ключ
         public Guid ReceiptId { get; set; }
 

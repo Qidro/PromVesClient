@@ -32,6 +32,10 @@
             btnReportFilter = new Button();
             dataGridViewReceipts = new DataGridView();
             groupBox1 = new GroupBox();
+            shipperСheckBox = new CheckBox();
+            cargoCheckBox = new CheckBox();
+            shipperTextBox = new TextBox();
+            cargoTextBox = new TextBox();
             operatorTextBox = new TextBox();
             operatorCheckBox = new CheckBox();
             vagonNumberBox = new CheckBox();
@@ -47,6 +51,7 @@
             btnDeleteReceipt = new Button();
             receiptInfoLabel = new Label();
             btnPrintReceipt = new Button();
+            btnSaveChanges = new Button();
             ((System.ComponentModel.ISupportInitialize)dataGridViewReceipts).BeginInit();
             groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewСards).BeginInit();
@@ -57,7 +62,7 @@
             btnReportFilter.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
             btnReportFilter.Location = new Point(1132, 333);
             btnReportFilter.Name = "btnReportFilter";
-            btnReportFilter.Size = new Size(321, 36);
+            btnReportFilter.Size = new Size(355, 36);
             btnReportFilter.TabIndex = 0;
             btnReportFilter.Text = "Применить фильтр";
             btnReportFilter.UseVisualStyleBackColor = true;
@@ -78,6 +83,10 @@
             // 
             // groupBox1
             // 
+            groupBox1.Controls.Add(shipperСheckBox);
+            groupBox1.Controls.Add(cargoCheckBox);
+            groupBox1.Controls.Add(shipperTextBox);
+            groupBox1.Controls.Add(cargoTextBox);
             groupBox1.Controls.Add(operatorTextBox);
             groupBox1.Controls.Add(operatorCheckBox);
             groupBox1.Controls.Add(vagonNumberBox);
@@ -88,14 +97,48 @@
             groupBox1.Controls.Add(dateTimePicker1);
             groupBox1.Location = new Point(1132, 12);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(321, 305);
+            groupBox1.Size = new Size(355, 305);
             groupBox1.TabIndex = 2;
             groupBox1.TabStop = false;
             groupBox1.Text = "Фильтр квитанции";
             // 
+            // shipperСheckBox
+            // 
+            shipperСheckBox.AutoSize = true;
+            shipperСheckBox.Location = new Point(20, 222);
+            shipperСheckBox.Name = "shipperСheckBox";
+            shipperСheckBox.Size = new Size(126, 19);
+            shipperСheckBox.TabIndex = 16;
+            shipperСheckBox.Text = "Грузоотправитель";
+            shipperСheckBox.UseVisualStyleBackColor = true;
+            // 
+            // cargoCheckBox
+            // 
+            cargoCheckBox.AutoSize = true;
+            cargoCheckBox.Location = new Point(20, 182);
+            cargoCheckBox.Name = "cargoCheckBox";
+            cargoCheckBox.Size = new Size(50, 19);
+            cargoCheckBox.TabIndex = 15;
+            cargoCheckBox.Text = "Груз";
+            cargoCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // shipperTextBox
+            // 
+            shipperTextBox.Location = new Point(155, 220);
+            shipperTextBox.Name = "shipperTextBox";
+            shipperTextBox.Size = new Size(166, 23);
+            shipperTextBox.TabIndex = 14;
+            // 
+            // cargoTextBox
+            // 
+            cargoTextBox.Location = new Point(155, 178);
+            cargoTextBox.Name = "cargoTextBox";
+            cargoTextBox.Size = new Size(166, 23);
+            cargoTextBox.TabIndex = 13;
+            // 
             // operatorTextBox
             // 
-            operatorTextBox.Location = new Point(125, 140);
+            operatorTextBox.Location = new Point(155, 140);
             operatorTextBox.Name = "operatorTextBox";
             operatorTextBox.Size = new Size(166, 23);
             operatorTextBox.TabIndex = 10;
@@ -109,7 +152,6 @@
             operatorCheckBox.TabIndex = 8;
             operatorCheckBox.Text = "Оператор";
             operatorCheckBox.UseVisualStyleBackColor = true;
-            operatorCheckBox.CheckedChanged += checkBox2_CheckedChanged;
             // 
             // vagonNumberBox
             // 
@@ -120,18 +162,17 @@
             vagonNumberBox.TabIndex = 7;
             vagonNumberBox.Text = "Номер вагона";
             vagonNumberBox.UseVisualStyleBackColor = true;
-            vagonNumberBox.CheckedChanged += vagonNumberBox_CheckedChanged;
             // 
             // vagonNumberTextBox
             // 
-            vagonNumberTextBox.Location = new Point(125, 104);
+            vagonNumberTextBox.Location = new Point(155, 104);
             vagonNumberTextBox.Name = "vagonNumberTextBox";
             vagonNumberTextBox.Size = new Size(166, 23);
             vagonNumberTextBox.TabIndex = 6;
             // 
             // dateTimePicker2
             // 
-            dateTimePicker2.Location = new Point(125, 64);
+            dateTimePicker2.Location = new Point(155, 62);
             dateTimePicker2.Name = "dateTimePicker2";
             dateTimePicker2.Size = new Size(166, 23);
             dateTimePicker2.TabIndex = 3;
@@ -139,26 +180,24 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(72, 68);
+            label2.Location = new Point(125, 70);
             label2.Name = "label2";
             label2.Size = new Size(21, 15);
             label2.TabIndex = 2;
             label2.Text = "по";
-            label2.Click += label2_Click;
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(52, 30);
+            label1.Location = new Point(105, 30);
             label1.Name = "label1";
             label1.Size = new Size(41, 15);
             label1.TabIndex = 1;
             label1.Text = "Дата с";
-            label1.Click += label1_Click;
             // 
             // dateTimePicker1
             // 
-            dateTimePicker1.Location = new Point(125, 24);
+            dateTimePicker1.Location = new Point(155, 24);
             dateTimePicker1.Name = "dateTimePicker1";
             dateTimePicker1.Size = new Size(166, 23);
             dateTimePicker1.TabIndex = 0;
@@ -178,7 +217,7 @@
             btnResetFilter.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
             btnResetFilter.Location = new Point(1132, 375);
             btnResetFilter.Name = "btnResetFilter";
-            btnResetFilter.Size = new Size(321, 36);
+            btnResetFilter.Size = new Size(355, 36);
             btnResetFilter.TabIndex = 4;
             btnResetFilter.Text = "Сбросить фильтр";
             btnResetFilter.UseVisualStyleBackColor = true;
@@ -189,7 +228,7 @@
             btnSaveReceipt.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
             btnSaveReceipt.Location = new Point(1132, 417);
             btnSaveReceipt.Name = "btnSaveReceipt";
-            btnSaveReceipt.Size = new Size(321, 36);
+            btnSaveReceipt.Size = new Size(355, 36);
             btnSaveReceipt.TabIndex = 5;
             btnSaveReceipt.Text = "Сохранить квитанцию";
             btnSaveReceipt.UseVisualStyleBackColor = true;
@@ -200,9 +239,9 @@
             btnDeleteCard.BackColor = Color.Red;
             btnDeleteCard.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
             btnDeleteCard.ForeColor = SystemColors.ControlLightLight;
-            btnDeleteCard.Location = new Point(1132, 501);
+            btnDeleteCard.Location = new Point(1132, 543);
             btnDeleteCard.Name = "btnDeleteCard";
-            btnDeleteCard.Size = new Size(321, 36);
+            btnDeleteCard.Size = new Size(355, 36);
             btnDeleteCard.TabIndex = 6;
             btnDeleteCard.Text = "Удалить карточку вагона";
             btnDeleteCard.UseVisualStyleBackColor = false;
@@ -213,9 +252,9 @@
             btnDeleteReceipt.BackColor = Color.Red;
             btnDeleteReceipt.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
             btnDeleteReceipt.ForeColor = SystemColors.ControlLightLight;
-            btnDeleteReceipt.Location = new Point(1132, 543);
+            btnDeleteReceipt.Location = new Point(1132, 585);
             btnDeleteReceipt.Name = "btnDeleteReceipt";
-            btnDeleteReceipt.Size = new Size(321, 36);
+            btnDeleteReceipt.Size = new Size(355, 36);
             btnDeleteReceipt.TabIndex = 7;
             btnDeleteReceipt.Text = "Удалить квитанцию";
             btnDeleteReceipt.UseVisualStyleBackColor = false;
@@ -236,17 +275,29 @@
             btnPrintReceipt.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
             btnPrintReceipt.Location = new Point(1132, 459);
             btnPrintReceipt.Name = "btnPrintReceipt";
-            btnPrintReceipt.Size = new Size(321, 36);
+            btnPrintReceipt.Size = new Size(355, 36);
             btnPrintReceipt.TabIndex = 10;
             btnPrintReceipt.Text = "Распечатать квитанцию";
             btnPrintReceipt.UseVisualStyleBackColor = true;
             btnPrintReceipt.Click += btnPrintReceipt_Click;
             // 
+            // btnSaveChanges
+            // 
+            btnSaveChanges.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            btnSaveChanges.Location = new Point(1132, 501);
+            btnSaveChanges.Name = "btnSaveChanges";
+            btnSaveChanges.Size = new Size(355, 36);
+            btnSaveChanges.TabIndex = 12;
+            btnSaveChanges.Text = "Сохранить Изменения";
+            btnSaveChanges.UseVisualStyleBackColor = true;
+            btnSaveChanges.Click += btnSaveChanges_Click_1;
+            // 
             // frmWeighingReceipts
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1518, 909);
+            ClientSize = new Size(1548, 909);
+            Controls.Add(btnSaveChanges);
             Controls.Add(btnPrintReceipt);
             Controls.Add(receiptInfoLabel);
             Controls.Add(btnDeleteReceipt);
@@ -260,7 +311,6 @@
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "frmWeighingReceipts";
             Text = "Квитанции взвешивания";
-            Load += frmWeighingReceipts_Load;
             ((System.ComponentModel.ISupportInitialize)dataGridViewReceipts).EndInit();
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();
@@ -289,5 +339,10 @@
         private TextBox operatorTextBox;
         private Label receiptInfoLabel;
         private Button btnPrintReceipt;
+        private CheckBox shipperСheckBox;
+        private CheckBox cargoCheckBox;
+        private TextBox shipperTextBox;
+        private TextBox cargoTextBox;
+        private Button btnSaveChanges;
     }
 }

@@ -34,26 +34,26 @@ namespace PromVesClient.Models
         //разница тележек
         public decimal DifferenceCarts { get; set; }
         //вес левого борта
-        public decimal LeftSide { get; set; } 
+        public decimal LeftSide { get; set; }
         //вес правого борта
         public decimal RightSide { get; set; }
         //разница бортов
         public decimal DifferenceSides { get; set; }
         //тип взвегивания - тара или брутто
-        public string  TypeWeighing { get; set; }
+        public string TypeWeighing { get; set; }
         //грузоотправитель
         public string? Shipper { get; set; }
         //грузополучатель
-        public string? Сonsignee { get; set; }
+        public string? Consignee { get; set; }
         //груз
-        public string? Сargo { get; set; }
+        public string? Cargo { get; set; }
         //номер накладной
         public string? InvoiceNumber { get; set; }
         //номер накладной
-        public DateTime? InvoiceDataTime { get; set; }
+        public DateTime? InvoiceDateTime { get; set; }
         //вес по накладной
         public decimal? InvoiceWeighing { get; set; }
-        
+
         // Внешний ключ
         public Guid ReceiptId { get; set; }
 
