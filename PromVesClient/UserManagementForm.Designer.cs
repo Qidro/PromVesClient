@@ -53,6 +53,7 @@
             dgvUser.Name = "dgvUser";
             dgvUser.Size = new Size(610, 82);
             dgvUser.TabIndex = 0;
+            dgvUser.CellContentClick += dgvUser_CellContentClick;
             // 
             // colLogin
             // 

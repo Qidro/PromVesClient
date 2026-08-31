@@ -16,8 +16,7 @@ namespace PromVesClient
         private readonly UserService _userService;
         private readonly IServiceProvider _serviceProvider;
         public List<User> userList;
-        public UserManagementForm(UserService userService, IServiceProvider serviceProvider
-            )
+        public UserManagementForm(UserService userService, IServiceProvider serviceProvider)
         {
             InitializeComponent();
 
@@ -52,13 +51,13 @@ namespace PromVesClient
                 userList = result.Data;
                 dgvUserList.DataSource = userList;
             }
-            else 
+            else
             {
                 MessageBox.Show($"Не удалось загрузить пользователей в таблицу {result.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            
+
         }
-       
+
 
         private async void dgvUserList_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
@@ -177,6 +176,11 @@ namespace PromVesClient
             {
                 await LoadUsersAsync();
             }
+        }
+
+        private void dgvUser_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
         }
     }
 }
