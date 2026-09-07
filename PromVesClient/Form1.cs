@@ -64,7 +64,7 @@ namespace PromVesClient
 
                 form.ShowDialog();
 
-                //this.Hide();
+                this.Hide();
             }
             else
             {

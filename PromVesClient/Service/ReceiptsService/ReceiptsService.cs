@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using static System.Net.WebRequestMethods;
 namespace PromVesClient.Service.ReceiptsService
 {
@@ -14,6 +15,7 @@ namespace PromVesClient.Service.ReceiptsService
     {
         private readonly ILogger<ReceiptsService> _logger;
         private readonly ApplicationDbContext _dbContext;
+        string jsonConfig;
         public ReceiptsService(ILogger<ReceiptsService> logger, ApplicationDbContext dbContext) 
         { 
             _logger = logger;
@@ -123,6 +125,10 @@ namespace PromVesClient.Service.ReceiptsService
                     {
                         Id = r.Id,
                         VagonNumber = r.VagonNumber,
+                        L1 = r.L1,
+                        R1 = r.R1,
+                        L2 = r.L2,
+                        R2 = r.R2,
                         TareWeight = r.TareWeight,
                         GrossWeight = r.GrossWeight,
                         NetWeight = r.NetWeight,
@@ -135,6 +141,12 @@ namespace PromVesClient.Service.ReceiptsService
                         RightSide = r.RightSide,
                         DifferenceSides = r.DifferenceSides,
                         TypeWeighing = r.TypeWeighing,
+                        Shipper = r.Shipper,
+                        Consignee = r.Consignee,
+                        Cargo = r.Cargo,
+                        InvoiceDateTime = r.InvoiceDateTime,
+                        InvoiceNumber = r.InvoiceNumber,
+                        InvoiceWeighing = r.InvoiceWeighing,
                         ReceiptId = IdReceipt
 
                     }).ToListAsync();
@@ -162,7 +174,29 @@ namespace PromVesClient.Service.ReceiptsService
             }
             
         }
-        //метод получения квитанций с помощью фильтра
+        //метод получения видимых колонок для печати квитанции
+        public async Task<ServiceResult<Dictionary<string, bool>>> GetVisibalColumn()
+        {
+            try
+            {
+                jsonConfig = System.IO.File.ReadAllText("Configuration/ReceiptPrintSettings.json");
+                Dictionary<string, bool>? settings =
+                JsonSerializer.Deserialize<Dictionary<string, bool>>(jsonConfig);
+                return new ServiceResult<Dictionary<string, bool>>
+                {
+                    Success = true,
+                    Data = settings ?? new Dictionary<string, bool>()
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Ошибка чтении файла конфигурации настройки" + ex.Message);
+                return ServiceResult<Dictionary<string, bool>>.Fail("Ошибка чтении файла конфигурации настройки" + ex.Message);
+            }
+        }
+            //string json = System.IO.File.ReadAllText("ReceiptPrintSettings.json");
+
+            //метод получения квитанций с помощью фильтра
         public async Task<ServiceResult<List<ReceiptDto>>> GetReceiptFilter(SearchReceiptDto filter)
         {
             try 
@@ -187,6 +221,21 @@ namespace PromVesClient.Service.ReceiptsService
                     query = query.Where(r =>
                     r.Weighings.Any(w => w.VagonNumber == filter.vagonNumber));
                 }
+                //Груз
+                if (!string.IsNullOrWhiteSpace(filter.cargo))
+                {
+                    //перевод в нижний регистр
+                    var cargo = filter.cargo.ToLower();
+                    query = query.Where(c => c.Weighings.Any(w => w.Cargo.ToLower() == cargo));
+                }
+                //грузоотправитель
+                if (!string.IsNullOrWhiteSpace(filter.shipper))
+                {
+                    var shipper = filter.shipper.ToLower();
+                    query = query.Where(s => s.Weighings.Any(w => w.Shipper.ToLower() == shipper));
+                }
+                //сохраняем все в лист 
+
 
                 var receipts = await query
                     .Select(r => new ReceiptDto
@@ -222,6 +271,7 @@ namespace PromVesClient.Service.ReceiptsService
             
         }
 
+        //удаление карточки
         public async Task<ServiceResult> deletingCard(Guid IdWeighing)
         {
             try
@@ -265,6 +315,55 @@ namespace PromVesClient.Service.ReceiptsService
             {
                 _logger.LogError(ex, "Ошибка удаления квитанции");
                 return ServiceResult.Fail("Ошибка удаления.");
+            }
+        }
+        // Изменение данных накладной карточки вагона
+        public async Task<ServiceResult> UpdateCardInvoiceAsync(CardsDto card)
+        {
+            try
+            {
+                var weighing = await _dbContext.Weighings.FindAsync(card.Id);
+
+                if (weighing == null)
+                {
+                    return ServiceResult.Fail("Карточка вагона не найдена.");
+                }
+
+                weighing.Shipper = card.Shipper;
+                weighing.Consignee = card.Consignee;
+                weighing.Cargo = card.Cargo;
+                weighing.InvoiceNumber = card.InvoiceNumber;
+                weighing.InvoiceDateTime = card.InvoiceDateTime;
+                weighing.InvoiceWeighing = card.InvoiceWeighing;
+
+                await _dbContext.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "Данные накладной карточки {Id} успешно изменены",
+                    card.Id);
+
+                return ServiceResult.Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка изменения данных карточки");
+
+                string errorMessage = ex.Message;
+
+                if (ex.InnerException != null)
+                {
+                    errorMessage += "\n\nInnerException:\n" +
+                                    ex.InnerException.Message;
+                }
+
+                if (ex.InnerException?.InnerException != null)
+                {
+                    errorMessage += "\n\nInnerException 2:\n" +
+                                    ex.InnerException.InnerException.Message;
+                }
+
+                return ServiceResult.Fail(
+                    "Ошибка сохранения изменений:\n\n" + errorMessage);
             }
         }
 
