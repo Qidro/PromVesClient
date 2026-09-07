@@ -58,6 +58,7 @@ namespace PromVesClient
         //поля предназначенные для передачи данных в методы сохранения данных  в БД
         private decimal TareWeight;
         private decimal GrossWeight;
+        private decimal LoadCapacity;
         private Guid IdReceipt;
 
         private decimal? InvoiceWeighing;
@@ -402,7 +403,7 @@ namespace PromVesClient
             else if (cBoxTypeWeighing.Text == "Брутто")
             {
                 GrossWeight = cartSideWeights.Sum();
-                if (string.IsNullOrWhiteSpace(textBoxTara.Text))
+                if (string.IsNullOrWhiteSpace(txtLoadCapacity.Text))
                 {
                     //MessageBox.Show("Введите корректное значение тары", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     //MessageBox.Show("Введите корректное значение тары");
@@ -411,7 +412,7 @@ namespace PromVesClient
                 }
                 else
                 {
-                    string text = textBoxTara.Text.Trim()
+                    string text = txtLoadCapacity.Text.Trim()
                     .Replace('.', ',');
                     if (!decimal.TryParse(text.Trim(), out TareWeight))
                     {
@@ -445,6 +446,14 @@ namespace PromVesClient
                     MessageBox.Show("Введите корректное значение веса по накладной", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
+                //проверка поля грузоподьемности
+                string textLoadCapacity = txtLoadCapacity.Text.Trim()
+                    .Replace('.', ',');
+                if (!decimal.TryParse(textLoadCapacity.Trim(), out LoadCapacity))
+                {
+                    MessageBox.Show("Введите корректное значение грузоподъёмности");
+                    return;
+                }
             }
 
             var resultt = await _staticWeighingService.saveReceiptAsync(IdReceipt, "Статическое взвешивание", _currentUserService.CurrentUser.Name);
@@ -458,6 +467,7 @@ namespace PromVesClient
                 TareWeight = TareWeight,
                 GrossWeight = GrossWeight,
                 TypeWeighing = cBoxTypeWeighing.Text,
+                LoadCapacity = LoadCapacity,
                 Shipper = textBoxShipper.Text,
                 Сonsignee = textBoxСonsignee.Text,
                 Сargo = textBoxСargo.Text,
