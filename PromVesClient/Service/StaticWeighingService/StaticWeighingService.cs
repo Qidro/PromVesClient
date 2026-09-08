@@ -95,6 +95,8 @@ namespace PromVesClient.Service.StaticWeighingService
                         dtoWeighing.TareWeight = lastWeighing.TareWeight;
                     }
                 }
+                //вычисление грузоподьемности
+                LoadDeviation = dtoWeighing.LoadCapacity - NetWeight;
             } 
             catch (InvalidOperationException ex)
             {
@@ -121,7 +123,7 @@ namespace PromVesClient.Service.StaticWeighingService
                 TareWeight = dtoWeighing.TareWeight,
                 GrossWeight = dtoWeighing.GrossWeight,
                 NetWeight = NetWeight,
-                LoadCapacity = DefaultLoadCapacity,
+                LoadCapacity = dtoWeighing.LoadCapacity,
                 LoadDeviation = LoadDeviation,
                 FirstCart = FirstCart,
                 SecondCart = SecondCart,
