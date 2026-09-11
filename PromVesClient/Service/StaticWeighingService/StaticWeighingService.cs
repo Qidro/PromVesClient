@@ -43,9 +43,7 @@ namespace PromVesClient.Service.StaticWeighingService
             //общая сумма в весов
             decimal WeightSum = dtoWeighing.Platform1Left + dtoWeighing.Platform1Right + dtoWeighing.Platform2Left + dtoWeighing.Platform2Right;
             //грузопольемность
-            //decimal LoadCapacity = 70;
-            //расчет переруза/недогруза
-            decimal LoadDeviation = DefaultLoadCapacity - WeightSum;
+            decimal LoadDeviation;
             //временно Нетто 0
             decimal NetWeight = 0;
             //первая тележка
@@ -93,6 +91,17 @@ namespace PromVesClient.Service.StaticWeighingService
                         MidpointRounding.AwayFromZero);
                         //NetWeight = Math.Truncate((dtoWeighing.GrossWeight - lastWeighing.TareWeight) * 100) / 100.0; ;
                         dtoWeighing.TareWeight = lastWeighing.TareWeight;
+                    }
+                }
+                else if (dtoWeighing.TypeWeighing != "Тара")  //если не взвешивают тару, то проверяем по ссправочнику
+                {
+                    //если в других квитанциях нет нужного вагона с тарой/брутто, то ищем его в известных вагонах и получаем тару 
+                    var query = await _dbContext.Wagons.Where(w => w.Number == dtoWeighing.VagonNumber && w.IsActive == true).FirstOrDefaultAsync();
+                    if (query != null)
+                    {
+                        //записываем тару
+                        dtoWeighing.TareWeight = query.TareWeight;
+                        NetWeight = dtoWeighing.GrossWeight - query.TareWeight;
                     }
                 }
                 //вычисление грузоподьемности

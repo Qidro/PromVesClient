@@ -84,11 +84,11 @@ namespace PromVesClient
 
             // Получаем значения из верхнего DataGridView
             var number = dgvWagon.Rows[0].Cells["colNumber"].Value?.ToString()?.Trim();
-
-            if (string.IsNullOrWhiteSpace(number))
+            //проверка значения
+            if (string.IsNullOrWhiteSpace(number) || number.Length != 8)
             {
                 MessageBox.Show(
-                    "Введите номер вагона.",
+                    "Введите корректный номер вагона.",
                     "Ошибка",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);

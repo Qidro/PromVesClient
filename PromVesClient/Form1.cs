@@ -61,10 +61,9 @@ namespace PromVesClient
                 //MessageBox.Show("успешно", result.Data.PasswordHash);
                 var form = _serviceProvider.GetRequiredService<MainMenu>();
                 //var form = new MainMenu();
-
-                form.ShowDialog();
-
                 this.Hide();
+                form.ShowDialog();
+                this.Show();
             }
             else
             {
