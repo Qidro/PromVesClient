@@ -65,7 +65,7 @@
             label8 = new Label();
             label9 = new Label();
             lblConnectScale = new Label();
-            textBoxTara = new TextBox();
+            txtLoadCapacity = new TextBox();
             label10 = new Label();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
@@ -412,12 +412,12 @@
             lblConnectScale.Text = "Соединение с весами";
             lblConnectScale.Click += label10_Click;
             // 
-            // textBoxTara
+            // txtLoadCapacity
             // 
-            textBoxTara.Location = new Point(1248, 230);
-            textBoxTara.Name = "textBoxTara";
-            textBoxTara.Size = new Size(200, 23);
-            textBoxTara.TabIndex = 42;
+            txtLoadCapacity.Location = new Point(1248, 230);
+            txtLoadCapacity.Name = "txtLoadCapacity";
+            txtLoadCapacity.Size = new Size(200, 23);
+            txtLoadCapacity.TabIndex = 42;
             // 
             // label10
             // 
@@ -425,16 +425,16 @@
             label10.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
             label10.Location = new Point(1091, 226);
             label10.Name = "label10";
-            label10.Size = new Size(43, 21);
+            label10.Size = new Size(146, 21);
             label10.TabIndex = 41;
-            label10.Text = "Тара";
+            label10.Text = "Грузоподъёмность";
             // 
             // StaticWeighing
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1486, 801);
-            Controls.Add(textBoxTara);
+            Controls.Add(txtLoadCapacity);
             Controls.Add(label10);
             Controls.Add(lblConnectScale);
             Controls.Add(label9);
@@ -526,7 +526,7 @@
         private Label label8;
         private Label label9;
         private Label lblConnectScale;
-        private TextBox textBoxTara;
+        private TextBox txtLoadCapacity;
         private Label label10;
     }
 }
