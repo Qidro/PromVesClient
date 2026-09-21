@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.IO.Ports;
+using System.Text;
 
 namespace PromVesClient.Models
 {
-    public class SerialPortSettings
+    public class SerialPortBoard
     {
         public int Id { get; set; }
 
@@ -14,12 +14,10 @@ namespace PromVesClient.Models
         public int BaudRate { get; set; }
 
         public int DataBits { get; set; }
-
         public Parity Parity { get; set; }
 
         public StopBits StopBits { get; set; }
 
         public Handshake Handshake { get; set; }
-        public int DeviceAddress { get; set; }
     }
 }

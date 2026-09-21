@@ -37,7 +37,7 @@ namespace PromVesClient.Service
                 AppContext.BaseDirectory,
                 "Configuration");
 
-            _serverSettingsPath = @"C:\PromVesNew\PromVesServer\ConfigPort.json";
+            _serverSettingsPath = @"C:\Users\Igh\Desktop\клиент\PromVesClient\PromVesClient\Configuration\ConfigPort.json";
 
             _defaultSettingsPath = Path.Combine(
                 _configurationPath,

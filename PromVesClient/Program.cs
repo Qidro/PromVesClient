@@ -67,6 +67,9 @@ namespace PromVesClient
             services.AddScoped<ExcelReportService>();
             services.AddSingleton<ReceiptPrintSettingsService>();
             services.AddTransient<WagonService>();
+            services.AddSingleton<ModbusTcpService>();
+            services.AddSingleton<SerialPortBoardService>();
+            services.AddSingleton<GeneralConfiguratorService>();
 
             //регистрация одного экземпляра, чтобы все формы работали именно с ним
             services.AddSingleton<CurrentUserService>();
