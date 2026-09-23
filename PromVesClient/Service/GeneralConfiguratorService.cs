@@ -17,7 +17,7 @@ namespace PromVesClient.Service
         {
             WriteIndented = true
         };
-
+       
         public GeneralConfiguratorService(
             ILogger<GeneralConfiguratorService> logger)
         {
@@ -31,7 +31,7 @@ namespace PromVesClient.Service
                 _configurationPath,
                 "GeneralConfigurator.json");
         }
-
+        //метод загрузки настроек общих параметров конфигуратора
         public ServiceResult<GeneralConfiguratorConfiguration> Load()
         {
             try
@@ -74,7 +74,7 @@ namespace PromVesClient.Service
                     "Не удалось загрузить общие настройки.");
             }
         }
-
+        //метод сохранения настроек общих параметров конфигуратора
         public ServiceResult Save(
             GeneralConfiguratorConfiguration configuration)
         {

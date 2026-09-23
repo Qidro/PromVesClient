@@ -126,6 +126,7 @@
             IPtb1 = new TextBox();
             label30 = new Label();
             tabPage3 = new TabPage();
+            defaultboardbtn = new Button();
             SaveTablebtn = new Button();
             groupBox9 = new GroupBox();
             label44 = new Label();
@@ -1077,6 +1078,7 @@
             // 
             // tabPage3
             // 
+            tabPage3.Controls.Add(defaultboardbtn);
             tabPage3.Controls.Add(SaveTablebtn);
             tabPage3.Controls.Add(groupBox9);
             tabPage3.Controls.Add(protocolcb);
@@ -1090,6 +1092,16 @@
             tabPage3.TabIndex = 2;
             tabPage3.Text = "Настройка дублирующего табла";
             tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // defaultboardbtn
+            // 
+            defaultboardbtn.Location = new Point(551, 218);
+            defaultboardbtn.Name = "defaultboardbtn";
+            defaultboardbtn.Size = new Size(171, 39);
+            defaultboardbtn.TabIndex = 6;
+            defaultboardbtn.Text = "По умолчанию";
+            defaultboardbtn.UseVisualStyleBackColor = true;
+            defaultboardbtn.Click += defaultboardbtn_Click;
             // 
             // SaveTablebtn
             // 
@@ -1426,5 +1438,6 @@
         private ComboBox Boardcb;
         private Button SaveTcpbtn;
         private Button SaveTablebtn;
+        private Button defaultboardbtn;
     }
 }

@@ -31,7 +31,7 @@ namespace PromVesClient.Service
                 _configurationPath,
                 "SerialPortsBoards.json");
         }
-
+        //метод загрузки настроек COM-порта табло
         public ServiceResult<SerialPortBoardConfiguration> Load()
         {
             try
@@ -75,6 +75,7 @@ namespace PromVesClient.Service
             }
         }
 
+        //метод сохранения настроек COM-порта табло
         public ServiceResult Save(
             SerialPortBoardConfiguration configuration)
         {

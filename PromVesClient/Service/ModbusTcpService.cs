@@ -31,9 +31,7 @@ namespace PromVesClient.Service
                 "ConfigModbusTcp.json");
         }
 
-        /// <summary>
-        /// Загружает текущие настройки MOXA.
-        /// </summary>
+        // загружает настройки MOXA из файла ConfigModbusTcp.json
         public ServiceResult<ModbusTcpConfiguration> Load()
         {
             try
@@ -112,9 +110,7 @@ namespace PromVesClient.Service
             }
         }
 
-        /// <summary>
-        /// Загружает настройки MOXA по умолчанию.
-        /// </summary>
+        // загружает настройки MOXA по умолчанию из файла defaultConfigModbusTcp.json
         public ServiceResult<ModbusTcpConfiguration> LoadDefaults()
         {
             try
@@ -190,9 +186,7 @@ namespace PromVesClient.Service
             }
         }
 
-        /// <summary>
-        /// Сохраняет настройки MOXA.
-        /// </summary>
+        // сохраняет настройки MOXA в файл ConfigModbusTcp.json
         public ServiceResult Save(ModbusTcpConfiguration configuration)
         {
             try

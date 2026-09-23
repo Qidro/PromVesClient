@@ -28,7 +28,7 @@ namespace PromVesClient.Service
         new JsonStringEnumConverter()
     }
         };
-
+       
         public ComPortService(ILogger<ComPortService> logger)
         {
             _logger = logger;
@@ -45,10 +45,7 @@ namespace PromVesClient.Service
         }
 
 
-        /// <summary>
-        /// Загружает текущие настройки.
-        /// Если файла нет — создает его из defaultSettings.json.
-        /// </summary>
+        /// Загружает настройки COM-порта из файла.
         public ServiceResult<SerialPortConfiguration> Load()
         {
             try
@@ -121,9 +118,7 @@ namespace PromVesClient.Service
             }
         }
 
-        /// <summary>
-        /// Загружает настройки по умолчанию.
-        /// </summary>
+        /// Загружает настройки COM-порта по умолчанию из файла.
         public ServiceResult<SerialPortConfiguration> LoadDefaults()
         {
             try
@@ -180,7 +175,7 @@ namespace PromVesClient.Service
             }
         }
 
-        /// Сохраняет настройки.
+        /// Сохраняет настройки COM-порта в файл.
         public ServiceResult Save(SerialPortConfiguration configuration)
         {
             try
@@ -228,9 +223,7 @@ namespace PromVesClient.Service
                     "Не удалось сохранить настройки.");
             }
         }
-        /// <summary>
-        /// Восстанавливает настройки по умолчанию.
-        /// </summary>
+        /// Восстанавливает настройки COM-порта по умолчанию.
         public ServiceResult<SerialPortConfiguration> RestoreDefaults()
         {
             try
@@ -246,9 +239,7 @@ namespace PromVesClient.Service
                     "Не удалось загрузить настройки по умолчанию.");
             }
         }
-        /// <summary>
-        /// Возвращает список доступных COM-портов.
-        /// </summary>
+        // Получает список доступных COM-портов.
         public string[] GetAvailablePorts()
         {
             return SerialPort.GetPortNames()

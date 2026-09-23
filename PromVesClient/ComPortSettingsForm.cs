@@ -1,4 +1,5 @@
-﻿using PromVesClient.Models;
+﻿using DocumentFormat.OpenXml.Vml.Spreadsheet;
+using PromVesClient.Models;
 using PromVesClient.Service;
 using System;
 using System.Collections.Generic;
@@ -38,7 +39,7 @@ namespace PromVesClient
         // количество используемых COM-портов
         private int _selectedPortCount = 4;
 
-
+        // коллекции для компртов
         private List<ComboBox> _portBoxes;
         private List<ComboBox> _baudRateBoxes;
         private List<ComboBox> _dataBitsBoxes;
@@ -47,7 +48,7 @@ namespace PromVesClient
         private List<ComboBox> _handshakeBoxes;
         private List<ComboBox> _deviceAddressBoxes;
 
-
+        // коллекции для MOXA
         private List<TextBox> _moxaIpBoxes;
         private List<TextBox> _moxaPortBoxes;
         private List<ComboBox> _moxaSlaveIdBoxes;
@@ -75,7 +76,7 @@ namespace PromVesClient
             //подписка на события выбора адреса устройства
             SubscribePortEvents();
         }
-
+        // обработчик события загрузки формы
         private async void ComPortSettingsForm_Load(object sender, EventArgs e)
         {
             FillComboBox();
@@ -84,8 +85,10 @@ namespace PromVesClient
             UpdateDeviceAddressAvailability();
             LoadMoxaSettings();
             LoadBoardSettings();
+            UpdateBoardVisibility();
             FillBoardComboBox();
         }
+        // метод заполнения всех комбобоксов
         private async void FillComboBox()
         {
             FillPorts();
@@ -518,6 +521,7 @@ namespace PromVesClient
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
         }
+        // метод инициализации выбора количества COM-портов
         private async void InitializePortCountComboBox()
         {
             cbChoicePort.Items.Clear();
@@ -533,6 +537,7 @@ namespace PromVesClient
 
             cbChoicePort.SelectedIndexChanged += CbChoicePort_SelectedIndexChanged;
         }
+        // обработчик события изменения выбранного количества COM-портов
         private async void CbChoicePort_SelectedIndexChanged(object? sender, EventArgs e)
         {
             if (cbChoicePort.SelectedItem == null)
@@ -543,6 +548,7 @@ namespace PromVesClient
             UpdatePortVisibility();
             UpdateMoxaVisibility();
         }
+        // метод обновления видимости групповых элементов для COM-портов
         private async void UpdatePortVisibility()
         {
             groupBox1.Visible = _selectedPortCount >= 1;
@@ -550,12 +556,14 @@ namespace PromVesClient
             groupBox3.Visible = _selectedPortCount >= 3;
             groupBox4.Visible = _selectedPortCount >= 4;
         }
+        // обработчик события изменения выбранного адреса устройства
         private async void DeviceAddress_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (_updatingDeviceAddresses)
                 return;
             UpdateDeviceAddressAvailability();
         }
+        // метод обновления доступности адресов устройств в ComboBox
         private async void UpdateDeviceAddressAvailability()
         {
             if (_updatingDeviceAddresses)
@@ -610,7 +618,8 @@ namespace PromVesClient
                 _updatingDeviceAddresses = false;
             }
         }
-        private void InitializeMoxaCollections()
+        // метод инициализации коллекций для MOXA
+        private async void InitializeMoxaCollections()
         {
             _moxaIpBoxes = new List<TextBox>
     {
@@ -648,6 +657,7 @@ namespace PromVesClient
                 textBox.KeyPress += MoxaIpTextBox_KeyPress;
             }
         }
+        // метод инициализации контролов для MOXA
         private void InitializeMoxaControls()
         {
             foreach (var comboBox in _moxaSlaveIdBoxes)
@@ -661,6 +671,7 @@ namespace PromVesClient
                 }
             }
         }
+        // метод обновления видимости групповых элементов для MOXA
         private void UpdateMoxaVisibility()
         {
             if (_moxaGroupBoxes == null)
@@ -671,6 +682,7 @@ namespace PromVesClient
                 _moxaGroupBoxes[i].Visible = i < _selectedPortCount;
             }
         }
+        // метод загрузки настроек MOXA
         private async void LoadMoxaSettings()
         {
             var result = _modbusTcpService.Load();
@@ -702,6 +714,7 @@ namespace PromVesClient
                 _moxaSlaveIdBoxes[i].SelectedItem = setting.SlaveId;
             }
         }
+        // метод сохранения настроек MOXA
         private void SaveMoxaSettings()
         {
             var configuration = new ModbusTcpConfiguration();
@@ -754,7 +767,7 @@ namespace PromVesClient
                 throw new Exception(result.Message);
             }
         }
-
+        // обработчик события нажатия кнопки сохранения настроек MOXA
         private void SaveTcpbtn_Click(object sender, EventArgs e)
         {
             try
@@ -776,8 +789,8 @@ namespace PromVesClient
                     MessageBoxIcon.Error);
             }
         }
-
-        private void MoxaIpTextBox_KeyPress(object? sender, KeyPressEventArgs e)
+        // зпратение метода проверки корректности IP-адреса
+        private async void MoxaIpTextBox_KeyPress(object? sender, KeyPressEventArgs e)
         {
             // Разрешаем цифры, точку и управляющие символы (Backspace и т.п.)
             if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar) && e.KeyChar != '.')
@@ -785,17 +798,19 @@ namespace PromVesClient
                 e.Handled = true;
             }
         }
-
+        // метод проверки корректности IP-адреса
         private static bool IsValidIpAddress(string ip)
         {
             return IPAddress.TryParse(ip, out _);
         }
+        // метод инициализации контролов для табло
         private async void InitializeBoardSettings()
         {
             Boardcb.Items.Clear();
 
             Boardcb.Items.Add("GreenBoard");
             Boardcb.Items.Add("YHLBoard");
+            Boardcb.Items.Add("None");
 
             Boardcb.DropDownStyle = ComboBoxStyle.DropDownList;
 
@@ -807,6 +822,7 @@ namespace PromVesClient
             protocolcb.Items.Add("St");
 
             protocolcb.DropDownStyle = ComboBoxStyle.DropDownList;
+            Boardcb.SelectedIndexChanged += Boardcb_SelectedIndexChanged;
 
 
             cbPort5.DropDownStyle = ComboBoxStyle.DropDownList;
@@ -821,7 +837,9 @@ namespace PromVesClient
 
             cbStopBits5.DropDownStyle = ComboBoxStyle.DropDownList;
         }
-        private async void SaveBoardSerialPortSettings()
+
+        // метод сохранения настроек COM-порта для табло
+        private async Task SaveBoardSerialPortSettings()
         {
             if (string.IsNullOrWhiteSpace(cbPort5.Text))
                 throw new Exception("Не выбран COM-порт табло.");
@@ -832,42 +850,30 @@ namespace PromVesClient
             if (!int.TryParse(cbDataBits5.Text, out int dataBits))
                 throw new Exception("Некорректный DataBits.");
 
-            if (!Enum.TryParse<Parity>(
-                    cbParity5.Text,
-                    out Parity parity))
-            {
+            if (!Enum.TryParse<Parity>(cbParity5.Text, out Parity parity))
                 throw new Exception("Некорректный Parity.");
-            }
 
-            if (!Enum.TryParse<StopBits>(
-                    cbStopBits5.Text,
-                    out StopBits stopBits))
-            {
+            if (!Enum.TryParse<StopBits>(cbStopBits5.Text, out StopBits stopBits))
                 throw new Exception("Некорректный StopBits.");
-            }
 
-            if (!Enum.TryParse<Handshake>(
-                    cbHandshake5.Text,
-                    out Handshake handshake))
-            {
+            if (!Enum.TryParse<Handshake>(cbHandshake5.Text, out Handshake handshake))
                 throw new Exception("Некорректный Handshake.");
-            }
 
             var configuration = new SerialPortBoardConfiguration();
+            configuration.SerialPortsBoards.Add(new SerialPortBoard
+            {
+                Id = 1,
+                PortName = cbPort5.Text,
+                BaudRate = baudRate,
+                DataBits = dataBits,
+                Parity = parity,
+                StopBits = stopBits,
+                Handshake = handshake
+            });
 
-            configuration.SerialPortsBoards.Add(
-                new SerialPortBoard
-                {
-                    Id = 1,
-                    PortName = cbPort5.Text,
-                    BaudRate = baudRate,
-                    DataBits = dataBits,
-                    Parity = parity,
-                    StopBits = stopBits,
-                    Handshake = handshake
-                });
-
-            var result = _serialPortBoardService.Save(configuration);
+            // Если сервис имеет асинхронный метод SaveAsync — используйте его.
+            // Иначе обёрните синхронный вызов в Task.Run, чтобы не блокировать UI.
+            var result = await Task.Run(() => _serialPortBoardService.Save(configuration));
 
             if (!result.Success)
                 throw new Exception(result.Message);
@@ -894,11 +900,19 @@ namespace PromVesClient
             if (!result.Success)
                 throw new Exception(result.Message);
         }
+        // обработчик события нажатия кнопки сохранения настроек табло
         private async void SaveTablebtn_Click(object sender, EventArgs e)
         {
             try
             {
-                SaveBoardSerialPortSettings();
+                if (Boardcb.Text == "None")
+                {
+                    // COM-настройки табло не сохраняем
+                }
+                else
+                {
+                    await SaveBoardSerialPortSettings();
+                }
                 SaveGeneralConfigurator();
 
                 MessageBox.Show(
@@ -916,6 +930,7 @@ namespace PromVesClient
                     MessageBoxIcon.Error);
             }
         }
+        // метод загрузки настроек COM-порта для табло
         private void LoadBoardSettings()
         {
             var serialResult = _serialPortBoardService.Load();
@@ -946,6 +961,7 @@ namespace PromVesClient
                 }
             }
         }
+        // метод заполнения комбобоксов для табло
         private async void FillBoardComboBox()
         {
             FillBoardPort();
@@ -994,7 +1010,7 @@ namespace PromVesClient
                 });
         }
 
-        private void FillBoardParity()
+        private async void FillBoardParity()
         {
             FillComboBoxes(
                 new[] { cbParity5 },
@@ -1013,6 +1029,49 @@ namespace PromVesClient
             FillComboBoxes(
                 new[] { cbHandshake5 },
                 Enum.GetNames<Handshake>());
+        }
+        private void Boardcb_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            bool isNone = Boardcb.Text == "None";
+
+            groupBox9.Visible = !isNone;
+            defaultboardbtn.Visible = !isNone;
+        }
+        private async void UpdateBoardVisibility()
+        {
+            groupBox9.Visible = Boardcb.Text != "None";
+        }
+        private async void FillBoardDefaults()
+        {
+            // COM-порт
+            if (cbPort5.Items.Count > 0)
+            {
+                cbPort5.SelectedIndex = 0;
+            }
+            else
+            {
+                cbPort5.SelectedItem = null;
+            }
+
+            // BaudRate
+            cbBaudRate5.SelectedItem = 1200;
+
+            // DataBits
+            cbDataBits5.SelectedItem = 8;
+
+            // Parity
+            cbParity5.SelectedItem = Parity.None.ToString();
+
+            // StopBits
+            cbStopBits5.SelectedItem = StopBits.One.ToString();
+
+            // Handshake
+            cbHandshake5.SelectedItem = Handshake.None.ToString();
+        }
+        // обработчик события нажатия кнопки восстановления настроек табло по умолчанию
+        private async void defaultboardbtn_Click(object sender, EventArgs e)
+        {
+            FillBoardDefaults();
         }
     }
 }
