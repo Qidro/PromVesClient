@@ -29,15 +29,15 @@
         private void InitializeComponent()
         {
             dgvWagon = new DataGridView();
-            dgvWagonList = new DataGridView();
-            btnCreate = new Button();
-            btnChangeStatus = new Button();
             colNumber = new DataGridViewTextBoxColumn();
             colTareWeight = new DataGridViewTextBoxColumn();
+            dgvWagonList = new DataGridView();
             colId = new DataGridViewTextBoxColumn();
             colListNumber = new DataGridViewTextBoxColumn();
             colListTareWeight = new DataGridViewTextBoxColumn();
             colListStatus = new DataGridViewTextBoxColumn();
+            btnCreate = new Button();
+            btnChangeStatus = new Button();
             ((System.ComponentModel.ISupportInitialize)dgvWagon).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dgvWagonList).BeginInit();
             SuspendLayout();
@@ -51,35 +51,6 @@
             dgvWagon.Size = new Size(459, 98);
             dgvWagon.TabIndex = 0;
             // 
-            // dgvWagonList
-            // 
-            dgvWagonList.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvWagonList.Columns.AddRange(new DataGridViewColumn[] { colId, colListNumber, colListTareWeight, colListStatus });
-            dgvWagonList.Location = new Point(12, 197);
-            dgvWagonList.Name = "dgvWagonList";
-            dgvWagonList.Size = new Size(459, 149);
-            dgvWagonList.TabIndex = 1;
-            // 
-            // btnCreate
-            // 
-            btnCreate.Location = new Point(12, 129);
-            btnCreate.Name = "btnCreate";
-            btnCreate.Size = new Size(99, 50);
-            btnCreate.TabIndex = 2;
-            btnCreate.Text = "Добавить";
-            btnCreate.UseVisualStyleBackColor = true;
-            btnCreate.Click += btnCreate_Click;
-            // 
-            // btnChangeStatus
-            // 
-            btnChangeStatus.Location = new Point(279, 129);
-            btnChangeStatus.Name = "btnChangeStatus";
-            btnChangeStatus.Size = new Size(192, 50);
-            btnChangeStatus.TabIndex = 4;
-            btnChangeStatus.Text = "Активировать/Деактивировать";
-            btnChangeStatus.UseVisualStyleBackColor = true;
-            btnChangeStatus.Click += btnChangeStatus_Click;
-            // 
             // colNumber
             // 
             colNumber.HeaderText = "Номер вагона";
@@ -91,6 +62,15 @@
             colTareWeight.HeaderText = "Тара";
             colTareWeight.Name = "colTareWeight";
             colTareWeight.Width = 210;
+            // 
+            // dgvWagonList
+            // 
+            dgvWagonList.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvWagonList.Columns.AddRange(new DataGridViewColumn[] { colId, colListNumber, colListTareWeight, colListStatus });
+            dgvWagonList.Location = new Point(12, 197);
+            dgvWagonList.Name = "dgvWagonList";
+            dgvWagonList.Size = new Size(459, 149);
+            dgvWagonList.TabIndex = 1;
             // 
             // colId
             // 
@@ -116,6 +96,26 @@
             colListStatus.HeaderText = "Статус";
             colListStatus.Name = "colListStatus";
             colListStatus.Width = 140;
+            // 
+            // btnCreate
+            // 
+            btnCreate.Location = new Point(12, 129);
+            btnCreate.Name = "btnCreate";
+            btnCreate.Size = new Size(99, 50);
+            btnCreate.TabIndex = 2;
+            btnCreate.Text = "Добавить";
+            btnCreate.UseVisualStyleBackColor = true;
+            btnCreate.Click += btnCreate_Click;
+            // 
+            // btnChangeStatus
+            // 
+            btnChangeStatus.Location = new Point(279, 129);
+            btnChangeStatus.Name = "btnChangeStatus";
+            btnChangeStatus.Size = new Size(192, 50);
+            btnChangeStatus.TabIndex = 4;
+            btnChangeStatus.Text = "Активировать/Деактивировать";
+            btnChangeStatus.UseVisualStyleBackColor = true;
+            btnChangeStatus.Click += btnChangeStatus_Click;
             // 
             // WagonForm
             // 
