@@ -1,0 +1,34 @@
+{
+  "SerialPorts": [
+    {
+      "Id": 1,
+      "PortName": "COM1",
+      "BaudRate": 115200,
+      "DataBits": 8,
+      "Parity": "None",
+      "StopBits": "One",
+      "Handshake": "None",
+      "DeviceAddress": 2
+    },
+    {
+      "Id": 2,
+      "PortName": "COM3",
+      "BaudRate": 115200,
+      "DataBits": 8,
+      "Parity": "None",
+      "StopBits": "One",
+      "Handshake": "None",
+      "DeviceAddress": 3
+    },
+    {
+      "Id": 3,
+      "PortName": "COM2",
+      "BaudRate": 115200,
+      "DataBits": 8,
+      "Parity": "None",
+      "StopBits": "One",
+      "Handshake": "None",
+      "DeviceAddress": 6
+    }
+  ]
+}
