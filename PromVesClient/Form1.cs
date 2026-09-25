@@ -36,15 +36,20 @@ namespace PromVesClient
             //programVersion.Text = "Версия: 1.0.0";
 
         }
-        
-        private void Form1_Load(object sender, EventArgs e)
+        //загрузка предварительных данных 
+        private async void Form1_Load(object sender, EventArgs e)
         {
-
+            await loadConfig();
         }
 
         private void label1_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private async Task loadConfig()
+        { 
+            
         }
 
         private async void button1_Click(object sender, EventArgs e)
@@ -57,7 +62,7 @@ namespace PromVesClient
             //результат авторизации
             if (result.Success == true)
             {
-                _currentUserService.Login(result.Data!);
+                _currentUserService.Login(result.Data!, );
                 //MessageBox.Show("успешно", result.Data.PasswordHash);
                 var form = _serviceProvider.GetRequiredService<MainMenu>();
                 //var form = new MainMenu();

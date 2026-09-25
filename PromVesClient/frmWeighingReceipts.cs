@@ -805,5 +805,10 @@ namespace PromVesClient
                     MessageBoxIcon.Error);
             }
         }
+
+        private void frmWeighingReceipts_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }
