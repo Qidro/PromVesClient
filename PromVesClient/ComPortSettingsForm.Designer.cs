@@ -809,6 +809,7 @@
             tabPage2.TabIndex = 1;
             tabPage2.Text = "Настройка ModbusTCP";
             tabPage2.UseVisualStyleBackColor = true;
+            tabPage2.Click += tabPage2_Click;
             // 
             // SaveTcpbtn
             // 

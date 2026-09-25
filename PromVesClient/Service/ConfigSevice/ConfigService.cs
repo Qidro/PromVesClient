@@ -26,49 +26,72 @@ namespace PromVesClient.Service.ConfigSevice
         new JsonStringEnumConverter()
     }
         };
-        public ConfigService(ILogger<ComPortService> logger, ComPortService _comPortService)
-        { 
-            
+        public ConfigService(ILogger<ComPortService> logger, ComPortService comPortService)
+        {
+            _logger = logger;
+            _comPortService = comPortService;
         }
         //расчет количество графиков
         public async Task<ServiceResult<int>> GetGraphsCountAsync()
         {
-            return ServiceResult<int>.Ok(1);
+            //получаем протокол взвешивания
+            var resultGetProtocol = await GetProtocolAsync();
+            if (resultGetProtocol.Success == true)
+            {
+                //получаем количество графиков
+                var resultGetGraphsCount = await GetGraphsCountAsync(resultGetProtocol.Data);
+                if (resultGetGraphsCount.Success == true)
+                {
+                    return ServiceResult<int>.Ok(resultGetGraphsCount.Data);
+                }
+                else
+                {
+                    return ServiceResult<int>.Fail($"не удалось получить количества графиков взвешивания, причина: { resultGetGraphsCount.Message}");
+                }
+            }
+            else
+            {
+                return ServiceResult<int>.Fail($"не удалось получить протокол взвешивания, причина: {resultGetProtocol.Message}");
+            }
+           // return ServiceResult<int>.Ok(1);
         }
         //получение протокола взвешивания
-        public async Task<ServiceResult<string>> GetProtocolAsync()
+        private async Task<ServiceResult<string>> GetProtocolAsync()
         {
-            string _serverSettingsPath = @"C:\PromVesNew\PromVesServer\ConfigPort.json";
+            //путь к файлу
+            string _serverSettingsPath = @"C:\PromVesNew\PromVesServer\Configuration\GeneralConfigurator.json";
+            //открытие файла
             if (!File.Exists(_serverSettingsPath))
             {
-                _logger.LogWarning(
-                    "Файл настроек {Path} не найден. Загружаются настройки по умолчанию.",
+                _logger.LogError(
+                    "Файл настроек {Path} не найден.",
                     _serverSettingsPath);
 
                 return ServiceResult<string>.Fail("Файл настроек статического взвешивания не найден");
             }
-
-            string json = File.ReadAllText(_serverSettingsPath);
-
+            //чтение файла
+            string json = await File.ReadAllTextAsync(_serverSettingsPath);
+            //проверка, что он не пустой
             if (string.IsNullOrWhiteSpace(json))
             {
-                _logger.LogWarning(
-                    "Файл настроек {Path} пустой. Загружаются настройки по умолчанию.",
+                _logger.LogError(
+                    "Файл настроек {Path} пустой",
                     _serverSettingsPath);
             }
-
-            var configuration = JsonSerializer.Deserialize<SerialPortConfiguration>(json, _jsonOptions);
+            //десереализуем
+            var configuration = JsonSerializer.Deserialize<GeneralConfiguratorConfiguration>(json, _jsonOptions);
 
             if (configuration == null)
             {
-                _logger.LogWarning(
-                    "Не удалось десериализовать файл настроек. Загружаются настройки по умолчанию.");
+                _logger.LogError(
+                        "Не удалось десериализовать файл настроек: {Path}", _serverSettingsPath);
+                return ServiceResult<string>.Fail("Не удалось десериализовать файл настроек");
             }
-            return ServiceResult<string>.Ok("");
+            return ServiceResult<string>.Ok(configuration.GeneralConfigurator.Protocol);
         }
 
         //получение количества портов/серверов
-        public async Task<ServiceResult<int>> GetGraphsCountAsync(string protocolName)
+        private async Task<ServiceResult<int>> GetGraphsCountAsync(string protocolName)
         {
             try
             {
@@ -90,7 +113,7 @@ namespace PromVesClient.Service.ConfigSevice
                         "Файл настроек {Path} не найден.",
                         _serverSettingsPath);
 
-                    return ServiceResult<int>.Fail("Файл настроек статического взвешивания не найден");
+                    return ServiceResult<int>.Fail("Файл настроек количества графиков статического взвешивания не найден");
                 }
                 //чтение файла
                 string json = File.ReadAllText(_serverSettingsPath);
@@ -100,18 +123,32 @@ namespace PromVesClient.Service.ConfigSevice
                     _logger.LogWarning(
                         "Файл настроек {Path}",
                         _serverSettingsPath);
-                    return ServiceResult<int>.Fail("Файл настроек статического взвешивания пустой");
+                    return ServiceResult<int>.Fail("Файл настроек количества графиков статического взвешивания пустой");
                 }
-
-                var configuration = JsonSerializer.Deserialize<SerialPortConfiguration>(json, _jsonOptions);
-
-                if (configuration == null)
+                if (protocolName == "ModbusTcp")
                 {
-                    _logger.LogWarning(
-                        "Не удалось десериализовать файл настроек.");
-                    return ServiceResult<int>.Fail("Не удалось десериализовать файл настроек");
+                    var configuration = JsonSerializer.Deserialize<ModbusTcpConfiguration>(json, _jsonOptions);
+
+                    if (configuration == null)
+                    {
+                        _logger.LogWarning(
+                            "Не удалось десериализовать файл настроек количества графиков статического взвешивания");
+                        return ServiceResult<int>.Fail("Не удалось десериализовать файл настроек количества графиков статического взвешивания");
+                    }
+                    return ServiceResult<int>.Ok(configuration.ModbusTcpSetting.Count);
                 }
-                return ServiceResult<int>.Ok(configuration.SerialPorts.Count);
+                else
+                {
+                    var configuration = JsonSerializer.Deserialize<SerialPortConfiguration>(json, _jsonOptions);
+
+                    if (configuration == null)
+                    {
+                        _logger.LogWarning(
+                            "Не удалось десериализовать файл настроек количества графиков статического взвешивания");
+                        return ServiceResult<int>.Fail("Не удалось десериализовать файл настроек количества графиков статического взвешивания");
+                    }
+                    return ServiceResult<int>.Ok(configuration.SerialPorts.Count);
+                }
             }
             catch (JsonException ex)
             {
