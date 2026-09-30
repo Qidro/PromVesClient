@@ -1,18 +1,14 @@
-﻿using DocumentFormat.OpenXml.Vml.Spreadsheet;
-using PromVesClient.Models;
+﻿using PromVesClient.Models;
 using PromVesClient.Service;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO.Ports;
+using System.Linq;
 using System.Net;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-
+using System.ServiceProcess;
+using System.Threading.Tasks;
 
 namespace PromVesClient
 {
@@ -25,21 +21,17 @@ namespace PromVesClient
         private readonly SerialPortBoardService _serialPortBoardService;
         // для работы с табло
         private readonly GeneralConfiguratorService _generalConfiguratorService;
-        private readonly JsonSerializerOptions _jsonOptions = new()
-        {
-            WriteIndented = true,
-            Converters =
-    {
-        new JsonStringEnumConverter()
-    }
-        };
-        //для портов, чтобы не повторялись
+        // События выбора не должны вмешиваться в начальную загрузку настроек.
+        private bool _initializing = true;
         private bool _updatingPorts;
-        private bool _updatingDeviceAddresses;
+        private string[] _availablePorts = Array.Empty<string>();
+        // Сервис для перезапуска службы PromVesServer
+        private readonly PromVesServerService _promVesServerService;
+
         // количество используемых COM-портов
         private int _selectedPortCount = 4;
 
-        // коллекции для компртов
+        // Коллекции элементов для COM-портов
         private List<ComboBox> _portBoxes;
         private List<ComboBox> _baudRateBoxes;
         private List<ComboBox> _dataBitsBoxes;
@@ -53,7 +45,13 @@ namespace PromVesClient
         private List<TextBox> _moxaPortBoxes;
         private List<ComboBox> _moxaSlaveIdBoxes;
         private List<GroupBox> _moxaGroupBoxes;
-        public ComPortSettingsForm(ComPortService comPortService, ModbusTcpService modbusTcpService, SerialPortBoardService serialPortBoardService, GeneralConfiguratorService generalConfiguratorService)
+
+        public ComPortSettingsForm(
+            ComPortService comPortService,
+            ModbusTcpService modbusTcpService,
+            SerialPortBoardService serialPortBoardService,
+            GeneralConfiguratorService generalConfiguratorService,
+            PromVesServerService promVesServerService)
         {
             InitializeComponent();
 
@@ -61,187 +59,123 @@ namespace PromVesClient
             _modbusTcpService = modbusTcpService;
             _serialPortBoardService = serialPortBoardService;
             _generalConfiguratorService = generalConfiguratorService;
-            //иницилизация настроек компрта
+            _promVesServerService = promVesServerService;
+
             InitializeCollections();
-            //инициализация настроек MOXA
             InitializeMoxaCollections();
-            //подгрузка данных для компртов
-            SubscribePortEvents();
-            //подгрузка данных для MOXA
             InitializeMoxaControls();
-            //инициализация настроек табла
             InitializeBoardSettings();
-            // инициализация выбора количества COM-портов
             InitializePortCountComboBox();
-            //подписка на события выбора адреса устройства
             SubscribePortEvents();
-        }
-        // обработчик события загрузки формы
-        private async void ComPortSettingsForm_Load(object sender, EventArgs e)
-        {
-            FillComboBox();
-            LoadSettings();
+            SubscribeDefaultButtons();
+
+            // Работает и при наличии, и при отсутствии этой подписки в дизайнере.
+            Load -= ComPortSettingsForm_Load;
+            Load += ComPortSettingsForm_Load;
+
             UpdatePortVisibility();
-            UpdateDeviceAddressAvailability();
-            LoadMoxaSettings();
-            LoadBoardSettings();
+            UpdateMoxaVisibility();
             UpdateBoardVisibility();
-            FillBoardComboBox();
         }
-        // метод заполнения всех комбобоксов
-        private async void FillComboBox()
+
+        // обработчик события загрузки формы
+        private void ComPortSettingsForm_Load(object sender, EventArgs e)
         {
-            FillPorts();
-            FillBaudRates();
-            FillDataBits();
-            FillParity();
-            FillStopBits();
-            FillHandshake();
-        }
-        // обьединяем в колекции комбо боксы
-        private async void InitializeCollections()
-        {
-            _portBoxes = new List<ComboBox>
+            _initializing = true;
+            try
             {
-                cbPort1,
-                cbPort2,
-                cbPort3,
-                cbPort4
-            };
-
-            _baudRateBoxes = new List<ComboBox>
+                // Программно заполняются только списки имён COM-портов.
+                RefreshAvailablePorts();
+                LoadSettings();
+                LoadMoxaSettings();
+                LoadBoardSettings();
+            }
+            catch (Exception ex)
             {
-                cbBaudRate1,
-                cbBaudRate2,
-                cbBaudRate3,
-                cbBaudRate4
-            };
-
-            _dataBitsBoxes = new List<ComboBox>
+                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
             {
-                cbDataBits1,
-                cbDataBits2,
-                cbDataBits3,
-                cbDataBits4
-            };
-
-            _parityBoxes = new List<ComboBox>
-            {
-                cbParity1,
-                cbParity2,
-                cbParity3,
-                cbParity4
-            };
-
-            _stopBitsBoxes = new List<ComboBox>
-            {
-                cbStopBits1,
-                cbStopBits2,
-                cbStopBits3,
-                cbStopBits4
-            };
-
-            _handshakeBoxes = new List<ComboBox>
-            {
-                cbHandshake1,
-                cbHandshake2,
-                cbHandshake3,
-                cbHandshake4
-            };
-            _deviceAddressBoxes = new List<ComboBox>
-            {
-                cbAddress1,
-                cbAddress2,
-                cbAddress3,
-                cbAddress4
-            };
-            foreach (var comboBox in _deviceAddressBoxes)
-            {
-                comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-
-                for (int i = 1; i <= 247; i++)
-                {
-                    comboBox.Items.Add(i);
-                }
-
-                comboBox.SelectedIndexChanged += DeviceAddress_SelectedIndexChanged;
+                _initializing = false;
+                UpdatePortVisibility();
+                UpdateMoxaVisibility();
+                UpdateBoardVisibility();
             }
         }
-        // метод универсального заполнения
-        private async void FillComboBoxes<T>(
-    IEnumerable<ComboBox> comboBoxes,
-    IEnumerable<T> values)
-        {
-            foreach (var comboBox in comboBoxes)
-            {
-                comboBox.Items.Clear();
-                comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
 
-                foreach (var value in values)
-                {
-                    comboBox.Items.Add(value);
-                }
+        // Коллекции элементов формы для COM-портов
+        private void InitializeCollections()
+        {
+            _portBoxes = new List<ComboBox> { cbPort1, cbPort2, cbPort3, cbPort4 };
+            _baudRateBoxes = new List<ComboBox> { cbBaudRate1, cbBaudRate2, cbBaudRate3, cbBaudRate4 };
+            _dataBitsBoxes = new List<ComboBox> { cbDataBits1, cbDataBits2, cbDataBits3, cbDataBits4 };
+            _parityBoxes = new List<ComboBox> { cbParity1, cbParity2, cbParity3, cbParity4 };
+            _stopBitsBoxes = new List<ComboBox> { cbStopBits1, cbStopBits2, cbStopBits3, cbStopBits4 };
+            _handshakeBoxes = new List<ComboBox> { cbHandshake1, cbHandshake2, cbHandshake3, cbHandshake4 };
+            _deviceAddressBoxes = new List<ComboBox> { cbAddress1, cbAddress2, cbAddress3, cbAddress4 };
+
+            // Настройка поведения элементов без изменения их списков.
+            foreach (var boxes in new[]
+            {
+                _portBoxes, _baudRateBoxes, _dataBitsBoxes, _parityBoxes,
+                _stopBitsBoxes, _handshakeBoxes, _deviceAddressBoxes
+            })
+            {
+                foreach (var comboBox in boxes)
+                    comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             }
         }
-        //поиск портов и добавления их
-        private async void FillPorts()
+
+        // Выбирает существующий пункт, не добавляя и не удаляя Items.
+        // Пробелы по краям и регистр не влияют на выбор.
+        private static bool SelectComboBoxItem(
+            ComboBox comboBox, object? value, ICollection<string>? missingItems = null)
         {
-            FillComboBoxes(
-                _portBoxes,
-                SerialPort.GetPortNames());
-        }
-        //метод заполнения BaudRates
-        private async void FillBaudRates()
-        {
-            FillComboBoxes(
-                _baudRateBoxes,
-                new[]
+            string text = value?.ToString()?.Trim() ?? string.Empty;
+            int selectedIndex = -1;
+
+            if (text.Length > 0)
+            {
+                for (int i = 0; i < comboBox.Items.Count; i++)
                 {
-            300,
-            600,
-            1200,
-            2400,
-            4800,
-            9600,
-            19200,
-            38400,
-            57600,
-            115200
-                });
-        }
-        private async void FillDataBits()
-        {
-            FillComboBoxes(
-                _dataBitsBoxes,
-                new[]
+                    string itemText = comboBox.GetItemText(comboBox.Items[i]).Trim();
+                    if (string.Equals(itemText, text, StringComparison.OrdinalIgnoreCase))
+                    {
+                        selectedIndex = i;
+                        break;
+                    }
+                }
+
+                // Также поддерживаем числовые коды enum в дизайнере:
+                // например, StopBits.One соответствует коду 1.
+                if (selectedIndex < 0 && value is Enum enumValue)
                 {
-            5,
-            6,
-            7,
-            8
-                });
+                    long code = Convert.ToInt64(enumValue);
+                    for (int i = 0; i < comboBox.Items.Count; i++)
+                    {
+                        if (long.TryParse(comboBox.GetItemText(comboBox.Items[i]), out long itemCode)
+                            && itemCode == code)
+                        {
+                            selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            comboBox.SelectedIndex = selectedIndex;
+            if (selectedIndex < 0)
+            {
+                comboBox.Text = string.Empty;
+                if (text.Length > 0)
+                    missingItems?.Add($"{comboBox.Name}: отсутствует значение «{text}».");
+            }
+
+            return selectedIndex >= 0;
         }
-        // следующие методы значения подгружаются из .NET
-        private async void FillParity()
-        {
-            FillComboBoxes(
-                _parityBoxes,
-                Enum.GetNames<Parity>());
-        }
-        private async void FillStopBits()
-        {
-            FillComboBoxes(
-                _stopBitsBoxes,
-                Enum.GetNames<StopBits>());
-        }
-        private async void FillHandshake()
-        {
-            FillComboBoxes(
-                _handshakeBoxes,
-                Enum.GetNames<Handshake>());
-        }
-        // заполнение одного порта
-        private async void LoadSettings()
+
+        // Загрузка сохранённых настроек COM-портов
+        private void LoadSettings()
         {
             var result = _comPortService.Load();
 
@@ -252,78 +186,85 @@ namespace PromVesClient
                     "Ошибка",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
-
                 return;
             }
 
-            var configuration = result.Data;
-            // Определяем количество COM-портов из ConfigPort.json
-            _selectedPortCount = Math.Clamp(
-                configuration.SerialPorts.Count,
-                1,
-                4);
-
-            // Показываем это количество в ComboBox
-            cbChoicePort.SelectedItem = _selectedPortCount;
-
-            // Загружаем настройки портов
-            int portsToLoad = Math.Min(
-                configuration.SerialPorts.Count,
-                _portBoxes.Count);
-            for (int i = 0; i < configuration.SerialPorts.Count; i++)
-            {
-                LoadPortToControls(
-                    configuration.SerialPorts[i],
-                    _portBoxes[i],
-                    _baudRateBoxes[i],
-                    _dataBitsBoxes[i],
-                    _parityBoxes[i],
-                    _stopBitsBoxes[i],
-                    _handshakeBoxes[i],
-                    _deviceAddressBoxes[i]);
-            }
+            ApplyPortSettings(result.Data);
         }
-        //заполнение атоматически всех портов
-        private async void LoadPortToControls(
-    SerialPortSettings settings,
-    ComboBox portBox,
-    ComboBox baudRateBox,
-    ComboBox dataBitsBox,
-    ComboBox parityBox,
-    ComboBox stopBitsBox,
-    ComboBox handshakeBox,
-    ComboBox deviceAddressBox)
+
+        // При загрузке и восстановлении сначала возвращаем полные списки портов.
+        // Фильтрацию включаем только после применения всех сохранённых значений.
+        private void ApplyPortSettings(
+            SerialPortConfiguration configuration, ICollection<string>? missingItems = null)
         {
-            if (string.IsNullOrWhiteSpace(settings.PortName))
+            if (configuration?.SerialPorts == null)
+                throw new InvalidOperationException("Не получена конфигурация COM-портов.");
+
+            _updatingPorts = true;
+            try
             {
-                portBox.SelectedItem = null;
+                _selectedPortCount = Math.Clamp(configuration.SerialPorts.Count, 1, 4);
+                SelectComboBoxItem(cbChoicePort, _selectedPortCount, missingItems);
+
+                foreach (var comboBox in _portBoxes)
+                    SetPortItems(comboBox, _availablePorts, comboBox.Text);
+
+                int count = Math.Min(configuration.SerialPorts.Count, _portBoxes.Count);
+                for (int i = 0; i < count; i++)
+                {
+                    LoadPortToControls(
+                        configuration.SerialPorts[i],
+                        _portBoxes[i],
+                        _baudRateBoxes[i],
+                        _dataBitsBoxes[i],
+                        _parityBoxes[i],
+                        _stopBitsBoxes[i],
+                        _handshakeBoxes[i],
+                        _deviceAddressBoxes[i],
+                        missingItems);
+                }
             }
-            else
+            finally
             {
-                portBox.SelectedItem = settings.PortName;
+                _updatingPorts = false;
             }
 
-            baudRateBox.SelectedItem = settings.BaudRate;
-
-            dataBitsBox.SelectedItem = settings.DataBits;
-
-            parityBox.SelectedItem = settings.Parity.ToString();
-
-            stopBitsBox.SelectedItem = settings.StopBits.ToString();
-
-            handshakeBox.SelectedItem = settings.Handshake.ToString();
-            deviceAddressBox.Text = settings.DeviceAddress.ToString();
+            UpdateAvailablePorts();
+            UpdatePortVisibility();
+            UpdateMoxaVisibility();
         }
+
+        // Выбор сохранённых значений без изменения списков
+        private void LoadPortToControls(
+            SerialPortSettings settings,
+            ComboBox portBox,
+            ComboBox baudRateBox,
+            ComboBox dataBitsBox,
+            ComboBox parityBox,
+            ComboBox stopBitsBox,
+            ComboBox handshakeBox,
+            ComboBox deviceAddressBox,
+            ICollection<string>? missingItems = null)
+        {
+            SelectComboBoxItem(portBox, settings.PortName, missingItems);
+            SelectComboBoxItem(baudRateBox, settings.BaudRate, missingItems);
+            SelectComboBoxItem(dataBitsBox, settings.DataBits, missingItems);
+            SelectComboBoxItem(parityBox, settings.Parity, missingItems);
+            SelectComboBoxItem(stopBitsBox, settings.StopBits, missingItems);
+            SelectComboBoxItem(handshakeBox, settings.Handshake, missingItems);
+            SelectComboBoxItem(deviceAddressBox, settings.DeviceAddress, missingItems);
+        }
+
         // метод чтения одного порта
         private SerialPortSettings ReadPortFromControls(
-    ComboBox portBox,
-    ComboBox baudRateBox,
-    ComboBox dataBitsBox,
-    ComboBox parityBox,
-    ComboBox stopBitsBox,
-    ComboBox handshakeBox,
-    ComboBox deviceAddressBox,
-    int id)
+            ComboBox portBox,
+            ComboBox baudRateBox,
+            ComboBox dataBitsBox,
+            ComboBox parityBox,
+            ComboBox stopBitsBox,
+            ComboBox handshakeBox,
+            ComboBox deviceAddressBox,
+            int id)
         {
             if (!int.TryParse(deviceAddressBox.Text, out int deviceAddress))
             {
@@ -340,337 +281,325 @@ namespace PromVesClient
                 PortName = portBox.Text,
                 BaudRate = int.Parse(baudRateBox.Text),
                 DataBits = int.Parse(dataBitsBox.Text),
-                Parity = Enum.Parse<Parity>(parityBox.Text),
-                StopBits = Enum.Parse<StopBits>(stopBitsBox.Text),
-                Handshake = Enum.Parse<Handshake>(handshakeBox.Text),
+                Parity = Enum.Parse<Parity>(parityBox.Text.Trim(), true),
+                StopBits = Enum.Parse<StopBits>(stopBitsBox.Text.Trim(), true),
+                Handshake = Enum.Parse<Handshake>(handshakeBox.Text.Trim(), true),
                 DeviceAddress = deviceAddress
             };
         }
+
         //теперь общий метод для сохранения
-        private async void SaveSettings()
+        private void SaveSettings()
         {
             var configuration = new SerialPortConfiguration();
+            var selectedPorts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var selectedAddresses = new HashSet<int>();
 
             for (int i = 0; i < _selectedPortCount; i++)
             {
-                configuration.SerialPorts.Add(
-                    ReadPortFromControls(
-                        _portBoxes[i],
-                        _baudRateBoxes[i],
-                        _dataBitsBoxes[i],
-                        _parityBoxes[i],
-                        _stopBitsBoxes[i],
-                        _handshakeBoxes[i],
-                        _deviceAddressBoxes[i],
-                        i + 1));
-            }
-
-            var result = _comPortService.Save(configuration);
-
-            if (!result.Success)
-            {
-                MessageBox.Show(
-                    result.Message,
-                    "Ошибка",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-            }
-        }
-        //метод исключения ком портов
-        private async void SubscribePortEvents()
-        {
-            foreach (var comboBox in _portBoxes)
-            {
-                comboBox.SelectedIndexChanged += Port_SelectedIndexChanged;
-            }
-        }
-        //обработчик
-        private async void Port_SelectedIndexChanged(object? sender, EventArgs e)
-        {
-            UpdateAvailablePorts();
-        }
-        //сам метод сброса компортов в форме
-        private async void UpdateAvailablePorts()
-        {
-            if (_updatingPorts)
-                return;
-
-            _updatingPorts = true;
-
-            try
-            {
-                var allPorts = _comPortService.GetAvailablePorts().ToList();
-
-                var selectedPorts = _portBoxes
-                    .Where(cb => cb.SelectedItem != null)
-                    .Select(cb => cb.SelectedItem!.ToString()!)
-                    .ToList();
-
-                foreach (var comboBox in _portBoxes)
-                {
-                    string? currentPort = comboBox.SelectedItem?.ToString();
-
-                    comboBox.Items.Clear();
-
-                    foreach (var port in allPorts)
-                    {
-                        if (!selectedPorts.Contains(port) || port == currentPort)
-                        {
-                            comboBox.Items.Add(port);
-                        }
-                    }
-
-                    if (currentPort != null)
-                    {
-                        comboBox.SelectedItem = currentPort;
-                    }
-                }
-            }
-            finally
-            {
-                _updatingPorts = false;
-            }
-        }
-        // кнопка сохранения заданных настроек
-        private async void btnSave_Click(object sender, EventArgs e)
-        {
-            for (int i = 0; i < _selectedPortCount; i++)
-            {
-                if (_portBoxes[i].SelectedItem == null ||
-                    _baudRateBoxes[i].SelectedItem == null ||
-                    _dataBitsBoxes[i].SelectedItem == null ||
-                    _parityBoxes[i].SelectedItem == null ||
-                    _stopBitsBoxes[i].SelectedItem == null ||
-                    _handshakeBoxes[i].SelectedItem == null ||
-                    string.IsNullOrWhiteSpace(_deviceAddressBoxes[i].Text))
-                {
-                    MessageBox.Show(
-                        $"Не заполнены настройки для COM-порта №{i + 1}.",
-                        "Ошибка",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning);
-
-                    return;
-                }
-            }
-            SaveSettings();
-
-            MessageBox.Show(
-                "Настройки успешно сохранены.",
-                "COM-порты",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
-        }
-        // кнопка востановления дефолтных настроек
-        private async void btnRestoreDefaults_Click(object sender, EventArgs e)
-        {
-            var dialogResult = MessageBox.Show(
-                "Восстановить настройки по умолчанию?",
-                "Подтверждение",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question);
-
-            if (dialogResult != DialogResult.Yes)
-                return;
-
-            var result = _comPortService.RestoreDefaults();
-
-            if (!result.Success)
-            {
-                MessageBox.Show(
-                    result.Message,
-                    "Ошибка",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-
-                return;
-            }
-
-            var configuration = result.Data;
-
-            _selectedPortCount = Math.Clamp(
-        configuration.SerialPorts.Count,
-        1,
-        4);
-
-            cbChoicePort.SelectedItem = _selectedPortCount;
-            int portsToLoad = Math.Min(
-        configuration.SerialPorts.Count,
-        _portBoxes.Count);
-
-
-            for (int i = 0; i < configuration.SerialPorts.Count; i++)
-            {
-                LoadPortToControls(
-                    configuration.SerialPorts[i],
+                var settings = ReadPortFromControls(
                     _portBoxes[i],
                     _baudRateBoxes[i],
                     _dataBitsBoxes[i],
                     _parityBoxes[i],
                     _stopBitsBoxes[i],
                     _handshakeBoxes[i],
-                    _deviceAddressBoxes[i]);
+                    _deviceAddressBoxes[i],
+                    i + 1);
+
+                // Дополнительная проверка, в том числе для загруженной конфигурации.
+                if (!selectedPorts.Add(settings.PortName))
+                    throw new Exception($"COM-порт {settings.PortName} выбран несколько раз.");
+
+                if (!selectedAddresses.Add(settings.DeviceAddress))
+                    throw new Exception($"Адрес устройства {settings.DeviceAddress} выбран несколько раз.");
+
+                configuration.SerialPorts.Add(settings);
             }
 
-            UpdateAvailablePorts();
-            UpdatePortVisibility();
+            var result = _comPortService.Save(configuration);
 
-            MessageBox.Show(
-                "Настройки по умолчанию загружены. Для применения нажмите «Сохранить».",
-                "COM-порты",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
+            if (!result.Success)
+                throw new Exception(result.Message);
         }
-        // метод инициализации выбора количества COM-портов
-        private async void InitializePortCountComboBox()
+
+        //обработчик
+        private void Port_SelectedIndexChanged(object? sender, EventArgs e)
         {
-            cbChoicePort.Items.Clear();
-
-            cbChoicePort.Items.Add(1);
-            cbChoicePort.Items.Add(2);
-            cbChoicePort.Items.Add(3);
-            cbChoicePort.Items.Add(4);
-
-            cbChoicePort.DropDownStyle = ComboBoxStyle.DropDownList;
-
-            cbChoicePort.SelectedItem = _selectedPortCount;
-
-            cbChoicePort.SelectedIndexChanged += CbChoicePort_SelectedIndexChanged;
-        }
-        // обработчик события изменения выбранного количества COM-портов
-        private async void CbChoicePort_SelectedIndexChanged(object? sender, EventArgs e)
-        {
-            if (cbChoicePort.SelectedItem == null)
+            if (_initializing || _updatingPorts)
                 return;
 
-            _selectedPortCount = (int)cbChoicePort.SelectedItem;
+            UpdateAvailablePorts();
+        }
 
+        private void SubscribePortEvents()
+        {
+            foreach (var comboBox in _portBoxes)
+            {
+                comboBox.SelectedIndexChanged -= Port_SelectedIndexChanged;
+                comboBox.SelectedIndexChanged += Port_SelectedIndexChanged;
+                comboBox.DropDown -= PortComboBox_DropDown;
+                comboBox.DropDown += PortComboBox_DropDown;
+            }
+
+            // COM-порт табло, как в исходной форме, выбирается отдельно.
+            cbPort5.DropDown -= PortComboBox_DropDown;
+            cbPort5.DropDown += PortComboBox_DropDown;
+        }
+
+        // При раскрытии списка повторно проверяем доступные COM-порты.
+        private void PortComboBox_DropDown(object? sender, EventArgs e)
+        {
+            if (_initializing || _updatingPorts)
+                return;
+
+            try
+            {
+                RefreshAvailablePorts();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void RefreshAvailablePorts()
+        {
+            _availablePorts = _comPortService.GetAvailablePorts()
+                .Where(port => !string.IsNullOrWhiteSpace(port))
+                .Select(port => port.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            UpdateAvailablePorts();
+        }
+
+        // Выбранный порт остаётся в своём ComboBox и исключается из остальных.
+        // После смены выбора освободившийся порт снова появляется в их списках.
+        private void UpdateAvailablePorts()
+        {
+            if (_updatingPorts)
+                return;
+
+            _updatingPorts = true;
+            try
+            {
+                // Снимок делается до очистки Items, иначе выбор может потеряться.
+                var currentPorts = _portBoxes.Select(box => box.Text.Trim()).ToArray();
+                var selectedPorts = new HashSet<string>(
+                    currentPorts.Where(port => !string.IsNullOrWhiteSpace(port)),
+                    StringComparer.OrdinalIgnoreCase);
+
+                for (int i = 0; i < _portBoxes.Count; i++)
+                {
+                    string currentPort = currentPorts[i];
+                    var ports = _availablePorts.Where(port =>
+                        !selectedPorts.Contains(port) ||
+                        string.Equals(port, currentPort, StringComparison.OrdinalIgnoreCase));
+
+                    SetPortItems(_portBoxes[i], ports, currentPort);
+                }
+
+                // Табло не участвует во взаимном исключении cbPort1–cbPort4.
+                SetPortItems(cbPort5, _availablePorts, cbPort5.Text);
+            }
+            finally
+            {
+                _updatingPorts = false;
+            }
+        }
+
+        // Используется только для cbPort1–cbPort5. Остальные Items задаёт дизайнер.
+        private static void SetPortItems(
+            ComboBox comboBox, IEnumerable<string> ports, string? selectedPort)
+        {
+            comboBox.BeginUpdate();
+            try
+            {
+                comboBox.Items.Clear();
+                foreach (string port in ports)
+                    comboBox.Items.Add(port);
+
+                SelectComboBoxItem(comboBox, selectedPort);
+            }
+            finally
+            {
+                comboBox.EndUpdate();
+            }
+        }
+
+        // кнопка сохранения заданных настроек
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                for (int i = 0; i < _selectedPortCount; i++)
+                {
+                    if (_portBoxes[i].SelectedItem == null ||
+                        _baudRateBoxes[i].SelectedItem == null ||
+                        _dataBitsBoxes[i].SelectedItem == null ||
+                        _parityBoxes[i].SelectedItem == null ||
+                        _stopBitsBoxes[i].SelectedItem == null ||
+                        _handshakeBoxes[i].SelectedItem == null ||
+                        string.IsNullOrWhiteSpace(_deviceAddressBoxes[i].Text))
+                    {
+                        MessageBox.Show(
+                            $"Не заполнены настройки для COM-порта №{i + 1}.",
+                            "Ошибка",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+
+                        return;
+                    }
+                }
+                SaveSettings();
+
+                MessageBox.Show(
+                    "Настройки успешно сохранены.",
+                    "COM-порты",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        // Подключаем известные кнопки, не изменяя Designer.cs.
+        private void SubscribeDefaultButtons()
+        {
+            // Поиск по Name не требует добавления нового поля в Designer.cs.
+            // Если кнопка переименована, её Click должен быть привязан в дизайнере.
+            foreach (var button in Controls.Find("btnRestoreDefaults", true).OfType<Button>())
+            {
+                button.Click -= btnRestoreDefaults_Click;
+                button.Click += btnRestoreDefaults_Click;
+            }
+
+            defaultboardbtn.Click -= defaultboardbtn_Click;
+            defaultboardbtn.Click += defaultboardbtn_Click;
+        }
+
+        // Кнопка восстановления настроек по умолчанию
+        private void btnRestoreDefaults_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show(
+                "Восстановить настройки по умолчанию?",
+                "Подтверждение", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+                != DialogResult.Yes)
+                return;
+
+            try
+            {
+                var result = _comPortService.RestoreDefaults();
+                if (!result.Success)
+                    throw new InvalidOperationException(result.Message);
+
+                if (result.Data?.SerialPorts == null || result.Data.SerialPorts.Count == 0)
+                    throw new InvalidOperationException(
+                        "Сервис RestoreDefaults() не вернул настройки COM-портов.");
+
+                // Состав подключённых портов мог измениться после открытия формы.
+                RefreshAvailablePorts();
+                var missingItems = new List<string>();
+                ApplyPortSettings(result.Data, missingItems);
+
+                if (ShowMissingDefaults(missingItems, "COM-порты"))
+                    return;
+
+                MessageBox.Show(
+                    "Настройки по умолчанию загружены. Для применения нажите «Сохранить».",
+                    "COM-порты", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // Вместо сообщения об успехе показываем, какие значения не удалось выбрать.
+        private static bool ShowMissingDefaults(ICollection<string> missingItems, string caption)
+        {
+            if (missingItems.Count == 0)
+                return false;
+
+            MessageBox.Show(
+                "Не все значения по умолчанию удалось выбрать:\n\n" +
+                string.Join(Environment.NewLine, missingItems) +
+                "\n\nДля обычных параметров проверьте Items соответствующего ComboBox " +
+                "в дизайнере. Имена COM-портов берутся из списка доступных портов " +
+                "компьютера. Отсутствующие значения не добавляются автоматически.",
+                caption, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return true;
+        }
+
+        // метод инициализации выбора количества COM-портов
+        private void InitializePortCountComboBox()
+        {
+            cbChoicePort.DropDownStyle = ComboBoxStyle.DropDownList;
+            cbChoicePort.SelectedIndexChanged -= CbChoicePort_SelectedIndexChanged;
+            cbChoicePort.SelectedIndexChanged += CbChoicePort_SelectedIndexChanged;
+            SelectComboBoxItem(cbChoicePort, _selectedPortCount);
+        }
+
+        // обработчик события изменения выбранного количества COM-портов
+        private void CbChoicePort_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            if (_initializing || _updatingPorts)
+                return;
+
+            if (!int.TryParse(cbChoicePort.Text, out int portCount) ||
+                portCount < 1 || portCount > 4)
+                return;
+
+            _selectedPortCount = portCount;
             UpdatePortVisibility();
             UpdateMoxaVisibility();
         }
+
         // метод обновления видимости групповых элементов для COM-портов
-        private async void UpdatePortVisibility()
+        private void UpdatePortVisibility()
         {
             groupBox1.Visible = _selectedPortCount >= 1;
             groupBox2.Visible = _selectedPortCount >= 2;
             groupBox3.Visible = _selectedPortCount >= 3;
             groupBox4.Visible = _selectedPortCount >= 4;
         }
+
         // обработчик события изменения выбранного адреса устройства
-        private async void DeviceAddress_SelectedIndexChanged(object sender, EventArgs e)
+        private void DeviceAddress_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (_updatingDeviceAddresses)
-                return;
-            UpdateDeviceAddressAvailability();
+            // Оставлен для совместимости с возможной привязкой в Designer.cs.
+            // Списки адресов больше не перестраиваются при выборе.
         }
-        // метод обновления доступности адресов устройств в ComboBox
-        private async void UpdateDeviceAddressAvailability()
-        {
-            if (_updatingDeviceAddresses)
-                return;
 
-            try
-            {
-                _updatingDeviceAddresses = true;
-
-                var selectedAddresses = new HashSet<int>();
-
-                // Сначала собираем уже выбранные адреса
-                foreach (var comboBox in _deviceAddressBoxes)
-                {
-                    if (int.TryParse(comboBox.Text, out int address))
-                    {
-                        selectedAddresses.Add(address);
-                    }
-                }
-
-                // Убираем выбранные адреса из остальных ComboBox
-                foreach (var comboBox in _deviceAddressBoxes)
-                {
-                    int? currentValue = null;
-
-                    if (int.TryParse(comboBox.Text, out int currentAddress))
-                    {
-                        currentValue = currentAddress;
-                    }
-
-                    comboBox.Items.Clear();
-
-                    for (int address = 1; address <= 32; address++)
-                    {
-                        // Текущий выбранный адрес оставляем
-                        // Остальные выбранные в других COM-портах убираем
-                        if (!selectedAddresses.Contains(address) ||
-                            currentValue == address)
-                        {
-                            comboBox.Items.Add(address);
-                        }
-                    }
-
-                    if (currentValue.HasValue)
-                    {
-                        comboBox.SelectedItem = currentValue.Value;
-                    }
-                }
-            }
-            finally
-            {
-                _updatingDeviceAddresses = false;
-            }
-        }
         // метод инициализации коллекций для MOXA
-        private async void InitializeMoxaCollections()
+        private void InitializeMoxaCollections()
         {
-            _moxaIpBoxes = new List<TextBox>
-    {
-        IPtb1,
-        IPtb2,
-        IPtb3,
-        IPtb4
-    };
+            _moxaIpBoxes = new List<TextBox> { IPtb1, IPtb2, IPtb3, IPtb4 };
+            _moxaPortBoxes = new List<TextBox> { Port1, Port2, Port3, Port4 };
+            _moxaSlaveIdBoxes = new List<ComboBox> { cbAddress5, cbAddress6, cbAddress7, cbAddress8 };
+            _moxaGroupBoxes = new List<GroupBox> { groupBox5, groupBox6, groupBox7, groupBox8 };
 
-            _moxaPortBoxes = new List<TextBox>
-    {
-        Port1,
-        Port2,
-        Port3,
-        Port4
-    };
-
-            _moxaSlaveIdBoxes = new List<ComboBox>
-    {
-        cbAddress5,
-        cbAddress6,
-        cbAddress7,
-        cbAddress8
-    };
-
-            _moxaGroupBoxes = new List<GroupBox>
-    {
-        groupBox5,
-        groupBox6,
-        groupBox7,
-        groupBox8
-    };
             foreach (var textBox in _moxaIpBoxes)
             {
+                textBox.KeyPress -= MoxaIpTextBox_KeyPress;
                 textBox.KeyPress += MoxaIpTextBox_KeyPress;
             }
         }
+
         // метод инициализации контролов для MOXA
         private void InitializeMoxaControls()
         {
             foreach (var comboBox in _moxaSlaveIdBoxes)
-            {
-                comboBox.Items.Clear();
                 comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-
-                for (int i = 1; i <= 32; i++)
-                {
-                    comboBox.Items.Add(i);
-                }
-            }
         }
+
         // метод обновления видимости групповых элементов для MOXA
         private void UpdateMoxaVisibility()
         {
@@ -682,8 +611,9 @@ namespace PromVesClient
                 _moxaGroupBoxes[i].Visible = i < _selectedPortCount;
             }
         }
+
         // метод загрузки настроек MOXA
-        private async void LoadMoxaSettings()
+        private void LoadMoxaSettings()
         {
             var result = _modbusTcpService.Load();
 
@@ -711,9 +641,10 @@ namespace PromVesClient
                 _moxaIpBoxes[i].Text = setting.NportIp;
                 _moxaPortBoxes[i].Text = setting.NportPort.ToString();
 
-                _moxaSlaveIdBoxes[i].SelectedItem = setting.SlaveId;
+                SelectComboBoxItem(_moxaSlaveIdBoxes[i], setting.SlaveId);
             }
         }
+
         // метод сохранения настроек MOXA
         private void SaveMoxaSettings()
         {
@@ -767,6 +698,7 @@ namespace PromVesClient
                 throw new Exception(result.Message);
             }
         }
+
         // обработчик события нажатия кнопки сохранения настроек MOXA
         private void SaveTcpbtn_Click(object sender, EventArgs e)
         {
@@ -789,8 +721,9 @@ namespace PromVesClient
                     MessageBoxIcon.Error);
             }
         }
-        // зпратение метода проверки корректности IP-адреса
-        private async void MoxaIpTextBox_KeyPress(object? sender, KeyPressEventArgs e)
+
+        // Ограничение ввода символов IP-адреса
+        private void MoxaIpTextBox_KeyPress(object? sender, KeyPressEventArgs e)
         {
             // Разрешаем цифры, точку и управляющие символы (Backspace и т.п.)
             if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar) && e.KeyChar != '.')
@@ -798,44 +731,27 @@ namespace PromVesClient
                 e.Handled = true;
             }
         }
+
         // метод проверки корректности IP-адреса
         private static bool IsValidIpAddress(string ip)
         {
             return IPAddress.TryParse(ip, out _);
         }
+
         // метод инициализации контролов для табло
-        private async void InitializeBoardSettings()
+        private void InitializeBoardSettings()
         {
-            Boardcb.Items.Clear();
+            foreach (var comboBox in new[]
+            {
+                Boardcb, protocolcb, cbPort5, cbBaudRate5, cbDataBits5,
+                cbHandshake5, cbParity5, cbStopBits5
+            })
+            {
+                comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            }
 
-            Boardcb.Items.Add("GreenBoard");
-            Boardcb.Items.Add("YHLBoard");
-            Boardcb.Items.Add("None");
-
-            Boardcb.DropDownStyle = ComboBoxStyle.DropDownList;
-
-
-            protocolcb.Items.Clear();
-
-            protocolcb.Items.Add("ModbusTcp");
-            protocolcb.Items.Add("ModbusRtu");
-            protocolcb.Items.Add("St");
-
-            protocolcb.DropDownStyle = ComboBoxStyle.DropDownList;
+            Boardcb.SelectedIndexChanged -= Boardcb_SelectedIndexChanged;
             Boardcb.SelectedIndexChanged += Boardcb_SelectedIndexChanged;
-
-
-            cbPort5.DropDownStyle = ComboBoxStyle.DropDownList;
-
-            cbBaudRate5.DropDownStyle = ComboBoxStyle.DropDownList;
-
-            cbDataBits5.DropDownStyle = ComboBoxStyle.DropDownList;
-
-            cbHandshake5.DropDownStyle = ComboBoxStyle.DropDownList;
-
-            cbParity5.DropDownStyle = ComboBoxStyle.DropDownList;
-
-            cbStopBits5.DropDownStyle = ComboBoxStyle.DropDownList;
         }
 
         // метод сохранения настроек COM-порта для табло
@@ -850,13 +766,13 @@ namespace PromVesClient
             if (!int.TryParse(cbDataBits5.Text, out int dataBits))
                 throw new Exception("Некорректный DataBits.");
 
-            if (!Enum.TryParse<Parity>(cbParity5.Text, out Parity parity))
+            if (!Enum.TryParse<Parity>(cbParity5.Text.Trim(), true, out Parity parity))
                 throw new Exception("Некорректный Parity.");
 
-            if (!Enum.TryParse<StopBits>(cbStopBits5.Text, out StopBits stopBits))
+            if (!Enum.TryParse<StopBits>(cbStopBits5.Text.Trim(), true, out StopBits stopBits))
                 throw new Exception("Некорректный StopBits.");
 
-            if (!Enum.TryParse<Handshake>(cbHandshake5.Text, out Handshake handshake))
+            if (!Enum.TryParse<Handshake>(cbHandshake5.Text.Trim(), true, out Handshake handshake))
                 throw new Exception("Некорректный Handshake.");
 
             var configuration = new SerialPortBoardConfiguration();
@@ -871,14 +787,14 @@ namespace PromVesClient
                 Handshake = handshake
             });
 
-            // Если сервис имеет асинхронный метод SaveAsync — используйте его.
-            // Иначе обёрните синхронный вызов в Task.Run, чтобы не блокировать UI.
+            // Сохраняем настройки табло без блокировки интерфейса.
             var result = await Task.Run(() => _serialPortBoardService.Save(configuration));
 
             if (!result.Success)
                 throw new Exception(result.Message);
         }
-        private async void SaveGeneralConfigurator()
+
+        private void SaveGeneralConfigurator()
         {
             if (string.IsNullOrWhiteSpace(Boardcb.Text))
                 throw new Exception("Не выбрано табло.");
@@ -900,6 +816,7 @@ namespace PromVesClient
             if (!result.Success)
                 throw new Exception(result.Message);
         }
+
         // обработчик события нажатия кнопки сохранения настроек табло
         private async void SaveTablebtn_Click(object sender, EventArgs e)
         {
@@ -930,6 +847,7 @@ namespace PromVesClient
                     MessageBoxIcon.Error);
             }
         }
+
         // метод загрузки настроек COM-порта для табло
         private void LoadBoardSettings()
         {
@@ -941,137 +859,83 @@ namespace PromVesClient
                 var settings =
                     serialResult.Data.SerialPortsBoards[0];
 
-                cbPort5.SelectedItem = settings.PortName;
-                cbBaudRate5.SelectedItem = settings.BaudRate;
-                cbDataBits5.SelectedItem = settings.DataBits;
-                cbParity5.SelectedItem = settings.Parity.ToString();
-                cbStopBits5.SelectedItem = settings.StopBits.ToString();
-                cbHandshake5.SelectedItem = settings.Handshake.ToString();
-
+                SelectComboBoxItem(cbPort5, settings.PortName);
+                SelectComboBoxItem(cbBaudRate5, settings.BaudRate);
+                SelectComboBoxItem(cbDataBits5, settings.DataBits);
+                SelectComboBoxItem(cbParity5, settings.Parity);
+                SelectComboBoxItem(cbStopBits5, settings.StopBits);
+                SelectComboBoxItem(cbHandshake5, settings.Handshake);
 
                 var generalResult = _generalConfiguratorService.Load();
 
                 if (generalResult.Success)
                 {
-                    protocolcb.Text =
-                        generalResult.Data.GeneralConfigurator.Protocol;
+                    SelectComboBoxItem(protocolcb, generalResult.Data.GeneralConfigurator.Protocol);
 
-                    Boardcb.Text =
-                        generalResult.Data.GeneralConfigurator.Board;
+                    SelectComboBoxItem(Boardcb, generalResult.Data.GeneralConfigurator.Board);
                 }
             }
         }
-        // метод заполнения комбобоксов для табло
-        private async void FillBoardComboBox()
-        {
-            FillBoardPort();
-            FillBoardBaudRate();
-            FillBoardDataBits();
-            FillBoardParity();
-            FillBoardStopBits();
-            FillBoardHandshake();
-        }
-        private async void FillBoardPort()
-        {
-            FillComboBoxes(
-                new[] { cbPort5 },
-                SerialPort.GetPortNames());
-        }
 
-        private async void FillBoardBaudRate()
-        {
-            FillComboBoxes(
-                new[] { cbBaudRate5 },
-                new[]
-                {
-            300,
-            600,
-            1200,
-            2400,
-            4800,
-            9600,
-            19200,
-            38400,
-            57600,
-            115200
-                });
-        }
-
-        private async void FillBoardDataBits()
-        {
-            FillComboBoxes(
-                new[] { cbDataBits5 },
-                new[]
-                {
-            5,
-            6,
-            7,
-            8
-                });
-        }
-
-        private async void FillBoardParity()
-        {
-            FillComboBoxes(
-                new[] { cbParity5 },
-                Enum.GetNames<Parity>());
-        }
-
-        private async void FillBoardStopBits()
-        {
-            FillComboBoxes(
-                new[] { cbStopBits5 },
-                Enum.GetNames<StopBits>());
-        }
-
-        private async void FillBoardHandshake()
-        {
-            FillComboBoxes(
-                new[] { cbHandshake5 },
-                Enum.GetNames<Handshake>());
-        }
         private void Boardcb_SelectedIndexChanged(object sender, EventArgs e)
         {
-            bool isNone = Boardcb.Text == "None";
+            if (_initializing)
+                return;
 
-            groupBox9.Visible = !isNone;
-            defaultboardbtn.Visible = !isNone;
+            UpdateBoardVisibility();
         }
-        private async void UpdateBoardVisibility()
+
+        private void UpdateBoardVisibility()
         {
-            groupBox9.Visible = Boardcb.Text != "None";
+            bool showBoardSettings = Boardcb.Text != "None";
+            groupBox9.Visible = showBoardSettings;
+            defaultboardbtn.Visible = showBoardSettings;
         }
-        private async void FillBoardDefaults()
+
+        private void SelectBoardDefaults(ICollection<string>? missingItems = null)
         {
-            // COM-порт
-            if (cbPort5.Items.Count > 0)
-            {
-                cbPort5.SelectedIndex = 0;
-            }
-            else
-            {
-                cbPort5.SelectedItem = null;
-            }
+            // Сначала выбираем параметры из списков, заданных в дизайнере.
+            SelectComboBoxItem(cbBaudRate5, 1200, missingItems);
+            SelectComboBoxItem(cbDataBits5, 8, missingItems);
+            SelectComboBoxItem(cbParity5, Parity.None, missingItems);
+            SelectComboBoxItem(cbStopBits5, StopBits.One, missingItems);
+            SelectComboBoxItem(cbHandshake5, Handshake.None, missingItems);
 
-            // BaudRate
-            cbBaudRate5.SelectedItem = 1200;
-
-            // DataBits
-            cbDataBits5.SelectedItem = 8;
-
-            // Parity
-            cbParity5.SelectedItem = Parity.None.ToString();
-
-            // StopBits
-            cbStopBits5.SelectedItem = StopBits.One.ToString();
-
-            // Handshake
-            cbHandshake5.SelectedItem = Handshake.None.ToString();
+            // Как в исходной форме: первый доступный COM-порт табло.
+            cbPort5.SelectedIndex = cbPort5.Items.Count > 0 ? 0 : -1;
+            if (cbPort5.SelectedIndex < 0)
+                missingItems?.Add("cbPort5: доступные COM-порты не найдены.");
         }
+
         // обработчик события нажатия кнопки восстановления настроек табло по умолчанию
-        private async void defaultboardbtn_Click(object sender, EventArgs e)
+        private void defaultboardbtn_Click(object sender, EventArgs e)
         {
-            FillBoardDefaults();
+            try
+            {
+                RefreshAvailablePorts();
+                var missingItems = new List<string>();
+                SelectBoardDefaults(missingItems);
+                ShowMissingDefaults(missingItems, "Табло");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async void btnRestartServerCom_Click(object sender, EventArgs e)
+        {
+            await _promVesServerService.RestartServerAsync();
+        }
+
+        private async void btnRestartServerMoxa_Click(object sender, EventArgs e)
+        {
+            await _promVesServerService.RestartServerAsync();
+        }
+
+        private async void btnRestartServerGeneral_Click(object sender, EventArgs e)
+        {
+            await _promVesServerService.RestartServerAsync();
         }
     }
 }

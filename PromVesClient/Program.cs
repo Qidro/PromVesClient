@@ -70,6 +70,7 @@ namespace PromVesClient
             services.AddSingleton<ModbusTcpService>();
             services.AddSingleton<SerialPortBoardService>();
             services.AddSingleton<GeneralConfiguratorService>();
+            services.AddSingleton<PromVesServerService>();
 
             //регистрация одного экземпляра, чтобы все формы работали именно с ним
             services.AddSingleton<CurrentUserService>();

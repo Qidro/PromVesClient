@@ -146,6 +146,9 @@
             Boardcb = new ComboBox();
             label43 = new Label();
             label42 = new Label();
+            btnRestartServerCom = new Button();
+            btnRestartServerMoxa = new Button();
+            btnRestartServerGeneral = new Button();
             groupBox1.SuspendLayout();
             groupBox2.SuspendLayout();
             groupBox3.SuspendLayout();
@@ -196,6 +199,7 @@
             // cbAddress1
             // 
             cbAddress1.FormattingEnabled = true;
+            cbAddress1.Items.AddRange(new object[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32" });
             cbAddress1.Location = new Point(92, 208);
             cbAddress1.Name = "cbAddress1";
             cbAddress1.Size = new Size(135, 23);
@@ -258,6 +262,7 @@
             // cbHandshake1
             // 
             cbHandshake1.FormattingEnabled = true;
+            cbHandshake1.Items.AddRange(new object[] { "None", "XOnXOff", "RequestToSend", "RequestToSendXOnXOff" });
             cbHandshake1.Location = new Point(92, 179);
             cbHandshake1.Name = "cbHandshake1";
             cbHandshake1.Size = new Size(135, 23);
@@ -266,6 +271,7 @@
             // cbStopBits1
             // 
             cbStopBits1.FormattingEnabled = true;
+            cbStopBits1.Items.AddRange(new object[] { "None", "One", "Two", "OnePointFive" });
             cbStopBits1.Location = new Point(92, 150);
             cbStopBits1.Name = "cbStopBits1";
             cbStopBits1.Size = new Size(135, 23);
@@ -274,6 +280,7 @@
             // cbParity1
             // 
             cbParity1.FormattingEnabled = true;
+            cbParity1.Items.AddRange(new object[] { "None", "Odd", "Even", "Mark", "Space" });
             cbParity1.Location = new Point(92, 121);
             cbParity1.Name = "cbParity1";
             cbParity1.Size = new Size(135, 23);
@@ -282,6 +289,7 @@
             // cbDataBits1
             // 
             cbDataBits1.FormattingEnabled = true;
+            cbDataBits1.Items.AddRange(new object[] { " 5", " 6", " 7", " 8" });
             cbDataBits1.Location = new Point(92, 92);
             cbDataBits1.Name = "cbDataBits1";
             cbDataBits1.Size = new Size(135, 23);
@@ -290,6 +298,7 @@
             // cbBaudRate1
             // 
             cbBaudRate1.FormattingEnabled = true;
+            cbBaudRate1.Items.AddRange(new object[] { " 300", " 600", " 1200", " 2400", " 4800", " 9600", " 19200", " 38400", " 57600", " 115200" });
             cbBaudRate1.Location = new Point(92, 63);
             cbBaudRate1.Name = "cbBaudRate1";
             cbBaudRate1.Size = new Size(135, 23);
@@ -338,6 +347,7 @@
             // cbAddress2
             // 
             cbAddress2.FormattingEnabled = true;
+            cbAddress2.Items.AddRange(new object[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32" });
             cbAddress2.Location = new Point(98, 208);
             cbAddress2.Name = "cbAddress2";
             cbAddress2.Size = new Size(135, 23);
@@ -400,6 +410,7 @@
             // cbHandshake2
             // 
             cbHandshake2.FormattingEnabled = true;
+            cbHandshake2.Items.AddRange(new object[] { "None", "XOnXOff", "RequestToSend", "RequestToSendXOnXOff" });
             cbHandshake2.Location = new Point(98, 179);
             cbHandshake2.Name = "cbHandshake2";
             cbHandshake2.Size = new Size(135, 23);
@@ -408,6 +419,7 @@
             // cbStopBits2
             // 
             cbStopBits2.FormattingEnabled = true;
+            cbStopBits2.Items.AddRange(new object[] { "None", "One", "Two", "OnePointFive" });
             cbStopBits2.Location = new Point(98, 150);
             cbStopBits2.Name = "cbStopBits2";
             cbStopBits2.Size = new Size(135, 23);
@@ -416,6 +428,7 @@
             // cbParity2
             // 
             cbParity2.FormattingEnabled = true;
+            cbParity2.Items.AddRange(new object[] { "None", "Odd", "Even", "Mark", "Space" });
             cbParity2.Location = new Point(98, 121);
             cbParity2.Name = "cbParity2";
             cbParity2.Size = new Size(135, 23);
@@ -424,6 +437,7 @@
             // cbDataBits2
             // 
             cbDataBits2.FormattingEnabled = true;
+            cbDataBits2.Items.AddRange(new object[] { " 5", " 6", " 7", " 8" });
             cbDataBits2.Location = new Point(98, 92);
             cbDataBits2.Name = "cbDataBits2";
             cbDataBits2.Size = new Size(135, 23);
@@ -432,6 +446,7 @@
             // cbBaudRate2
             // 
             cbBaudRate2.FormattingEnabled = true;
+            cbBaudRate2.Items.AddRange(new object[] { " 300", " 600", " 1200", " 2400", " 4800", " 9600", " 19200", " 38400", " 57600", " 115200" });
             cbBaudRate2.Location = new Point(98, 63);
             cbBaudRate2.Name = "cbBaudRate2";
             cbBaudRate2.Size = new Size(135, 23);
@@ -480,6 +495,7 @@
             // cbAddress3
             // 
             cbAddress3.FormattingEnabled = true;
+            cbAddress3.Items.AddRange(new object[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32" });
             cbAddress3.Location = new Point(92, 207);
             cbAddress3.Name = "cbAddress3";
             cbAddress3.Size = new Size(135, 23);
@@ -542,6 +558,7 @@
             // cbHandshake3
             // 
             cbHandshake3.FormattingEnabled = true;
+            cbHandshake3.Items.AddRange(new object[] { "None", "XOnXOff", "RequestToSend", "RequestToSendXOnXOff" });
             cbHandshake3.Location = new Point(92, 178);
             cbHandshake3.Name = "cbHandshake3";
             cbHandshake3.Size = new Size(135, 23);
@@ -550,6 +567,7 @@
             // cbStopBits3
             // 
             cbStopBits3.FormattingEnabled = true;
+            cbStopBits3.Items.AddRange(new object[] { "None", "One", "Two", "OnePointFive" });
             cbStopBits3.Location = new Point(92, 149);
             cbStopBits3.Name = "cbStopBits3";
             cbStopBits3.Size = new Size(135, 23);
@@ -558,6 +576,7 @@
             // cbParity3
             // 
             cbParity3.FormattingEnabled = true;
+            cbParity3.Items.AddRange(new object[] { "None", "Odd", "Even", "Mark", "Space" });
             cbParity3.Location = new Point(92, 120);
             cbParity3.Name = "cbParity3";
             cbParity3.Size = new Size(135, 23);
@@ -566,6 +585,7 @@
             // cbDataBits3
             // 
             cbDataBits3.FormattingEnabled = true;
+            cbDataBits3.Items.AddRange(new object[] { " 5", " 6", " 7", " 8" });
             cbDataBits3.Location = new Point(92, 91);
             cbDataBits3.Name = "cbDataBits3";
             cbDataBits3.Size = new Size(135, 23);
@@ -574,6 +594,7 @@
             // cbBaudRate3
             // 
             cbBaudRate3.FormattingEnabled = true;
+            cbBaudRate3.Items.AddRange(new object[] { " 300", " 600", " 1200", " 2400", " 4800", " 9600", " 19200", " 38400", " 57600", " 115200" });
             cbBaudRate3.Location = new Point(92, 62);
             cbBaudRate3.Name = "cbBaudRate3";
             cbBaudRate3.Size = new Size(135, 23);
@@ -618,6 +639,7 @@
             // cbBaudRate4
             // 
             cbBaudRate4.FormattingEnabled = true;
+            cbBaudRate4.Items.AddRange(new object[] { " 300", " 600", " 1200", " 2400", " 4800", " 9600", " 19200", " 38400", " 57600", " 115200" });
             cbBaudRate4.Location = new Point(98, 62);
             cbBaudRate4.Name = "cbBaudRate4";
             cbBaudRate4.Size = new Size(135, 23);
@@ -626,6 +648,7 @@
             // cbDataBits4
             // 
             cbDataBits4.FormattingEnabled = true;
+            cbDataBits4.Items.AddRange(new object[] { " 5", " 6", " 7", " 8" });
             cbDataBits4.Location = new Point(98, 91);
             cbDataBits4.Name = "cbDataBits4";
             cbDataBits4.Size = new Size(135, 23);
@@ -634,6 +657,7 @@
             // cbParity4
             // 
             cbParity4.FormattingEnabled = true;
+            cbParity4.Items.AddRange(new object[] { "None", "Odd", "Even", "Mark", "Space" });
             cbParity4.Location = new Point(98, 120);
             cbParity4.Name = "cbParity4";
             cbParity4.Size = new Size(135, 23);
@@ -642,6 +666,7 @@
             // cbStopBits4
             // 
             cbStopBits4.FormattingEnabled = true;
+            cbStopBits4.Items.AddRange(new object[] { "None", "One", "Two", "OnePointFive" });
             cbStopBits4.Location = new Point(98, 149);
             cbStopBits4.Name = "cbStopBits4";
             cbStopBits4.Size = new Size(135, 23);
@@ -650,6 +675,7 @@
             // cbHandshake4
             // 
             cbHandshake4.FormattingEnabled = true;
+            cbHandshake4.Items.AddRange(new object[] { "None", "XOnXOff", "RequestToSend", "RequestToSendXOnXOff" });
             cbHandshake4.Location = new Point(98, 178);
             cbHandshake4.Name = "cbHandshake4";
             cbHandshake4.Size = new Size(135, 23);
@@ -690,6 +716,7 @@
             // cbAddress4
             // 
             cbAddress4.FormattingEnabled = true;
+            cbAddress4.Items.AddRange(new object[] { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32" });
             cbAddress4.Location = new Point(98, 207);
             cbAddress4.Name = "cbAddress4";
             cbAddress4.Size = new Size(135, 23);
@@ -752,6 +779,7 @@
             // cbChoicePort
             // 
             cbChoicePort.FormattingEnabled = true;
+            cbChoicePort.Items.AddRange(new object[] { "1", "2", "3", "4" });
             cbChoicePort.Location = new Point(675, 153);
             cbChoicePort.Name = "cbChoicePort";
             cbChoicePort.Size = new Size(51, 23);
@@ -779,6 +807,7 @@
             // 
             // tabPage1
             // 
+            tabPage1.Controls.Add(btnRestartServerCom);
             tabPage1.Controls.Add(groupBox2);
             tabPage1.Controls.Add(cbChoicePort);
             tabPage1.Controls.Add(label25);
@@ -797,6 +826,7 @@
             // 
             // tabPage2
             // 
+            tabPage2.Controls.Add(btnRestartServerMoxa);
             tabPage2.Controls.Add(SaveTcpbtn);
             tabPage2.Controls.Add(groupBox8);
             tabPage2.Controls.Add(groupBox7);
@@ -812,7 +842,7 @@
             // 
             // SaveTcpbtn
             // 
-            SaveTcpbtn.Location = new Point(278, 336);
+            SaveTcpbtn.Location = new Point(282, 332);
             SaveTcpbtn.Name = "SaveTcpbtn";
             SaveTcpbtn.Size = new Size(171, 39);
             SaveTcpbtn.TabIndex = 5;
@@ -856,6 +886,7 @@
             // cbAddress8
             // 
             cbAddress8.FormattingEnabled = true;
+            cbAddress8.Items.AddRange(new object[] { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32" });
             cbAddress8.Location = new Point(105, 74);
             cbAddress8.Name = "cbAddress8";
             cbAddress8.Size = new Size(153, 23);
@@ -920,6 +951,7 @@
             // cbAddress7
             // 
             cbAddress7.FormattingEnabled = true;
+            cbAddress7.Items.AddRange(new object[] { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32" });
             cbAddress7.Location = new Point(105, 74);
             cbAddress7.Name = "cbAddress7";
             cbAddress7.Size = new Size(153, 23);
@@ -984,6 +1016,7 @@
             // cbAddress6
             // 
             cbAddress6.FormattingEnabled = true;
+            cbAddress6.Items.AddRange(new object[] { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32" });
             cbAddress6.Location = new Point(105, 74);
             cbAddress6.Name = "cbAddress6";
             cbAddress6.Size = new Size(153, 23);
@@ -1048,6 +1081,7 @@
             // cbAddress5
             // 
             cbAddress5.FormattingEnabled = true;
+            cbAddress5.Items.AddRange(new object[] { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32" });
             cbAddress5.Location = new Point(105, 74);
             cbAddress5.Name = "cbAddress5";
             cbAddress5.Size = new Size(153, 23);
@@ -1078,6 +1112,7 @@
             // 
             // tabPage3
             // 
+            tabPage3.Controls.Add(btnRestartServerGeneral);
             tabPage3.Controls.Add(defaultboardbtn);
             tabPage3.Controls.Add(SaveTablebtn);
             tabPage3.Controls.Add(groupBox9);
@@ -1200,6 +1235,7 @@
             // cbHandshake5
             // 
             cbHandshake5.FormattingEnabled = true;
+            cbHandshake5.Items.AddRange(new object[] { "None", "XOnXOff", "RequestToSend", "RequestToSendXOnXOff" });
             cbHandshake5.Location = new Point(92, 179);
             cbHandshake5.Name = "cbHandshake5";
             cbHandshake5.Size = new Size(135, 23);
@@ -1208,6 +1244,7 @@
             // cbStopBits5
             // 
             cbStopBits5.FormattingEnabled = true;
+            cbStopBits5.Items.AddRange(new object[] { "None", "One", "Two", "OnePointFive" });
             cbStopBits5.Location = new Point(92, 150);
             cbStopBits5.Name = "cbStopBits5";
             cbStopBits5.Size = new Size(135, 23);
@@ -1216,6 +1253,7 @@
             // cbParity5
             // 
             cbParity5.FormattingEnabled = true;
+            cbParity5.Items.AddRange(new object[] { "None", "Odd", "Even", "Mark", "Space" });
             cbParity5.Location = new Point(92, 121);
             cbParity5.Name = "cbParity5";
             cbParity5.Size = new Size(135, 23);
@@ -1224,6 +1262,7 @@
             // cbDataBits5
             // 
             cbDataBits5.FormattingEnabled = true;
+            cbDataBits5.Items.AddRange(new object[] { " 5", " 6", " 7", " 8" });
             cbDataBits5.Location = new Point(92, 92);
             cbDataBits5.Name = "cbDataBits5";
             cbDataBits5.Size = new Size(135, 23);
@@ -1232,6 +1271,7 @@
             // cbBaudRate5
             // 
             cbBaudRate5.FormattingEnabled = true;
+            cbBaudRate5.Items.AddRange(new object[] { " 300", " 600", " 1200", " 2400", " 4800", " 9600", " 19200", " 38400", " 57600", " 115200" });
             cbBaudRate5.Location = new Point(92, 63);
             cbBaudRate5.Name = "cbBaudRate5";
             cbBaudRate5.Size = new Size(135, 23);
@@ -1249,6 +1289,7 @@
             // 
             protocolcb.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
             protocolcb.FormattingEnabled = true;
+            protocolcb.Items.AddRange(new object[] { "ModbusTcp", "ModbusRtu", "St" });
             protocolcb.Location = new Point(266, 120);
             protocolcb.Name = "protocolcb";
             protocolcb.Size = new Size(168, 33);
@@ -1258,6 +1299,7 @@
             // 
             Boardcb.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
             Boardcb.FormattingEnabled = true;
+            Boardcb.Items.AddRange(new object[] { "None", "YHLBoard", "GreenBoard" });
             Boardcb.Location = new Point(266, 79);
             Boardcb.Name = "Boardcb";
             Boardcb.Size = new Size(168, 33);
@@ -1282,6 +1324,36 @@
             label42.Size = new Size(64, 25);
             label42.TabIndex = 0;
             label42.Text = "Табло";
+            // 
+            // btnRestartServerCom
+            // 
+            btnRestartServerCom.Location = new Point(539, 217);
+            btnRestartServerCom.Name = "btnRestartServerCom";
+            btnRestartServerCom.Size = new Size(171, 39);
+            btnRestartServerCom.TabIndex = 8;
+            btnRestartServerCom.Text = "Перезапуск службы";
+            btnRestartServerCom.UseVisualStyleBackColor = true;
+            btnRestartServerCom.Click += btnRestartServerCom_Click;
+            // 
+            // btnRestartServerMoxa
+            // 
+            btnRestartServerMoxa.Location = new Point(536, 433);
+            btnRestartServerMoxa.Name = "btnRestartServerMoxa";
+            btnRestartServerMoxa.Size = new Size(171, 39);
+            btnRestartServerMoxa.TabIndex = 9;
+            btnRestartServerMoxa.Text = "Перезапуск службы";
+            btnRestartServerMoxa.UseVisualStyleBackColor = true;
+            btnRestartServerMoxa.Click += btnRestartServerMoxa_Click;
+            // 
+            // btnRestartServerGeneral
+            // 
+            btnRestartServerGeneral.Location = new Point(551, 150);
+            btnRestartServerGeneral.Name = "btnRestartServerGeneral";
+            btnRestartServerGeneral.Size = new Size(171, 39);
+            btnRestartServerGeneral.TabIndex = 10;
+            btnRestartServerGeneral.Text = "Перезапуск службы";
+            btnRestartServerGeneral.UseVisualStyleBackColor = true;
+            btnRestartServerGeneral.Click += btnRestartServerGeneral_Click;
             // 
             // ComPortSettingsForm
             // 
@@ -1439,5 +1511,8 @@
         private Button SaveTcpbtn;
         private Button SaveTablebtn;
         private Button defaultboardbtn;
+        private Button btnRestartServerCom;
+        private Button btnRestartServerMoxa;
+        private Button btnRestartServerGeneral;
     }
 }
