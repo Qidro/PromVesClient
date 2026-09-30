@@ -72,6 +72,8 @@ namespace PromVesClient
             services.AddSingleton<SerialPortBoardService>();
             services.AddSingleton<GeneralConfiguratorService>();
             services.AddSingleton<ConfigService>();
+            services.AddSingleton<PromVesServerService>();
+
             //регистрация одного экземпляра, чтобы все формы работали именно с ним
             services.AddSingleton<CurrentUserService>();
             var provider = services.BuildServiceProvider();
