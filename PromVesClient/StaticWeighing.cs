@@ -41,18 +41,16 @@ namespace PromVesClient
         private ScottPlot.Plottables.Signal signal;
         //сохранение ссылок на обьекты графиков
         private List<ScottPlot.WinForms.FormsPlot> plots;
+        //сохранение ссылок на обьекты надписей
+        private List<Label> labelsList;
         //Предназначен для создания точек на графике
-        private readonly Queue<decimal>[] values =
-        {
-            new Queue<decimal>(),
-            new Queue<decimal>(),
-            new Queue<decimal>(),
-            new Queue<decimal>()
-        };
+        private readonly Queue<decimal>[] values;
+
         //таймер предназначен для создания точек для 4 графиков
         private readonly System.Windows.Forms.Timer graphTimer = new();
         //переменная предназначенная для соханения данных веса с бортов
-        private decimal[] cartSideWeights = new decimal[4];
+        private readonly decimal[] cartSideWeights;
+        private List<decimal> cartAxesWeightsList = new List<decimal>{ 0,0,0,0};
         //переменная, которая сохраняет полученные значения для расчета стабильности
         private decimal[] stableWeight = new decimal[100];
         //поля предназначенные для передачи данных в методы сохранения данных  в БД
@@ -68,6 +66,14 @@ namespace PromVesClient
             _logger = logger;
             _currentUserService = currentUserService;
             _tcpService = tcpService;
+            int graphCount = _currentUserService.GetGraphsCount();
+            values = new Queue<decimal>[graphCount];
+
+            for (int i = 0; i < graphCount; i++)
+            {
+                values[i] = new Queue<decimal>();
+            }
+            cartSideWeights = new decimal[graphCount];
             InitializeComponent();
             //регистрации метода на ожидание новых данных
             _tcpService.MessageReceived += ProcessMessage;
@@ -75,6 +81,16 @@ namespace PromVesClient
             _tcpService.ConnectionError += OnConnectionError;
             //добавляем при закрытии формы проверку на окончания взвешивания
             this.FormClosing += Form1_FormClosing;
+            //formsPlot1.Plot.Axes.Bottom.TickLabelStyle.IsVisible = false;
+            //formsPlot1.Refresh();
+            //сохраняем обьекты label в List
+            labelsList = new()
+            {
+                lblPlatform1Left,
+                lblPlatform1Right,
+                lblPlatform2Left,
+                lblPlatform2Right
+            };
             //сохраняем обьекты в List
             plots = new()
             {
@@ -83,6 +99,32 @@ namespace PromVesClient
                 formsPlot3,
                 formsPlot4
             };
+            //отображение label согласно количеству графиков
+            for (int i = 0; i < graphCount; i++)
+            {
+                labelsList[i].Visible = true;
+                //labelsList[i].Font.Size = 14;
+                //labelsList[i].Font = new Font(label1.Font.FontFamily, 25);
+            }
+            //отображение графиков согласно их количеству
+            for (int i = 0; i < graphCount; i++)
+            {
+                plots[i].Visible = true;
+                plots[i].Plot.Axes.Bottom.TickLabelStyle.IsVisible = false;
+            }
+            //1078; 668
+            //74; 806
+            if (graphCount ==1)
+            {
+                plots[0].Size = new Size(1078, 668);
+                labelsList[0].Font = new Font(label1.Font.FontFamily, 25);
+                labelsList[0].Location = new Point(74, 776);
+            }
+            //изменяем размер формы для двух графиков
+            if (graphCount == 2)
+            {
+                this.Size = new Size(1561, 558);
+            }
             graphTimer.Interval = 1000; // 1 секунда
             //сохраняем функцию, которая будет работать с тиком
             graphTimer.Tick += GraphTimer_Tick;
@@ -326,14 +368,21 @@ namespace PromVesClient
                 //Console.WriteLine("мы находится в событии");
                 string[] parts = message.Split(';');
                 //обработка 4 графиков
-                for (int i = 0; i < 4; i++)
+                for (int i = 0; i < cartSideWeights.Length; i++)
                 {
                     cartSideWeights[i] = decimal.Parse(parts[i]) / 1000;
                 }
-                lblPlatform1Left.Text = "Платформа 1 левый борт: " + cartSideWeights[0].ToString("F2") + " Т.";
-                lblPlatform1Right.Text = "Платформа 1 правый борт: " + cartSideWeights[1].ToString("F2") + " Т.";
-                lblPlatform2Left.Text = "Платформа 2 левый борт: " + cartSideWeights[2].ToString("F2") + " Т.";
-                lblPlatform2Right.Text = "Платформа 2 правый борт: " + cartSideWeights[3].ToString("F2") + " Т.";
+                if (cartSideWeights.Length > 0)
+                    lblPlatform1Left.Text = $"Платформа 1 левый борт: {cartSideWeights[0]:F2} Т.";
+
+                if (cartSideWeights.Length > 1)
+                    lblPlatform1Right.Text = $"Платформа 1 правый борт: {cartSideWeights[1]:F2} Т.";
+
+                if (cartSideWeights.Length > 2)
+                    lblPlatform2Left.Text = $"Платформа 2 левый борт: {cartSideWeights[2]:F2} Т.";
+
+                if (cartSideWeights.Length > 3)
+                    lblPlatform2Right.Text = $"Платформа 2 правый борт: {cartSideWeights[3]:F2} Т.";
                 //вызов метода по вывода значения на табло
                 _ = DisplayingValue(cartSideWeights.Sum());
                 stable(cartSideWeights.Sum());
@@ -457,12 +506,16 @@ namespace PromVesClient
             }
 
             var resultt = await _staticWeighingService.saveReceiptAsync(IdReceipt, "Статическое взвешивание", _currentUserService.CurrentUser.Name);
+            for (int i = 0; i < cartSideWeights.Length; i++ )
+            {
+                cartAxesWeightsList[i] = cartSideWeights[i];
+            }
             WeighingDto dto = new WeighingDto
             {
-                Platform1Left = cartSideWeights[0],
-                Platform1Right = cartSideWeights[1],
-                Platform2Left = cartSideWeights[2],
-                Platform2Right = cartSideWeights[3],
+                Platform1Left = cartAxesWeightsList[0],
+                Platform1Right = cartAxesWeightsList[1],
+                Platform2Left = cartAxesWeightsList[2],
+                Platform2Right = cartAxesWeightsList[3],
                 VagonNumber = comboBoxVagonNumber.Text,
                 TareWeight = TareWeight,
                 GrossWeight = GrossWeight,
@@ -542,10 +595,14 @@ namespace PromVesClient
         //метод таймера
         private void GraphTimer_Tick(object? sender, EventArgs e)
         {
-            AddPoint(0, cartSideWeights[0]);
-            AddPoint(1, cartSideWeights[1]);
-            AddPoint(2, cartSideWeights[2]);
-            AddPoint(3, cartSideWeights[3]);
+            for (int i = 0; i < cartSideWeights.Length; i++)
+            {
+                AddPoint(i, cartSideWeights[i]);
+            }
+            //AddPoint(0, cartSideWeights[0]);
+            //AddPoint(1, cartSideWeights[1]);
+            //AddPoint(2, cartSideWeights[2]);
+            //AddPoint(3, cartSideWeights[3]);
         }
 
         private void label10_Click(object sender, EventArgs e)
@@ -569,6 +626,11 @@ namespace PromVesClient
             //выводим, что соединение есть
             lblConnectScale.BackColor = Color.Green;
             return true;
+        }
+
+        private void lblPlatform1Right_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

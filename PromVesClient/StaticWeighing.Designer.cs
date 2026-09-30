@@ -79,7 +79,7 @@
             // 
             // pictureBox1
             // 
-            pictureBox1.Location = new Point(1091, 36);
+            pictureBox1.Location = new Point(1147, 36);
             pictureBox1.Name = "pictureBox1";
             pictureBox1.Size = new Size(63, 100);
             pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
@@ -89,7 +89,7 @@
             // 
             // pictureBox2
             // 
-            pictureBox2.Location = new Point(1150, 36);
+            pictureBox2.Location = new Point(1206, 36);
             pictureBox2.Name = "pictureBox2";
             pictureBox2.Size = new Size(63, 100);
             pictureBox2.SizeMode = PictureBoxSizeMode.Zoom;
@@ -98,7 +98,7 @@
             // 
             // pictureBox3
             // 
-            pictureBox3.Location = new Point(1210, 36);
+            pictureBox3.Location = new Point(1266, 36);
             pictureBox3.Name = "pictureBox3";
             pictureBox3.Size = new Size(63, 100);
             pictureBox3.SizeMode = PictureBoxSizeMode.Zoom;
@@ -107,7 +107,7 @@
             // 
             // pictureBox4
             // 
-            pictureBox4.Location = new Point(1270, 36);
+            pictureBox4.Location = new Point(1326, 36);
             pictureBox4.Name = "pictureBox4";
             pictureBox4.Size = new Size(63, 100);
             pictureBox4.SizeMode = PictureBoxSizeMode.Zoom;
@@ -116,7 +116,7 @@
             // 
             // pictureBox5
             // 
-            pictureBox5.Location = new Point(1330, 36);
+            pictureBox5.Location = new Point(1386, 36);
             pictureBox5.Name = "pictureBox5";
             pictureBox5.Size = new Size(63, 100);
             pictureBox5.SizeMode = PictureBoxSizeMode.Zoom;
@@ -125,7 +125,7 @@
             // 
             // pictureBox6
             // 
-            pictureBox6.Location = new Point(1390, 36);
+            pictureBox6.Location = new Point(1446, 36);
             pictureBox6.Name = "pictureBox6";
             pictureBox6.Size = new Size(63, 100);
             pictureBox6.SizeMode = PictureBoxSizeMode.Zoom;
@@ -137,7 +137,7 @@
             // 
             label1.AutoSize = true;
             label1.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            label1.Location = new Point(929, 36);
+            label1.Location = new Point(986, 38);
             label1.Name = "label1";
             label1.Size = new Size(109, 21);
             label1.TabIndex = 6;
@@ -147,7 +147,7 @@
             // pictureBoxStabilityFalse
             // 
             pictureBoxStabilityFalse.Image = (Image)resources.GetObject("pictureBoxStabilityFalse.Image");
-            pictureBoxStabilityFalse.Location = new Point(888, 36);
+            pictureBoxStabilityFalse.Location = new Point(945, 38);
             pictureBoxStabilityFalse.Name = "pictureBoxStabilityFalse";
             pictureBoxStabilityFalse.Size = new Size(35, 25);
             pictureBoxStabilityFalse.SizeMode = PictureBoxSizeMode.Zoom;
@@ -157,7 +157,7 @@
             // pictureBoxStabilityTrue
             // 
             pictureBoxStabilityTrue.Image = (Image)resources.GetObject("pictureBoxStabilityTrue.Image");
-            pictureBoxStabilityTrue.Location = new Point(888, 36);
+            pictureBoxStabilityTrue.Location = new Point(945, 38);
             pictureBoxStabilityTrue.Name = "pictureBoxStabilityTrue";
             pictureBoxStabilityTrue.Size = new Size(35, 25);
             pictureBoxStabilityTrue.SizeMode = PictureBoxSizeMode.Zoom;
@@ -168,47 +168,52 @@
             // 
             lblPlatform1Left.AutoSize = true;
             lblPlatform1Left.Font = new Font("Segoe UI", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            lblPlatform1Left.Location = new Point(74, 419);
+            lblPlatform1Left.Location = new Point(74, 441);
             lblPlatform1Left.Name = "lblPlatform1Left";
             lblPlatform1Left.Size = new Size(24, 30);
             lblPlatform1Left.TabIndex = 14;
             lblPlatform1Left.Text = "0";
+            lblPlatform1Left.Visible = false;
             // 
             // lblPlatform2Left
             // 
             lblPlatform2Left.AutoSize = true;
             lblPlatform2Left.Font = new Font("Segoe UI", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            lblPlatform2Left.Location = new Point(74, 745);
+            lblPlatform2Left.Location = new Point(74, 806);
             lblPlatform2Left.Name = "lblPlatform2Left";
             lblPlatform2Left.Size = new Size(24, 30);
             lblPlatform2Left.TabIndex = 15;
             lblPlatform2Left.Text = "0";
+            lblPlatform2Left.Visible = false;
             // 
             // lblPlatform1Right
             // 
             lblPlatform1Right.AutoSize = true;
             lblPlatform1Right.Font = new Font("Segoe UI", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            lblPlatform1Right.Location = new Point(633, 419);
+            lblPlatform1Right.Location = new Point(633, 441);
             lblPlatform1Right.Name = "lblPlatform1Right";
             lblPlatform1Right.Size = new Size(24, 30);
             lblPlatform1Right.TabIndex = 16;
             lblPlatform1Right.Text = "0";
+            lblPlatform1Right.Visible = false;
+            lblPlatform1Right.Click += lblPlatform1Right_Click;
             // 
             // lblPlatform2Right
             // 
             lblPlatform2Right.AutoSize = true;
             lblPlatform2Right.Font = new Font("Segoe UI", 15.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            lblPlatform2Right.Location = new Point(633, 745);
+            lblPlatform2Right.Location = new Point(633, 806);
             lblPlatform2Right.Name = "lblPlatform2Right";
             lblPlatform2Right.Size = new Size(24, 30);
             lblPlatform2Right.TabIndex = 17;
             lblPlatform2Right.Text = "0";
+            lblPlatform2Right.Visible = false;
             // 
             // label3
             // 
             label3.AutoSize = true;
             label3.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            label3.Location = new Point(1091, 162);
+            label3.Location = new Point(1147, 162);
             label3.Name = "label3";
             label3.Size = new Size(110, 21);
             label3.TabIndex = 18;
@@ -219,7 +224,7 @@
             // 
             comboBoxVagonNumber.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
             comboBoxVagonNumber.FormattingEnabled = true;
-            comboBoxVagonNumber.Location = new Point(1248, 166);
+            comboBoxVagonNumber.Location = new Point(1304, 166);
             comboBoxVagonNumber.Name = "comboBoxVagonNumber";
             comboBoxVagonNumber.Size = new Size(200, 25);
             comboBoxVagonNumber.TabIndex = 19;
@@ -228,7 +233,7 @@
             // 
             label4.AutoSize = true;
             label4.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            label4.Location = new Point(1091, 195);
+            label4.Location = new Point(1147, 195);
             label4.Name = "label4";
             label4.Size = new Size(135, 21);
             label4.TabIndex = 20;
@@ -240,7 +245,7 @@
             cBoxTypeWeighing.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
             cBoxTypeWeighing.FormattingEnabled = true;
             cBoxTypeWeighing.Items.AddRange(new object[] { "Тара", "Брутто" });
-            cBoxTypeWeighing.Location = new Point(1248, 199);
+            cBoxTypeWeighing.Location = new Point(1304, 199);
             cBoxTypeWeighing.Name = "cBoxTypeWeighing";
             cBoxTypeWeighing.Size = new Size(200, 25);
             cBoxTypeWeighing.TabIndex = 21;
@@ -250,7 +255,7 @@
             // 
             btnSaveWeight.Enabled = false;
             btnSaveWeight.Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            btnSaveWeight.Location = new Point(1091, 435);
+            btnSaveWeight.Location = new Point(1147, 435);
             btnSaveWeight.Name = "btnSaveWeight";
             btnSaveWeight.Size = new Size(357, 32);
             btnSaveWeight.TabIndex = 22;
@@ -263,7 +268,7 @@
             btnWeighing.Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
             btnWeighing.Location = new Point(326, 29);
             btnWeighing.Name = "btnWeighing";
-            btnWeighing.Size = new Size(321, 32);
+            btnWeighing.Size = new Size(343, 43);
             btnWeighing.TabIndex = 23;
             btnWeighing.Text = "Начать взвешивание";
             btnWeighing.UseVisualStyleBackColor = true;
@@ -273,35 +278,39 @@
             // 
             formsPlot1.Location = new Point(28, 115);
             formsPlot1.Name = "formsPlot1";
-            formsPlot1.Size = new Size(452, 301);
+            formsPlot1.Size = new Size(531, 334);
             formsPlot1.TabIndex = 24;
+            formsPlot1.Visible = false;
             // 
             // formsPlot2
             // 
             formsPlot2.Location = new Point(586, 115);
             formsPlot2.Name = "formsPlot2";
-            formsPlot2.Size = new Size(452, 301);
+            formsPlot2.Size = new Size(531, 334);
             formsPlot2.TabIndex = 25;
+            formsPlot2.Visible = false;
             // 
             // formsPlot3
             // 
-            formsPlot3.Location = new Point(28, 452);
+            formsPlot3.Location = new Point(28, 474);
             formsPlot3.Name = "formsPlot3";
-            formsPlot3.Size = new Size(452, 301);
+            formsPlot3.Size = new Size(531, 334);
             formsPlot3.TabIndex = 26;
+            formsPlot3.Visible = false;
             // 
             // formsPlot4
             // 
-            formsPlot4.Location = new Point(586, 452);
+            formsPlot4.Location = new Point(586, 474);
             formsPlot4.Name = "formsPlot4";
-            formsPlot4.Size = new Size(452, 301);
+            formsPlot4.Size = new Size(531, 334);
             formsPlot4.TabIndex = 27;
+            formsPlot4.Visible = false;
             // 
             // label2
             // 
             label2.AutoSize = true;
             label2.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            label2.Location = new Point(1091, 257);
+            label2.Location = new Point(1147, 257);
             label2.Name = "label2";
             label2.Size = new Size(141, 21);
             label2.TabIndex = 28;
@@ -309,14 +318,14 @@
             // 
             // textBoxShipper
             // 
-            textBoxShipper.Location = new Point(1248, 261);
+            textBoxShipper.Location = new Point(1304, 261);
             textBoxShipper.Name = "textBoxShipper";
             textBoxShipper.Size = new Size(200, 23);
             textBoxShipper.TabIndex = 29;
             // 
             // textBoxСonsignee
             // 
-            textBoxСonsignee.Location = new Point(1248, 290);
+            textBoxСonsignee.Location = new Point(1304, 290);
             textBoxСonsignee.Name = "textBoxСonsignee";
             textBoxСonsignee.Size = new Size(200, 23);
             textBoxСonsignee.TabIndex = 30;
@@ -325,7 +334,7 @@
             // 
             label5.AutoSize = true;
             label5.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            label5.Location = new Point(1091, 290);
+            label5.Location = new Point(1147, 290);
             label5.Name = "label5";
             label5.Size = new Size(133, 21);
             label5.TabIndex = 31;
@@ -333,7 +342,7 @@
             // 
             // textBoxСargo
             // 
-            textBoxСargo.Location = new Point(1248, 319);
+            textBoxСargo.Location = new Point(1304, 319);
             textBoxСargo.Name = "textBoxСargo";
             textBoxСargo.Size = new Size(200, 23);
             textBoxСargo.TabIndex = 32;
@@ -342,7 +351,7 @@
             // 
             label6.AutoSize = true;
             label6.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            label6.Location = new Point(1091, 319);
+            label6.Location = new Point(1147, 319);
             label6.Name = "label6";
             label6.Size = new Size(42, 21);
             label6.TabIndex = 33;
@@ -350,7 +359,7 @@
             // 
             // textBoxInvoiceNumber
             // 
-            textBoxInvoiceNumber.Location = new Point(1248, 348);
+            textBoxInvoiceNumber.Location = new Point(1304, 348);
             textBoxInvoiceNumber.Name = "textBoxInvoiceNumber";
             textBoxInvoiceNumber.Size = new Size(200, 23);
             textBoxInvoiceNumber.TabIndex = 34;
@@ -359,7 +368,7 @@
             // 
             label7.AutoSize = true;
             label7.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            label7.Location = new Point(1091, 348);
+            label7.Location = new Point(1147, 348);
             label7.Name = "label7";
             label7.Size = new Size(109, 21);
             label7.TabIndex = 35;
@@ -367,14 +376,14 @@
             // 
             // textBoxInvoiceWeighing
             // 
-            textBoxInvoiceWeighing.Location = new Point(1248, 406);
+            textBoxInvoiceWeighing.Location = new Point(1304, 406);
             textBoxInvoiceWeighing.Name = "textBoxInvoiceWeighing";
             textBoxInvoiceWeighing.Size = new Size(200, 23);
             textBoxInvoiceWeighing.TabIndex = 36;
             // 
             // dateTimePickerInvoice
             // 
-            dateTimePickerInvoice.Location = new Point(1248, 377);
+            dateTimePickerInvoice.Location = new Point(1304, 377);
             dateTimePickerInvoice.Name = "dateTimePickerInvoice";
             dateTimePickerInvoice.Size = new Size(200, 23);
             dateTimePickerInvoice.TabIndex = 37;
@@ -383,7 +392,7 @@
             // 
             label8.AutoSize = true;
             label8.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            label8.Location = new Point(1091, 375);
+            label8.Location = new Point(1147, 375);
             label8.Name = "label8";
             label8.Size = new Size(125, 21);
             label8.TabIndex = 38;
@@ -393,7 +402,7 @@
             // 
             label9.AutoSize = true;
             label9.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            label9.Location = new Point(1091, 404);
+            label9.Location = new Point(1147, 404);
             label9.Name = "label9";
             label9.Size = new Size(151, 21);
             label9.TabIndex = 39;
@@ -405,7 +414,7 @@
             lblConnectScale.BackColor = Color.Red;
             lblConnectScale.Font = new Font("Segoe UI", 11.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
             lblConnectScale.ForeColor = SystemColors.Control;
-            lblConnectScale.Location = new Point(888, 64);
+            lblConnectScale.Location = new Point(945, 66);
             lblConnectScale.Name = "lblConnectScale";
             lblConnectScale.Size = new Size(161, 20);
             lblConnectScale.TabIndex = 40;
@@ -414,7 +423,7 @@
             // 
             // txtLoadCapacity
             // 
-            txtLoadCapacity.Location = new Point(1248, 230);
+            txtLoadCapacity.Location = new Point(1304, 230);
             txtLoadCapacity.Name = "txtLoadCapacity";
             txtLoadCapacity.Size = new Size(200, 23);
             txtLoadCapacity.TabIndex = 42;
@@ -423,7 +432,7 @@
             // 
             label10.AutoSize = true;
             label10.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            label10.Location = new Point(1091, 226);
+            label10.Location = new Point(1147, 226);
             label10.Name = "label10";
             label10.Size = new Size(146, 21);
             label10.TabIndex = 41;
@@ -433,7 +442,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1486, 801);
+            ClientSize = new Size(1545, 861);
             Controls.Add(txtLoadCapacity);
             Controls.Add(label10);
             Controls.Add(lblConnectScale);
