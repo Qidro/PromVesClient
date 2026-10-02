@@ -14,7 +14,8 @@ namespace PromVesClient.Service.TcpService
         private NetworkStream? _stream;
         private CancellationTokenSource? _cts;
         private readonly ILogger<TcpService> _logger;
-
+        //поле подключения к серверу
+        public bool ServerConnected { get; private set; }
         public CancellationToken Token =>
     _cts?.Token ?? CancellationToken.None;
 
@@ -35,6 +36,7 @@ namespace PromVesClient.Service.TcpService
 
             _stream = _client.GetStream();
             _cts = new CancellationTokenSource();
+            ServerConnected = true;
             //вызов метода по получению значения с сервера
             _ = ReceiveMessagesAsync(_cts.Token);
         }
@@ -62,7 +64,7 @@ namespace PromVesClient.Service.TcpService
 
             _client?.Close();
             _client?.Dispose();
-
+            ServerConnected = false;
             _cts = null;
             _stream = null;
             _client = null;
@@ -85,7 +87,16 @@ namespace PromVesClient.Service.TcpService
                         await _stream.ReadAsync(buffer, timeoutCts.Token);
 
                     if (count == 0)
-                        break;
+                    {
+                        ServerConnected = false;
+
+                        _logger.LogWarning("Сервер закрыл соединение.");
+
+                        ConnectionError?.Invoke(
+                            new Exception("Сервер закрыл соединение"));
+
+                        return;
+                    }
 
                     string message = Encoding.UTF8.GetString(buffer, 0, count);
                     //Console.WriteLine("выключаем событие");
@@ -96,6 +107,7 @@ namespace PromVesClient.Service.TcpService
             //сервер разорвал соединение
             catch (IOException ex)
             {
+                ServerConnected = false;
                 //MessageBox.Show("Ошибка: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 _logger.LogError(ex, "Ошибка ввода-вывода. Сервер разорвал соединение");
                 ConnectionError?.Invoke(new Exception("Сервер разорвал соединение", ex));
@@ -104,6 +116,7 @@ namespace PromVesClient.Service.TcpService
             //ошибка потока/работа с закрытым потоком, обьектом которго больше нет
             catch (ObjectDisposedException ex)
             {
+                ServerConnected = false;
                 _logger.LogError(ex, "Попытка считывания закрытого потока");
                 ConnectionError?.Invoke(new Exception("Сервер разорвал соединение", ex));
                 return;
@@ -111,17 +124,28 @@ namespace PromVesClient.Service.TcpService
             //ошибка сокета
             catch (SocketException ex)
             {
-               // MessageBox.Show("Ошибка", $"Ошибка сокета: {ex.SocketErrorCode}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ServerConnected = false;
+                // MessageBox.Show("Ошибка", $"Ошибка сокета: {ex.SocketErrorCode}", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 _logger.LogError(ex, "Ошибка сокета");
                 ConnectionError?.Invoke(new Exception("Сервер разорвал соединение", ex));
                 return;
             }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                ServerConnected = false;
+                //Штатная отмена
+                _logger.LogInformation("Получение сообщений остановлено");
+            }
             catch (OperationCanceledException)
             {
-                return;
+                ServerConnected = false;
+                //Таймаут
+                _logger.LogWarning("Нет сообщений от сервера в течение 10 секунд");
+                ConnectionError?.Invoke(new Exception("Нет сообщений от сервера"));
             }
             catch (Exception ex)
             {
+                ServerConnected = false;
                 //BeginInvoke(() =>
                 //{
                 //    //MessageBox.Show(ex.Message);

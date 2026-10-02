@@ -1,16 +1,24 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using Serilog.Core;
+using System;
 using System.Collections.Generic;
-using System.Text;
 using System.ServiceProcess;
+using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms; 
+using System.Windows.Forms;
 
 namespace PromVesClient.Service
 {
     public class PromVesServerService
     {
-        private const string ServiceName = "PromVesServer";
+        private const string ServiceName = "AnyDesk";
+        private readonly ILogger<PromVesServerService> _logger;
+        //private readonly ILogger<PromVesServerService> _logger;
 
+        public PromVesServerService(ILogger<PromVesServerService> logger)
+        {
+            _logger = logger;
+        }
         public async Task RestartAsync()
         {
             using var service = new ServiceController(ServiceName);
@@ -47,13 +55,14 @@ namespace PromVesClient.Service
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
             {
                 MessageBox.Show(
-                    "Служба PromVesServer не найдена.",
+                    $"Служба PromVesServer не найдена, либо нет прав доступа",
                     "Ошибка",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+                _logger.LogError($"Служба PromVesServer не найдена, либо нет прав доступа {ex}");
             }
             catch (System.ComponentModel.Win32Exception ex)
             {
@@ -62,14 +71,16 @@ namespace PromVesClient.Service
                     "Ошибка",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+                _logger.LogError($"Не удалось перезапустить службу {ex}");
             }
-            catch (System.TimeoutException)
+            catch (System.TimeoutException ex)
             {
                 MessageBox.Show(
                     "Служба не успела запуститься или остановиться за 30 секунд.",
                     "Ошибка",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+                _logger.LogError($"Служба не успела запуститься или остановиться за 30 секунд {ex}");
             }
             catch (Exception ex)
             {
@@ -78,6 +89,7 @@ namespace PromVesClient.Service
                     "Ошибка",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+                _logger.LogError($"Ошибка при перезапуске службы: {ex}");
             }
         }
     }

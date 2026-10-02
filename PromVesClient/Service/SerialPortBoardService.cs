@@ -27,9 +27,7 @@ namespace PromVesClient.Service
                 AppContext.BaseDirectory,
                 "Configuration");
 
-            _settingsPath = Path.Combine(
-                _configurationPath,
-                "SerialPortsBoards.json");
+            _settingsPath = @"C:\PromVesNew\PromVesServer\Configuration\SerialPortsBoards.json";
         }
         //метод загрузки настроек COM-порта табло
         public ServiceResult<SerialPortBoardConfiguration> Load()

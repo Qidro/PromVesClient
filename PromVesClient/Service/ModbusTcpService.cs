@@ -25,10 +25,7 @@ namespace PromVesClient.Service
             _configurationPath = Path.Combine(
                 AppContext.BaseDirectory,
                 "Configuration");
-
-            _serverSettingsPath = Path.Combine(
-                _configurationPath,
-                "ConfigModbusTcp.json");
+            _serverSettingsPath = @"C:\PromVesNew\PromVesServer\Configuration\ConfigModbusTcp.json";
         }
 
         // загружает настройки MOXA из файла ConfigModbusTcp.json

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using DocumentFormat.OpenXml.Drawing;
+using Microsoft.Extensions.Logging;
 using PromVesClient.DTO;
 using PromVesClient.Service;
 using PromVesClient.Service.StaticWeighingService;
@@ -50,6 +51,7 @@ namespace PromVesClient
         private readonly System.Windows.Forms.Timer graphTimer = new();
         //переменная предназначенная для соханения данных веса с бортов
         private readonly decimal[] cartSideWeights;
+        //изнчальные данные взвешивания
         private List<decimal> cartAxesWeightsList = new List<decimal>{ 0,0,0,0};
         //переменная, которая сохраняет полученные значения для расчета стабильности
         private decimal[] stableWeight = new decimal[100];
@@ -118,7 +120,7 @@ namespace PromVesClient
             {
                 plots[0].Size = new Size(1078, 668);
                 labelsList[0].Font = new Font(label1.Font.FontFamily, 25);
-                labelsList[0].Location = new Point(74, 776);
+                labelsList[0].Location = new System.Drawing.Point(74, 776);
             }
             //изменяем размер формы для двух графиков
             if (graphCount == 2)
@@ -338,19 +340,26 @@ namespace PromVesClient
             {
                 try
                 {
-                    await _tcpService.DisconnectAsync();
-
-                    await Task.Delay(5000);
-
-                    await _tcpService.ConnectAsync();
-
-                    BeginInvoke(() =>
+                    if (btnWeighing.Text != "Начать взвешивание" && _tcpService.ServerConnected == false)
                     {
-                        graphTimer.Start();
-                        //btnSaveWeight.Enabled = true;
-                    });
+                        await _tcpService.DisconnectAsync();
 
-                    break;
+                        await Task.Delay(5000);
+
+                        await _tcpService.ConnectAsync();
+
+                        BeginInvoke(() =>
+                        {
+                            graphTimer.Start();
+                            //btnSaveWeight.Enabled = true;
+                        });
+
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
                 catch (Exception reconnectEx)
                 {
@@ -367,25 +376,28 @@ namespace PromVesClient
                 ConnectionScalesCheck(message);
                 //Console.WriteLine("мы находится в событии");
                 string[] parts = message.Split(';');
-                //обработка 4 графиков
-                for (int i = 0; i < cartSideWeights.Length; i++)
+                if (cartSideWeights.Length == parts.Length)
                 {
-                    cartSideWeights[i] = decimal.Parse(parts[i]) / 1000;
+                    //обработка 4 графиков
+                    for (int i = 0; i < cartSideWeights.Length; i++)
+                    {
+                        cartSideWeights[i] = decimal.Parse(parts[i]) / 1000;
+                    }
+                    if (cartSideWeights.Length > 0)
+                        lblPlatform1Left.Text = $"Платформа 1 левый борт: {cartSideWeights[0]:F2} Т.";
+
+                    if (cartSideWeights.Length > 1)
+                        lblPlatform1Right.Text = $"Платформа 1 правый борт: {cartSideWeights[1]:F2} Т.";
+
+                    if (cartSideWeights.Length > 2)
+                        lblPlatform2Left.Text = $"Платформа 2 левый борт: {cartSideWeights[2]:F2} Т.";
+
+                    if (cartSideWeights.Length > 3)
+                        lblPlatform2Right.Text = $"Платформа 2 правый борт: {cartSideWeights[3]:F2} Т.";
+                    //вызов метода по вывода значения на табло
+                    _ = DisplayingValue(cartSideWeights.Sum());
+                    stable(cartSideWeights.Sum());
                 }
-                if (cartSideWeights.Length > 0)
-                    lblPlatform1Left.Text = $"Платформа 1 левый борт: {cartSideWeights[0]:F2} Т.";
-
-                if (cartSideWeights.Length > 1)
-                    lblPlatform1Right.Text = $"Платформа 1 правый борт: {cartSideWeights[1]:F2} Т.";
-
-                if (cartSideWeights.Length > 2)
-                    lblPlatform2Left.Text = $"Платформа 2 левый борт: {cartSideWeights[2]:F2} Т.";
-
-                if (cartSideWeights.Length > 3)
-                    lblPlatform2Right.Text = $"Платформа 2 правый борт: {cartSideWeights[3]:F2} Т.";
-                //вызов метода по вывода значения на табло
-                _ = DisplayingValue(cartSideWeights.Sum());
-                stable(cartSideWeights.Sum());
             }
             catch (FormatException ex)
             {
