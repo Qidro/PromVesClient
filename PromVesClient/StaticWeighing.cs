@@ -353,7 +353,7 @@ namespace PromVesClient
                             graphTimer.Start();
                             //btnSaveWeight.Enabled = true;
                         });
-
+                        lblConnectScale.BackColor = Color.Green;
                         break;
                     }
                     else
@@ -363,8 +363,10 @@ namespace PromVesClient
                 }
                 catch (Exception reconnectEx)
                 {
+                    lblConnectScale.BackColor = Color.Red;
                     _logger.LogWarning(reconnectEx,
                         "Не удалось подключиться. Повтор через 5 секунд.");
+
                 }
             }
         }
@@ -428,10 +430,13 @@ namespace PromVesClient
         {
             for (int i = 0; i < stableWeight.Length; i++)
             {
-                if (Math.Abs(stableWeight[i] - data) <= 0.05m)
+                if (Math.Abs(stableWeight[i] - data) <= 0.100m)
                 {
-                    pictureBoxStabilityTrue.Visible = true;
-                    pictureBoxStabilityFalse.Visible = false;
+                    if (stableWeight.Length - 1 == i)
+                    {
+                        pictureBoxStabilityTrue.Visible = true;
+                        pictureBoxStabilityFalse.Visible = false;
+                    }
                 }
                 else
                 {
