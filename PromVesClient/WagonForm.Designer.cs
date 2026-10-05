@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(WagonForm));
             dgvWagon = new DataGridView();
             colNumber = new DataGridViewTextBoxColumn();
             colTareWeight = new DataGridViewTextBoxColumn();
@@ -126,6 +127,9 @@
             Controls.Add(btnCreate);
             Controls.Add(dgvWagonList);
             Controls.Add(dgvWagon);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            MaximizeBox = false;
             Name = "WagonForm";
             Text = "Справочник вагонов";
             Load += WagonForm_Load;

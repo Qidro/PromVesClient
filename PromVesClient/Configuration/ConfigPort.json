@@ -29,16 +29,6 @@
       "StopBits": "One",
       "Handshake": "None",
       "DeviceAddress": 6
-    },
-    {
-      "Id": 4,
-      "PortName": "COM4",
-      "BaudRate": 2400,
-      "DataBits": 6,
-      "Parity": "Even",
-      "StopBits": "One",
-      "Handshake": "XOnXOff",
-      "DeviceAddress": 26
     }
   ]
 }

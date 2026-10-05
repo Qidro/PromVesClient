@@ -149,7 +149,9 @@
             Controls.Add(cbRole);
             Controls.Add(txtLogin);
             Controls.Add(btnSave);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
             Icon = (Icon)resources.GetObject("$this.Icon");
+            MaximizeBox = false;
             Name = "ChangeUserForm";
             Text = "Изменение пользователя";
             Load += ChangeUserForm_Load;

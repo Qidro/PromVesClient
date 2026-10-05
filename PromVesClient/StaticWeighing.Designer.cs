@@ -481,7 +481,9 @@
             Controls.Add(pictureBox2);
             Controls.Add(pictureBox1);
             Controls.Add(pictureBoxStabilityTrue);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
             Icon = (Icon)resources.GetObject("$this.Icon");
+            MinimizeBox = false;
             Name = "StaticWeighing";
             Text = "Статическое взвешивание";
             Load += StaticWeighing_Load;
