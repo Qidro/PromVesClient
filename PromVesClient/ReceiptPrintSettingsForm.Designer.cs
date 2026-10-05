@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ReceiptPrintSettingsForm));
             groupBox1 = new GroupBox();
             chkTypeWeighing = new CheckBox();
             chkVagonNumber = new CheckBox();
@@ -625,6 +626,9 @@
             Controls.Add(groupBox3);
             Controls.Add(groupBox2);
             Controls.Add(groupBox1);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            MaximizeBox = false;
             Name = "ReceiptPrintSettingsForm";
             Text = "Настройки квитанции";
             Load += ReceiptPrintSettingsForm_Load;

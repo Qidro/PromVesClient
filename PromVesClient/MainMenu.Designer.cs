@@ -39,8 +39,8 @@
             ServiceToolStrip = new ToolStripMenuItem();
             ComSetitem = new ToolStripMenuItem();
             отчетыToolStripMenuItem = new ToolStripMenuItem();
-            label1 = new Label();
             справочникВагоновToolStripMenuItem = new ToolStripMenuItem();
+            label1 = new Label();
             menuStrip1.SuspendLayout();
             SuspendLayout();
             // 
@@ -96,14 +96,14 @@
             // r23r23rToolStripMenuItem
             // 
             r23r23rToolStripMenuItem.Name = "r23r23rToolStripMenuItem";
-            r23r23rToolStripMenuItem.Size = new Size(180, 22);
+            r23r23rToolStripMenuItem.Size = new Size(152, 22);
             r23r23rToolStripMenuItem.Text = "Пользователи";
             r23r23rToolStripMenuItem.Click += r23r23rToolStripMenuItem_Click;
             // 
             // r23r23rToolStripMenuItem1
             // 
             r23r23rToolStripMenuItem1.Name = "r23r23rToolStripMenuItem1";
-            r23r23rToolStripMenuItem1.Size = new Size(180, 22);
+            r23r23rToolStripMenuItem1.Size = new Size(152, 22);
             r23r23rToolStripMenuItem1.Text = "Отчеты";
             r23r23rToolStripMenuItem1.Click += r23r23rToolStripMenuItem1_Click;
             // 
@@ -128,6 +128,13 @@
             отчетыToolStripMenuItem.Text = "Настройки квитанции";
             отчетыToolStripMenuItem.Click += отчетыToolStripMenuItem_Click;
             // 
+            // справочникВагоновToolStripMenuItem
+            // 
+            справочникВагоновToolStripMenuItem.Name = "справочникВагоновToolStripMenuItem";
+            справочникВагоновToolStripMenuItem.Size = new Size(195, 22);
+            справочникВагоновToolStripMenuItem.Text = "Справочник вагонов";
+            справочникВагоновToolStripMenuItem.Click += справочникВагоновToolStripMenuItem_Click;
+            // 
             // label1
             // 
             label1.AutoSize = true;
@@ -137,13 +144,6 @@
             label1.TabIndex = 4;
             label1.Text = "label1";
             label1.Visible = false;
-            // 
-            // справочникВагоновToolStripMenuItem
-            // 
-            справочникВагоновToolStripMenuItem.Name = "справочникВагоновToolStripMenuItem";
-            справочникВагоновToolStripMenuItem.Size = new Size(195, 22);
-            справочникВагоновToolStripMenuItem.Text = "Справочник вагонов";
-            справочникВагоновToolStripMenuItem.Click += справочникВагоновToolStripMenuItem_Click;
             // 
             // MainMenu
             // 
@@ -155,8 +155,10 @@
             Controls.Add(dynamicWeighing);
             Controls.Add(staticWeighing);
             Controls.Add(menuStrip1);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
             Icon = (Icon)resources.GetObject("$this.Icon");
             MainMenuStrip = menuStrip1;
+            MaximizeBox = false;
             Name = "MainMenu";
             Text = "Главное меню";
             Load += MainMenu_Load;

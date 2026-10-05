@@ -30,6 +30,7 @@ namespace PromVesClient
 
         // количество используемых COM-портов
         private int _selectedPortCount = 4;
+        private int _selectedMoxaCount = 4;
 
         // Коллекции элементов для COM-портов
         private List<ComboBox> _portBoxes;
@@ -66,6 +67,7 @@ namespace PromVesClient
             InitializeMoxaControls();
             InitializeBoardSettings();
             InitializePortCountComboBox();
+            InitializePortCountComboBoxMoxa();
             SubscribePortEvents();
             SubscribeDefaultButtons();
 
@@ -195,21 +197,42 @@ namespace PromVesClient
         // При загрузке и восстановлении сначала возвращаем полные списки портов.
         // Фильтрацию включаем только после применения всех сохранённых значений.
         private void ApplyPortSettings(
-            SerialPortConfiguration configuration, ICollection<string>? missingItems = null)
+     SerialPortConfiguration configuration,
+     ICollection<string>? missingItems = null)
         {
             if (configuration?.SerialPorts == null)
-                throw new InvalidOperationException("Не получена конфигурация COM-портов.");
+                throw new InvalidOperationException(
+                    "Не получена конфигурация COM-портов.");
 
             _updatingPorts = true;
+
             try
             {
-                _selectedPortCount = Math.Clamp(configuration.SerialPorts.Count, 1, 4);
-                SelectComboBoxItem(cbChoicePort, _selectedPortCount, missingItems);
+                // Количество COM-портов берём ТОЛЬКО из ConfigPort.json
+                _selectedPortCount = Math.Clamp(
+                    configuration.SerialPorts.Count,
+                    1,
+                    32);
 
+                SelectComboBoxItem(
+                    cbChoicePort,
+                    _selectedPortCount,
+                    missingItems);
+
+                // Заполняем ComboBox'ы доступными COM-портами
                 foreach (var comboBox in _portBoxes)
-                    SetPortItems(comboBox, _availablePorts, comboBox.Text);
+                {
+                    SetPortItems(
+                        comboBox,
+                        _availablePorts,
+                        comboBox.Text);
+                }
 
-                int count = Math.Min(configuration.SerialPorts.Count, _portBoxes.Count);
+                // Загружаем настройки каждого COM-порта
+                int count = Math.Min(
+                    configuration.SerialPorts.Count,
+                    _portBoxes.Count);
+
                 for (int i = 0; i < count; i++)
                 {
                     LoadPortToControls(
@@ -231,7 +254,6 @@ namespace PromVesClient
 
             UpdateAvailablePorts();
             UpdatePortVisibility();
-            UpdateMoxaVisibility();
         }
 
         // Выбор сохранённых значений без изменения списков
@@ -470,11 +492,10 @@ namespace PromVesClient
             }
         }
 
-        // Подключаем известные кнопки, не изменяя Designer.cs.
+        // кнопка закрытия формы
         private void SubscribeDefaultButtons()
         {
-            // Поиск по Name не требует добавления нового поля в Designer.cs.
-            // Если кнопка переименована, её Click должен быть привязан в дизайнере.
+
             foreach (var button in Controls.Find("btnRestoreDefaults", true).OfType<Button>())
             {
                 button.Click -= btnRestoreDefaults_Click;
@@ -559,7 +580,6 @@ namespace PromVesClient
 
             _selectedPortCount = portCount;
             UpdatePortVisibility();
-            UpdateMoxaVisibility();
         }
 
         // метод обновления видимости групповых элементов для COM-портов
@@ -599,19 +619,6 @@ namespace PromVesClient
             foreach (var comboBox in _moxaSlaveIdBoxes)
                 comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         }
-
-        // метод обновления видимости групповых элементов для MOXA
-        private void UpdateMoxaVisibility()
-        {
-            if (_moxaGroupBoxes == null)
-                return;
-
-            for (int i = 0; i < _moxaGroupBoxes.Count; i++)
-            {
-                _moxaGroupBoxes[i].Visible = i < _selectedPortCount;
-            }
-        }
-
         // метод загрузки настроек MOXA
         private void LoadMoxaSettings()
         {
@@ -630,9 +637,24 @@ namespace PromVesClient
 
             var configuration = result.Data;
 
-            int count = Math.Min(
+            if (configuration?.ModbusTcpSetting == null)
+                return;
+
+            // Количество MOXA берём ТОЛЬКО из ConfigModbusTcp.json
+            _selectedMoxaCount = Math.Clamp(
                 configuration.ModbusTcpSetting.Count,
-                _moxaIpBoxes.Count);
+                1,
+                _moxaGroupBoxes.Count);
+
+            // Показываем это количество в ComboBox
+            SelectComboBoxItem(
+                cbChoiceMoxa,
+                _selectedMoxaCount);
+
+            // Загружаем значения MOXA
+            int count = Math.Min(
+                _selectedMoxaCount,
+                configuration.ModbusTcpSetting.Count);
 
             for (int i = 0; i < count; i++)
             {
@@ -641,8 +663,13 @@ namespace PromVesClient
                 _moxaIpBoxes[i].Text = setting.NportIp;
                 _moxaPortBoxes[i].Text = setting.NportPort.ToString();
 
-                SelectComboBoxItem(_moxaSlaveIdBoxes[i], setting.SlaveId);
+                SelectComboBoxItem(
+                    _moxaSlaveIdBoxes[i],
+                    setting.SlaveId);
             }
+
+            // Показываем нужное количество GroupBox
+            UpdateMoxaVisibility();
         }
 
         // метод сохранения настроек MOXA
@@ -650,7 +677,7 @@ namespace PromVesClient
         {
             var configuration = new ModbusTcpConfiguration();
 
-            for (int i = 0; i < _selectedPortCount; i++)
+            for (int i = 0; i < _selectedMoxaCount ; i++)
             {
                 string ipAddress = _moxaIpBoxes[i].Text.Trim();
 
@@ -793,7 +820,7 @@ namespace PromVesClient
             if (!result.Success)
                 throw new Exception(result.Message);
         }
-
+        // метод сохранения настроек протокола и табло
         private void SaveGeneralConfigurator()
         {
             if (string.IsNullOrWhiteSpace(Boardcb.Text))
@@ -937,10 +964,40 @@ namespace PromVesClient
         {
             await _promVesServerService.RestartServerAsync();
         }
-
-        private void tabPage2_Click(object sender, EventArgs e)
+        // метод инициализации выбора количества MOXA
+        private void InitializePortCountComboBoxMoxa()
         {
+            cbChoiceMoxa.DropDownStyle = ComboBoxStyle.DropDownList;
 
+            cbChoiceMoxa.SelectedIndexChanged -= CbChoiceMoxa_SelectedIndexChanged;
+            cbChoiceMoxa.SelectedIndexChanged += CbChoiceMoxa_SelectedIndexChanged;
+
+            SelectComboBoxItem(cbChoiceMoxa, _selectedMoxaCount);
+        }
+
+        // обработчик события изменения выбранного количества MOXA
+        private void CbChoiceMoxa_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            if (_initializing)
+                return;
+
+            if (!int.TryParse(cbChoiceMoxa.Text, out int moxaCount) ||
+                moxaCount < 1 ||
+                moxaCount > _moxaGroupBoxes.Count)
+                return;
+
+            _selectedMoxaCount = moxaCount;
+
+            UpdateMoxaVisibility();
+        }
+
+        // метод обновления видимости групповых элементов для MOXA
+        private void UpdateMoxaVisibility()
+        {
+            groupBox5.Visible = _selectedMoxaCount >= 1;
+            groupBox6.Visible = _selectedMoxaCount >= 2;
+            groupBox7.Visible = _selectedMoxaCount >= 3;
+            groupBox8.Visible = _selectedMoxaCount >= 4;
         }
     }
 }

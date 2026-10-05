@@ -95,7 +95,11 @@
             label25 = new Label();
             tabControl1 = new TabControl();
             tabPage1 = new TabPage();
+            btnRestartServerCom = new Button();
             tabPage2 = new TabPage();
+            cbChoiceMoxa = new ComboBox();
+            label51 = new Label();
+            btnRestartServerMoxa = new Button();
             SaveTcpbtn = new Button();
             groupBox8 = new GroupBox();
             label39 = new Label();
@@ -126,6 +130,7 @@
             IPtb1 = new TextBox();
             label30 = new Label();
             tabPage3 = new TabPage();
+            btnRestartServerGeneral = new Button();
             defaultboardbtn = new Button();
             SaveTablebtn = new Button();
             groupBox9 = new GroupBox();
@@ -146,9 +151,6 @@
             Boardcb = new ComboBox();
             label43 = new Label();
             label42 = new Label();
-            btnRestartServerCom = new Button();
-            btnRestartServerMoxa = new Button();
-            btnRestartServerGeneral = new Button();
             groupBox1.SuspendLayout();
             groupBox2.SuspendLayout();
             groupBox3.SuspendLayout();
@@ -824,8 +826,20 @@
             tabPage1.Text = "Настройка COM-портов";
             tabPage1.UseVisualStyleBackColor = true;
             // 
+            // btnRestartServerCom
+            // 
+            btnRestartServerCom.Location = new Point(539, 217);
+            btnRestartServerCom.Name = "btnRestartServerCom";
+            btnRestartServerCom.Size = new Size(171, 39);
+            btnRestartServerCom.TabIndex = 8;
+            btnRestartServerCom.Text = "Перезапуск службы";
+            btnRestartServerCom.UseVisualStyleBackColor = true;
+            btnRestartServerCom.Click += btnRestartServerCom_Click;
+            // 
             // tabPage2
             // 
+            tabPage2.Controls.Add(cbChoiceMoxa);
+            tabPage2.Controls.Add(label51);
             tabPage2.Controls.Add(btnRestartServerMoxa);
             tabPage2.Controls.Add(SaveTcpbtn);
             tabPage2.Controls.Add(groupBox8);
@@ -839,11 +853,38 @@
             tabPage2.TabIndex = 1;
             tabPage2.Text = "Настройка ModbusTCP";
             tabPage2.UseVisualStyleBackColor = true;
-            tabPage2.Click += tabPage2_Click;
+            // 
+            // cbChoiceMoxa
+            // 
+            cbChoiceMoxa.FormattingEnabled = true;
+            cbChoiceMoxa.Items.AddRange(new object[] { "1", "2", "3", "4" });
+            cbChoiceMoxa.Location = new Point(610, 50);
+            cbChoiceMoxa.Name = "cbChoiceMoxa";
+            cbChoiceMoxa.Size = new Size(51, 23);
+            cbChoiceMoxa.TabIndex = 10;
+            // 
+            // label51
+            // 
+            label51.AutoSize = true;
+            label51.Location = new Point(457, 53);
+            label51.Name = "label51";
+            label51.Size = new Size(147, 15);
+            label51.TabIndex = 11;
+            label51.Text = "Количество COM-портов";
+            // 
+            // btnRestartServerMoxa
+            // 
+            btnRestartServerMoxa.Location = new Point(536, 433);
+            btnRestartServerMoxa.Name = "btnRestartServerMoxa";
+            btnRestartServerMoxa.Size = new Size(171, 39);
+            btnRestartServerMoxa.TabIndex = 9;
+            btnRestartServerMoxa.Text = "Перезапуск службы";
+            btnRestartServerMoxa.UseVisualStyleBackColor = true;
+            btnRestartServerMoxa.Click += btnRestartServerMoxa_Click;
             // 
             // SaveTcpbtn
             // 
-            SaveTcpbtn.Location = new Point(282, 332);
+            SaveTcpbtn.Location = new Point(251, 41);
             SaveTcpbtn.Name = "SaveTcpbtn";
             SaveTcpbtn.Size = new Size(171, 39);
             SaveTcpbtn.TabIndex = 5;
@@ -859,7 +900,7 @@
             groupBox8.Controls.Add(Port4);
             groupBox8.Controls.Add(IPtb4);
             groupBox8.Controls.Add(label41);
-            groupBox8.Location = new Point(418, 183);
+            groupBox8.Location = new Point(418, 260);
             groupBox8.Name = "groupBox8";
             groupBox8.Size = new Size(264, 116);
             groupBox8.TabIndex = 3;
@@ -924,7 +965,7 @@
             groupBox7.Controls.Add(Port3);
             groupBox7.Controls.Add(IPtb3);
             groupBox7.Controls.Add(label38);
-            groupBox7.Location = new Point(54, 183);
+            groupBox7.Location = new Point(54, 260);
             groupBox7.Name = "groupBox7";
             groupBox7.Size = new Size(264, 116);
             groupBox7.TabIndex = 2;
@@ -989,7 +1030,7 @@
             groupBox6.Controls.Add(Port2);
             groupBox6.Controls.Add(IPtb2);
             groupBox6.Controls.Add(label35);
-            groupBox6.Location = new Point(418, 41);
+            groupBox6.Location = new Point(418, 115);
             groupBox6.Name = "groupBox6";
             groupBox6.Size = new Size(264, 116);
             groupBox6.TabIndex = 1;
@@ -1054,7 +1095,7 @@
             groupBox5.Controls.Add(Port1);
             groupBox5.Controls.Add(IPtb1);
             groupBox5.Controls.Add(label30);
-            groupBox5.Location = new Point(54, 41);
+            groupBox5.Location = new Point(54, 115);
             groupBox5.Name = "groupBox5";
             groupBox5.Size = new Size(264, 116);
             groupBox5.TabIndex = 0;
@@ -1128,6 +1169,16 @@
             tabPage3.TabIndex = 2;
             tabPage3.Text = "Настройка дублирующего табла";
             tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // btnRestartServerGeneral
+            // 
+            btnRestartServerGeneral.Location = new Point(551, 150);
+            btnRestartServerGeneral.Name = "btnRestartServerGeneral";
+            btnRestartServerGeneral.Size = new Size(171, 39);
+            btnRestartServerGeneral.TabIndex = 10;
+            btnRestartServerGeneral.Text = "Перезапуск службы";
+            btnRestartServerGeneral.UseVisualStyleBackColor = true;
+            btnRestartServerGeneral.Click += btnRestartServerGeneral_Click;
             // 
             // defaultboardbtn
             // 
@@ -1326,43 +1377,15 @@
             label42.TabIndex = 0;
             label42.Text = "Табло";
             // 
-            // btnRestartServerCom
-            // 
-            btnRestartServerCom.Location = new Point(539, 217);
-            btnRestartServerCom.Name = "btnRestartServerCom";
-            btnRestartServerCom.Size = new Size(171, 39);
-            btnRestartServerCom.TabIndex = 8;
-            btnRestartServerCom.Text = "Перезапуск службы";
-            btnRestartServerCom.UseVisualStyleBackColor = true;
-            btnRestartServerCom.Click += btnRestartServerCom_Click;
-            // 
-            // btnRestartServerMoxa
-            // 
-            btnRestartServerMoxa.Location = new Point(536, 433);
-            btnRestartServerMoxa.Name = "btnRestartServerMoxa";
-            btnRestartServerMoxa.Size = new Size(171, 39);
-            btnRestartServerMoxa.TabIndex = 9;
-            btnRestartServerMoxa.Text = "Перезапуск службы";
-            btnRestartServerMoxa.UseVisualStyleBackColor = true;
-            btnRestartServerMoxa.Click += btnRestartServerMoxa_Click;
-            // 
-            // btnRestartServerGeneral
-            // 
-            btnRestartServerGeneral.Location = new Point(551, 150);
-            btnRestartServerGeneral.Name = "btnRestartServerGeneral";
-            btnRestartServerGeneral.Size = new Size(171, 39);
-            btnRestartServerGeneral.TabIndex = 10;
-            btnRestartServerGeneral.Text = "Перезапуск службы";
-            btnRestartServerGeneral.UseVisualStyleBackColor = true;
-            btnRestartServerGeneral.Click += btnRestartServerGeneral_Click;
-            // 
             // ComPortSettingsForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(755, 554);
             Controls.Add(tabControl1);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
             Icon = (Icon)resources.GetObject("$this.Icon");
+            MaximizeBox = false;
             Name = "ComPortSettingsForm";
             Text = "Наладка";
             Load += ComPortSettingsForm_Load;
@@ -1378,6 +1401,7 @@
             tabPage1.ResumeLayout(false);
             tabPage1.PerformLayout();
             tabPage2.ResumeLayout(false);
+            tabPage2.PerformLayout();
             groupBox8.ResumeLayout(false);
             groupBox8.PerformLayout();
             groupBox7.ResumeLayout(false);
@@ -1515,5 +1539,7 @@
         private Button btnRestartServerCom;
         private Button btnRestartServerMoxa;
         private Button btnRestartServerGeneral;
+        private ComboBox cbChoiceMoxa;
+        private Label label51;
     }
 }

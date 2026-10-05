@@ -167,7 +167,9 @@
             Controls.Add(btnCreateUser);
             Controls.Add(dgvUserList);
             Controls.Add(dgvUser);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
             Icon = (Icon)resources.GetObject("$this.Icon");
+            MaximizeBox = false;
             Name = "UserManagementForm";
             Text = "Пользователи";
             Load += UserManagementForm_Load;
