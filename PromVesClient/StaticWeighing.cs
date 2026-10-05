@@ -381,7 +381,8 @@ namespace PromVesClient
                     //обработка 4 графиков
                     for (int i = 0; i < cartSideWeights.Length; i++)
                     {
-                        cartSideWeights[i] = decimal.Parse(parts[i]) / 1000;
+                        if(decimal.TryParse(parts[i], NumberStyles.Number, CultureInfo.InvariantCulture, out var value))
+                            cartSideWeights[i] = value/1000;
                     }
                     if (cartSideWeights.Length > 0)
                         lblPlatform1Left.Text = $"Платформа 1 левый борт: {cartSideWeights[0]:F2} Т.";
@@ -427,12 +428,12 @@ namespace PromVesClient
         {
             for (int i = 0; i < stableWeight.Length; i++)
             {
-                if (stableWeight[i] == data && i == stableWeight.Length - 1)
+                if (Math.Abs(stableWeight[i] - data) <= 0.05m)
                 {
                     pictureBoxStabilityTrue.Visible = true;
                     pictureBoxStabilityFalse.Visible = false;
                 }
-                else if (stableWeight[i] < data || stableWeight[i] > data)
+                else
                 {
                     pictureBoxStabilityTrue.Visible = false;
                     pictureBoxStabilityFalse.Visible = true;
@@ -444,15 +445,18 @@ namespace PromVesClient
         //сохранение
         private async void btnSaveWeight_Click(object sender, EventArgs e)
         {
+            btnSaveWeight.Enabled = false;
             if (comboBoxVagonNumber.Text.Length != 8)
             {
                 MessageBox.Show("Перед сохранением введите корректный номер вагона", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                btnSaveWeight.Enabled = true;
                 return;
             }
             //проверка на стабильность веса перед сохранением
             if (pictureBoxStabilityFalse.Visible == true && pictureBoxStabilityTrue.Visible == false)
             {
                 MessageBox.Show("Перед сохранением дождитесь, чтобы вес был стабилен", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                btnSaveWeight.Enabled = true;
                 return;
             }
 
@@ -464,29 +468,12 @@ namespace PromVesClient
             else if (cBoxTypeWeighing.Text == "Брутто")
             {
                 GrossWeight = cartSideWeights.Sum();
-                if (string.IsNullOrWhiteSpace(txtLoadCapacity.Text))
-                {
-                    //MessageBox.Show("Введите корректное значение тары", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    //MessageBox.Show("Введите корректное значение тары");
-                    //return;
-                    TareWeight = 0;
-                }
-                else
-                {
-                    string text = txtLoadCapacity.Text.Trim()
-                    .Replace('.', ',');
-                    if (!decimal.TryParse(text.Trim(), out TareWeight))
-                    {
-                        MessageBox.Show("Введите корректное значение тары", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
-                    TareWeight = Math.Round(TareWeight, 2);
-                    //TareWeight = decimal.TryParse()
-                }
+                TareWeight = 0;
             }
             else
             {
                 MessageBox.Show("Выберите тип взвешивания", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                btnSaveWeight.Enabled = true;
                 return;
             }
             //проверка и преобразования поля в decimal для записи в модель
@@ -505,19 +492,40 @@ namespace PromVesClient
                 else
                 {
                     MessageBox.Show("Введите корректное значение веса по накладной", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    btnSaveWeight.Enabled = true;
                     return;
                 }
                 //проверка поля грузоподьемности
-                string textLoadCapacity = txtLoadCapacity.Text.Trim()
-                    .Replace('.', ',');
-                if (!decimal.TryParse(textLoadCapacity.Trim(), out LoadCapacity))
-                {
-                    MessageBox.Show("Введите корректное значение грузоподъёмности");
-                    return;
-                }
+                //string textLoadCapacity = txtLoadCapacity.Text.Trim()
+                //    .Replace('.', ',');
+                //if (!decimal.TryParse(textLoadCapacity.Trim(), out LoadCapacity))
+                //{
+                //    MessageBox.Show("Введите корректное значение грузоподъёмности");
+                //    return;
+                //}
             }
-
-            var resultt = await _staticWeighingService.saveReceiptAsync(IdReceipt, "Статическое взвешивание", _currentUserService.CurrentUser.Name);
+            //проверка поля грузоподьемности
+            string textLoadCapacity = txtLoadCapacity.Text.Trim()
+                .Replace('.', ',');
+            if (string.IsNullOrWhiteSpace(textLoadCapacity))
+            {
+                LoadCapacity = 0;
+            }
+            else if(!decimal.TryParse(textLoadCapacity.Trim(), out LoadCapacity))
+            {
+                MessageBox.Show("Введите корректное значение грузоподъёмности", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                btnSaveWeight.Enabled = true;
+                return;
+            }
+            //ссоздание квитанции
+            var resultsaveReceipt = await _staticWeighingService.saveReceiptAsync(IdReceipt, "Статическое взвешивание", _currentUserService.CurrentUser.Name);
+            //проверка на создание квитанции
+            if (resultsaveReceipt.Success == false)
+            {
+                MessageBox.Show($"Квитанция не была создана, причина: {resultsaveReceipt.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                btnSaveWeight.Enabled = true;
+                return;
+            }
             for (int i = 0; i < cartSideWeights.Length; i++ )
             {
                 cartAxesWeightsList[i] = cartSideWeights[i];
@@ -546,10 +554,12 @@ namespace PromVesClient
             if (result.Success == false)
             {
                 MessageBox.Show("Данные взвешивания не были сохранены в БД. Причина: " + result.Message, "Возникла ошибки при сохранении в БД", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                btnSaveWeight.Enabled = true;
             }
             else
             {
                 MessageBox.Show("Данные успешно сохранены в БД", "Данные сохранены", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                btnSaveWeight.Enabled = true;
             }
         }
         //создание точек на графике

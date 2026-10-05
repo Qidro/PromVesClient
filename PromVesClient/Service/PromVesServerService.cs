@@ -11,7 +11,7 @@ namespace PromVesClient.Service
 {
     public class PromVesServerService
     {
-        private const string ServiceName = "AnyDesk";
+        private const string ServiceName = "PromVesServerNew";
         private readonly ILogger<PromVesServerService> _logger;
         //private readonly ILogger<PromVesServerService> _logger;
 

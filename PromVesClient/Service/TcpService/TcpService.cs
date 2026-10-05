@@ -70,91 +70,142 @@ namespace PromVesClient.Service.TcpService
             _client = null;
         }
         //считывание с сервера присланных данных
+        // Считывание данных, присланных сервером
         public async Task ReceiveMessagesAsync(CancellationToken token)
         {
-            try 
+            try
             {
-                byte[] buffer = new byte[4096];
+                using var reader = new StreamReader(
+                    _stream,
+                    Encoding.UTF8,
+                    detectEncodingFromByteOrderMarks: false,
+                    leaveOpen: true);
 
                 while (!token.IsCancellationRequested)
                 {
-                    //создание токена отмены с задержкой 10 секунд
+                    // Таймаут ожидания сообщения — 10 секунд
                     using var timeoutCts =
-                    CancellationTokenSource.CreateLinkedTokenSource(token);
+                        CancellationTokenSource.CreateLinkedTokenSource(token);
+
                     timeoutCts.CancelAfter(TimeSpan.FromSeconds(10));
 
-                    int count =
-                        await _stream.ReadAsync(buffer, timeoutCts.Token);
+                    string? message;
 
-                    if (count == 0)
+                    try
                     {
+                        message = await reader.ReadLineAsync(timeoutCts.Token);
+                    }
+                    catch (OperationCanceledException) when (token.IsCancellationRequested)
+                    {
+                        // Штатная отмена всего процесса чтения
+                        _logger.LogInformation(
+                            "Получение сообщений от сервера остановлено.");
+
+                        ServerConnected = false;
+                        return;
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Истек таймаут 10 секунд
                         ServerConnected = false;
 
-                        _logger.LogWarning("Сервер закрыл соединение.");
+                        _logger.LogWarning(
+                            "Нет сообщений от сервера в течение 10 секунд.");
 
                         ConnectionError?.Invoke(
-                            new Exception("Сервер закрыл соединение"));
+                            new TimeoutException(
+                                "Нет сообщений от сервера в течение 10 секунд."));
 
                         return;
                     }
 
-                    string message = Encoding.UTF8.GetString(buffer, 0, count);
-                    //Console.WriteLine("выключаем событие");
-                    //
+                    // null означает, что сервер закрыл соединение
+                    if (message is null)
+                    {
+                        ServerConnected = false;
+
+                        _logger.LogWarning(
+                            "Сервер закрыл соединение.");
+
+                        ConnectionError?.Invoke(
+                            new IOException(
+                                "Сервер закрыл соединение."));
+
+                        return;
+                    }
+
+                    // Убираем пробелы и \r
+                    message = message.Trim();
+
+                    // Пустые сообщения игнорируем
+                    if (string.IsNullOrWhiteSpace(message))
+                        continue;
+
+                    _logger.LogDebug(
+                        "Получено сообщение от сервера: {Message}",
+                        message);
+
                     MessageReceived?.Invoke(message);
                 }
             }
-            //сервер разорвал соединение
             catch (IOException ex)
             {
                 ServerConnected = false;
-                //MessageBox.Show("Ошибка: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                _logger.LogError(ex, "Ошибка ввода-вывода. Сервер разорвал соединение");
-                ConnectionError?.Invoke(new Exception("Сервер разорвал соединение", ex));
-                return;
+
+                _logger.LogError(
+                    ex,
+                    "Ошибка ввода-вывода при получении данных от сервера.");
+
+                ConnectionError?.Invoke(
+                    new IOException(
+                        "Ошибка ввода-вывода. Соединение с сервером потеряно.",
+                        ex));
             }
-            //ошибка потока/работа с закрытым потоком, обьектом которго больше нет
             catch (ObjectDisposedException ex)
             {
                 ServerConnected = false;
-                _logger.LogError(ex, "Попытка считывания закрытого потока");
-                ConnectionError?.Invoke(new Exception("Сервер разорвал соединение", ex));
-                return;
+
+                _logger.LogError(
+                    ex,
+                    "Попытка чтения из закрытого потока.");
+
+                ConnectionError?.Invoke(
+                    new ObjectDisposedException(
+                        "NetworkStream",
+                        "Поток соединения с сервером был закрыт."));
             }
-            //ошибка сокета
             catch (SocketException ex)
             {
                 ServerConnected = false;
-                // MessageBox.Show("Ошибка", $"Ошибка сокета: {ex.SocketErrorCode}", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                _logger.LogError(ex, "Ошибка сокета");
-                ConnectionError?.Invoke(new Exception("Сервер разорвал соединение", ex));
-                return;
+
+                _logger.LogError(
+                    ex,
+                    "Ошибка сокета: {SocketErrorCode}",
+                    ex.SocketErrorCode);
+
+                ConnectionError?.Invoke(
+                    new SocketException((int)ex.SocketErrorCode));
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
                 ServerConnected = false;
-                //Штатная отмена
-                _logger.LogInformation("Получение сообщений остановлено");
-            }
-            catch (OperationCanceledException)
-            {
-                ServerConnected = false;
-                //Таймаут
-                _logger.LogWarning("Нет сообщений от сервера в течение 10 секунд");
-                ConnectionError?.Invoke(new Exception("Нет сообщений от сервера"));
+
+                _logger.LogInformation(
+                    "Получение сообщений от сервера остановлено.");
             }
             catch (Exception ex)
             {
                 ServerConnected = false;
-                //BeginInvoke(() =>
-                //{
-                //    //MessageBox.Show(ex.Message);
-                //});
-                _logger.LogError("Ошибка: " + ex.Message.ToString());
-                ConnectionError?.Invoke(new Exception("Сервер разорвал соединение", ex));
-                return;
+
+                _logger.LogError(
+                    ex,
+                    "Необработанная ошибка при получении данных от сервера.");
+
+                ConnectionError?.Invoke(
+                    new Exception(
+                        "Ошибка при получении данных от сервера.",
+                        ex));
             }
-            
         }
         //обьявление событий
         public event Action<string>? MessageReceived;
