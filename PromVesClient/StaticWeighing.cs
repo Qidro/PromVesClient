@@ -375,7 +375,11 @@ namespace PromVesClient
         {
             try
             {
-                ConnectionScalesCheck(message);
+                bool connectScales = ConnectionScalesCheck(message);
+                if (connectScales == false)
+                {
+                    return;
+                }
                 //Console.WriteLine("мы находится в событии");
                 string[] parts = message.Split(';');
                 if (cartSideWeights.Length == parts.Length)
@@ -386,17 +390,28 @@ namespace PromVesClient
                         if(decimal.TryParse(parts[i], NumberStyles.Number, CultureInfo.InvariantCulture, out var value))
                             cartSideWeights[i] = value/1000;
                     }
-                    if (cartSideWeights.Length > 0)
-                        lblPlatform1Left.Text = $"Платформа 1 левый борт: {cartSideWeights[0]:F2} Т.";
-
-                    if (cartSideWeights.Length > 1)
-                        lblPlatform1Right.Text = $"Платформа 1 правый борт: {cartSideWeights[1]:F2} Т.";
-
-                    if (cartSideWeights.Length > 2)
-                        lblPlatform2Left.Text = $"Платформа 2 левый борт: {cartSideWeights[2]:F2} Т.";
-
                     if (cartSideWeights.Length > 3)
+                    {
+                        lblPlatform1Left.Text = $"Платформа 1 левый борт: {cartSideWeights[0]:F2} Т.";
+                        lblPlatform1Right.Text = $"Платформа 1 правый борт: {cartSideWeights[1]:F2} Т.";
+                        lblPlatform2Left.Text = $"Платформа 2 левый борт: {cartSideWeights[2]:F2} Т.";
                         lblPlatform2Right.Text = $"Платформа 2 правый борт: {cartSideWeights[3]:F2} Т.";
+                    }
+                    else 
+                    {
+                        if (cartSideWeights.Length > 0)
+                        {
+                            lblPlatform1Left.Text = $"Платформа 1: {cartSideWeights[0]:F2} Т.";
+                        }
+                        if (cartSideWeights.Length > 1)
+                        {
+                            lblPlatform1Right.Text = $"Платформа 2: {cartSideWeights[1]:F2} Т.";
+                        }
+                        if (cartSideWeights.Length > 2)
+                        {
+                            lblPlatform2Left.Text = $"Платформа 3: {cartSideWeights[2]:F2} Т.";
+                        }
+                    } 
                     //вызов метода по вывода значения на табло
                     _ = DisplayingValue(cartSideWeights.Sum());
                     stable(cartSideWeights.Sum());
@@ -647,11 +662,13 @@ namespace PromVesClient
                 {
                     //выводим, что соединение нет
                     lblConnectScale.BackColor = Color.Red;
+                    btnSaveWeight.Enabled = false;
                     return false;
                 }
             }
             //выводим, что соединение есть
             lblConnectScale.BackColor = Color.Green;
+            btnSaveWeight.Enabled = true;
             return true;
         }
 
