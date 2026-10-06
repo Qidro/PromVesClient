@@ -50,7 +50,7 @@ namespace PromVesClient.Service
                 await RestartAsync();
 
                 MessageBox.Show(
-                    "Служба PromVesServer успешно перезапущена.",
+                    "Служба PromVesServerNew успешно перезапущена.",
                     "Служба сервера",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
@@ -58,11 +58,11 @@ namespace PromVesClient.Service
             catch (InvalidOperationException ex)
             {
                 MessageBox.Show(
-                    $"Служба PromVesServer не найдена, либо нет прав доступа",
+                    $"Служба PromVesServerNew не найдена, либо нет прав доступа",
                     "Ошибка",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
-                _logger.LogError($"Служба PromVesServer не найдена, либо нет прав доступа {ex}");
+                _logger.LogError($"Служба PromVesServerNew не найдена, либо нет прав доступа {ex}");
             }
             catch (System.ComponentModel.Win32Exception ex)
             {

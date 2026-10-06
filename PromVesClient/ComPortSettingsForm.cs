@@ -274,7 +274,7 @@ namespace PromVesClient
             SelectComboBoxItem(parityBox, settings.Parity, missingItems);
             SelectComboBoxItem(stopBitsBox, settings.StopBits, missingItems);
             SelectComboBoxItem(handshakeBox, settings.Handshake, missingItems);
-            SelectComboBoxItem(deviceAddressBox, settings.DeviceAddress, missingItems);
+            SelectComboBoxItem(deviceAddressBox, settings.slaveAddress, missingItems);
         }
 
         // метод чтения одного порта
@@ -306,7 +306,7 @@ namespace PromVesClient
                 Parity = Enum.Parse<Parity>(parityBox.Text.Trim(), true),
                 StopBits = Enum.Parse<StopBits>(stopBitsBox.Text.Trim(), true),
                 Handshake = Enum.Parse<Handshake>(handshakeBox.Text.Trim(), true),
-                DeviceAddress = deviceAddress
+                slaveAddress = deviceAddress
             };
         }
 
@@ -333,8 +333,8 @@ namespace PromVesClient
                 if (!selectedPorts.Add(settings.PortName))
                     throw new Exception($"COM-порт {settings.PortName} выбран несколько раз.");
 
-                if (!selectedAddresses.Add(settings.DeviceAddress))
-                    throw new Exception($"Адрес устройства {settings.DeviceAddress} выбран несколько раз.");
+                if (!selectedAddresses.Add(settings.slaveAddress))
+                    throw new Exception($"Адрес устройства {settings.slaveAddress} выбран несколько раз.");
 
                 configuration.SerialPorts.Add(settings);
             }

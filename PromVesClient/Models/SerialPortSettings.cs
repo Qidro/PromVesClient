@@ -20,6 +20,6 @@ namespace PromVesClient.Models
         public StopBits StopBits { get; set; }
 
         public Handshake Handshake { get; set; }
-        public int DeviceAddress { get; set; }
+        public int slaveAddress { get; set; }
     }
 }

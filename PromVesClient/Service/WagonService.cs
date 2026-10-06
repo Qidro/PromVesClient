@@ -73,7 +73,8 @@ namespace PromVesClient.Service
         // Добавление нового вагона
         public async Task<ServiceResult> CreateAsync(
             string number,
-            decimal tareWeight)
+            decimal tareWeight,
+            decimal loadDeviation)
         {
             try
             {
@@ -106,6 +107,7 @@ namespace PromVesClient.Service
                     Id = Guid.NewGuid(),
                     Number = number,
                     TareWeight = tareWeight,
+                    LoadCapacity = loadDeviation,
                     IsActive = true
                 };
 

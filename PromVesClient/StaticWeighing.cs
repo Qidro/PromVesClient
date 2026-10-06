@@ -60,7 +60,8 @@ namespace PromVesClient
         private decimal GrossWeight;
         private decimal LoadCapacity;
         private Guid IdReceipt;
-
+        //количества платформ
+        private int CountPlatform;
         private decimal? InvoiceWeighing;
         public StaticWeighing(ILogger<StaticWeighing> logger, StaticWeighingService staticWeighingService, CurrentUserService currentUserService, TcpService tcpService)
         {
@@ -69,8 +70,10 @@ namespace PromVesClient
             _currentUserService = currentUserService;
             _tcpService = tcpService;
             int graphCount = _currentUserService.GetGraphsCount();
-            values = new Queue<decimal>[graphCount];
 
+            values = new Queue<decimal>[graphCount];
+            //количества платформ
+            CountPlatform = graphCount;
             for (int i = 0; i < graphCount; i++)
             {
                 values[i] = new Queue<decimal>();
@@ -569,6 +572,14 @@ namespace PromVesClient
                 InvoiceWeighing = InvoiceWeighing,
                 IdReceipt = IdReceipt
             };
+            //Для 3-х платформенных
+            if (CountPlatform == 3)
+            {
+                dto.Platform1Left = cartAxesWeightsList[0];
+                dto.Platform1Right = 0;
+                dto.Platform2Left = cartAxesWeightsList[1];
+                dto.Platform2Right = cartAxesWeightsList[2];
+            }
             var result = await _staticWeighingService.saveWeighingAsync(dto);
             //проерка на сохранение данных
             if (result.Success == false)

@@ -14,6 +14,9 @@ namespace PromVesClient.Models
         // Тара вагона
         public decimal TareWeight { get; set; }
 
+        //Грузоподьемность вагона
+        public decimal LoadCapacity { get; set; }
+
         // Активен ли вагон
         public bool IsActive { get; set; } = true;
     }

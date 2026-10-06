@@ -8,7 +8,7 @@
       "Parity": "None",
       "StopBits": "One",
       "Handshake": "None",
-      "DeviceAddress": 2
+      "slaveAddress": 2
     },
     {
       "Id": 2,
@@ -18,7 +18,7 @@
       "Parity": "None",
       "StopBits": "One",
       "Handshake": "None",
-      "DeviceAddress": 3
+      "slaveAddress": 3
     },
     {
       "Id": 3,
@@ -28,7 +28,7 @@
       "Parity": "None",
       "StopBits": "One",
       "Handshake": "None",
-      "DeviceAddress": 6
+      "slaveAddress": 6
     }
   ]
 }

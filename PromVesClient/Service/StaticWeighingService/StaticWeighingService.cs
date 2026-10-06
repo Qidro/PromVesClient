@@ -42,8 +42,10 @@ namespace PromVesClient.Service.StaticWeighingService
             decimal R2 = dtoWeighing.Platform2Right;
             //общая сумма в весов
             decimal WeightSum = dtoWeighing.Platform1Left + dtoWeighing.Platform1Right + dtoWeighing.Platform2Left + dtoWeighing.Platform2Right;
-            //грузопольемность
+            //грузопольемность (отклонение)
             decimal LoadDeviation;
+            //грузоподьемность
+            decimal LoadCapacity;
             //временно Нетто 0
             decimal NetWeight = 0;
             //первая тележка
@@ -104,8 +106,20 @@ namespace PromVesClient.Service.StaticWeighingService
                         NetWeight = dtoWeighing.GrossWeight - query.TareWeight;
                     }
                 }
-                //вычисление грузоподьемности
-                LoadDeviation = dtoWeighing.LoadCapacity - NetWeight;
+                //получение грузоподьемности
+                var wagon = await _dbContext.Wagons.Where(w => w.Number == dtoWeighing.VagonNumber).FirstOrDefaultAsync();
+                if (wagon != null && wagon.IsActive != false)
+                {
+                    //вычисление грузоподьемности и отклонение грузоподьемности
+                    LoadCapacity = wagon.LoadCapacity;
+                    LoadDeviation = wagon.LoadCapacity - NetWeight;
+                }
+                else
+                {
+                    //вычисление грузоподьемности и отклонение грузоподьемности
+                    LoadCapacity = dtoWeighing.LoadCapacity;
+                    LoadDeviation = dtoWeighing.LoadCapacity - NetWeight;
+                }
             } 
             catch (InvalidOperationException ex)
             {
@@ -132,7 +146,7 @@ namespace PromVesClient.Service.StaticWeighingService
                 TareWeight = dtoWeighing.TareWeight,
                 GrossWeight = dtoWeighing.GrossWeight,
                 NetWeight = NetWeight,
-                LoadCapacity = dtoWeighing.LoadCapacity,
+                LoadCapacity = LoadCapacity,
                 LoadDeviation = LoadDeviation,
                 FirstCart = FirstCart,
                 SecondCart = SecondCart,

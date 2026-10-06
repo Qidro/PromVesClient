@@ -64,6 +64,7 @@ namespace PromVesClient
                     wagon.Id,
                     wagon.Number,
                     wagon.TareWeight,
+                    wagon.LoadCapacity,
                     wagon.IsActive ? "Активный" : "Неактивный");
             }
         }
@@ -126,11 +127,41 @@ namespace PromVesClient
 
                 return;
             }
+            // Получаем грузоподьемность
+            decimal loadDeviation;
 
+            var loadDeviationValue = dgvWagon.Rows[0]
+                .Cells["colLoadCapacity"]
+                .Value;
+
+            if (loadDeviationValue == null ||
+                !decimal.TryParse(loadDeviationValue.ToString(), out loadDeviation))
+            {
+                MessageBox.Show(
+                    "Введите корректное значение грузоподьемности.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+
+                return;
+            }
+
+            // Проверяем, что тара не отрицательная
+            if (loadDeviation < 0)
+            {
+                MessageBox.Show(
+                    "Тара не может быть отрицательной.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+
+                return;
+            }
             // Передаем данные в сервис
             var result = await _wagonService.CreateAsync(
                 number,
-                tareWeight);
+                tareWeight,
+                loadDeviation);
 
             // Проверяем результат
             if (!result.Success)
@@ -153,7 +184,7 @@ namespace PromVesClient
             // Очищаем строку ввода
             dgvWagon.Rows[0].Cells["colNumber"].Value = null;
             dgvWagon.Rows[0].Cells["colTareWeight"].Value = null;
-
+            dgvWagon.Rows[0].Cells["colLoadCapacity"].Value = null;
             // Обновляем список вагонов
             await LoadWagonsAsync();
         }

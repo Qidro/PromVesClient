@@ -181,9 +181,9 @@ namespace PromVesClient.Service.ReceiptsService
                 {
                     // Границы для всех заполненных строк
                     var range = ws.Range(2, 1, row - 1, 12);
-                    ws.Cell(row, 1).Value = $"Сумма Нетто: {cards[cards.Count - 1].NetWeight} т.";
-                    ws.Cell(row + 1, 1).Value = $"Дата: {DateTime.Today.ToString("dd.MM.yyyy")}";
-                    ws.Cell(row + 2, 1).Value = $"Время: {DateTime.Now:HH:mm:ss}";
+                    //ws.Cell(row, 1).Value = $"Сумма Нетто: {cards[cards.Count - 1].NetWeight} т.";
+                    ws.Cell(row, 1).Value = $"Дата: {DateTime.Today.ToString("dd.MM.yyyy")}";
+                    ws.Cell(row + 1, 1).Value = $"Время: {DateTime.Now:HH:mm:ss}";
                     //ws.Cell(row + 3, 1).Value = $"Оператор: {operatorName}";
 
                     ws.Cell(row, 1).Style.Font.FontSize = 16;
