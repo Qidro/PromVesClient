@@ -91,7 +91,9 @@ namespace PromVesClient
                 periodStart = dateTimePicker1.Value.ToUniversalTime(),
                 periodEnd = dateTimePicker2.Value.ToUniversalTime(),
                 vagonNumber = VagonNumber,
-                operatorName = Operator
+                operatorName = Operator,
+                cargo = Cargo,
+                shipper = Shipper
             };
             //выполнение запроса на получений квитанций с помощью фильтра
             var result = await _receiptsService.GetReceiptFilter(searchReceiptDto);
