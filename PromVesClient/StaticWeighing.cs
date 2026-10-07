@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Drawing;
+using DocumentFormat.OpenXml.Office2010.ExcelAc;
 using Microsoft.Extensions.Logging;
 using PromVesClient.DTO;
 using PromVesClient.Service;
@@ -11,6 +12,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Printing;
 using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
@@ -44,6 +46,8 @@ namespace PromVesClient
         private List<ScottPlot.WinForms.FormsPlot> plots;
         //сохранение ссылок на обьекты надписей
         private List<Label> labelsList;
+        //
+        private List<ReferenceDataDto> ReferenceWagonList;
         //Предназначен для создания точек на графике
         private readonly Queue<decimal>[] values;
 
@@ -80,6 +84,12 @@ namespace PromVesClient
             }
             cartSideWeights = new decimal[graphCount];
             InitializeComponent();
+
+            comboBoxVagonNumber.DropDownStyle = ComboBoxStyle.DropDown;
+
+            comboBoxVagonNumber.DropDown += comboBoxVagonNumber_DropDown;
+            comboBoxVagonNumber.SelectedIndexChanged += comboBoxVagonNumber_SelectedIndexChanged;
+            //comboBoxVagonNumber.TextUpdate += comboBoxVagonNumber_TextUpdate;
             //регистрации метода на ожидание новых данных
             _tcpService.MessageReceived += ProcessMessage;
             //регистрация метода на ожидание ошибок
@@ -154,15 +164,33 @@ namespace PromVesClient
             pictureBox5.Image = Properties.Resources._0;
             pictureBox6.Image = Properties.Resources._0;
         }
-
         private void pictureBox1_Click(object sender, EventArgs e)
         {
             //pictureBox1.Image = Properties.Resources._1t;
         }
-
-        private void StaticWeighing_Load(object sender, EventArgs e)
+        //подгрузка данных
+        private async void StaticWeighing_Load(object sender, EventArgs e)
         {
-
+            await GetWagonReference();
+        }
+        private async Task GetWagonReference()
+        {
+            var result = await _staticWeighingService.GetWagonInfoAsync();
+            if (result.Success == false)
+            {
+                MessageBox.Show($"Произошла ошибка получения вагонов из справочника, причина: {result.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else 
+            {
+                ReferenceWagonList = result.Data;
+                foreach (var item in ReferenceWagonList)
+                {
+                    comboBoxVagonNumber.Items.Add(item.WagonNumber);
+                }
+                //comboBoxVagonNumber
+                //MessageBox.Show(ReferenceWagonList[1].WagonNumber.ToString());
+                //comboBoxVagonNumber
+            }
         }
 
         private void pictureBox6_Click(object sender, EventArgs e)
@@ -682,7 +710,40 @@ namespace PromVesClient
             btnSaveWeight.Enabled = true;
             return true;
         }
+        private void comboBoxVagonNumber_DropDown(object sender, EventArgs e)
+        {
+            if (ReferenceWagonList == null)
+                return;
 
+            string searchText = comboBoxVagonNumber.Text;
+
+            var filteredWagons = ReferenceWagonList
+                .Where(x => x.WagonNumber.StartsWith(searchText))
+                .Select(x => x.WagonNumber)
+                .ToArray();
+
+            comboBoxVagonNumber.Items.Clear();
+            comboBoxVagonNumber.Items.AddRange(filteredWagons);
+        }
+        private void comboBoxVagonNumber_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (ReferenceWagonList == null)
+                return;
+
+            string selectedWagonNumber = comboBoxVagonNumber.Text;
+
+            var wagon = ReferenceWagonList
+                .FirstOrDefault(x => x.WagonNumber == selectedWagonNumber);
+
+            if (wagon != null)
+            {
+                txtLoadCapacity.Text = wagon.LoadCapacity.ToString("0.##");
+            }
+            else
+            {
+                txtLoadCapacity.Clear();
+            }
+        }
         private void lblPlatform1Right_Click(object sender, EventArgs e)
         {
 

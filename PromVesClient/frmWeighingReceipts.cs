@@ -810,5 +810,10 @@ namespace PromVesClient
         {
 
         }
+
+        private void frmWeighingReceipts_Load_1(object sender, EventArgs e)
+        {
+
+        }
     }
 }

@@ -253,5 +253,61 @@ namespace PromVesClient
             // Обновляем список
             await LoadWagonsAsync();
         }
+        //удаление вагона из справоччника
+        private async void button1_Click(object sender, EventArgs e)
+        {
+            // Проверяем, выбран ли вагон
+            if (dgvWagonList.SelectedRows.Count == 0)
+            {
+                MessageBox.Show(
+                    "Выберите вагон.",
+                    "Внимание",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+
+                return;
+            }
+
+            // Получаем выбранную строку
+            var row = dgvWagonList.SelectedRows[0];
+
+            // Получаем Id вагона
+            var idValue = row.Cells["colId"].Value;
+
+            if (idValue == null || !Guid.TryParse(idValue.ToString(), out Guid wagonId))
+            {
+                MessageBox.Show(
+                    "Не удалось определить вагон.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
+                return;
+            }
+
+            // Меняем статус через сервис
+            var result = await _wagonService.DeleteWagonAsync(wagonId);
+
+            if (!result.Success)
+            {
+                MessageBox.Show(
+                    result.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
+                return;
+            }
+            else
+            {
+                MessageBox.Show(
+                    "Вагон был успешно удален",
+                    "Успех",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            // Обновляем список
+            await LoadWagonsAsync();
+        }
     }
 }

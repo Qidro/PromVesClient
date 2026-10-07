@@ -313,6 +313,7 @@
             MaximizeBox = false;
             Name = "frmWeighingReceipts";
             Text = "Квитанции взвешивания";
+            Load += frmWeighingReceipts_Load_1;
             ((System.ComponentModel.ISupportInitialize)dataGridViewReceipts).EndInit();
             groupBox1.ResumeLayout(false);
             groupBox1.PerformLayout();

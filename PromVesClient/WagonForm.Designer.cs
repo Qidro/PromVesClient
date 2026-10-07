@@ -30,17 +30,18 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(WagonForm));
             dgvWagon = new DataGridView();
-            dgvWagonList = new DataGridView();
-            btnCreate = new Button();
-            btnChangeStatus = new Button();
             colNumber = new DataGridViewTextBoxColumn();
             colTareWeight = new DataGridViewTextBoxColumn();
             colLoadCapacity = new DataGridViewTextBoxColumn();
+            dgvWagonList = new DataGridView();
             colId = new DataGridViewTextBoxColumn();
             colListNumber = new DataGridViewTextBoxColumn();
             colListTareWeight = new DataGridViewTextBoxColumn();
             colListLoadCapacity = new DataGridViewTextBoxColumn();
             colListStatus = new DataGridViewTextBoxColumn();
+            btnCreate = new Button();
+            btnChangeStatus = new Button();
+            buttonDeleateWagon = new Button();
             ((System.ComponentModel.ISupportInitialize)dgvWagon).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dgvWagonList).BeginInit();
             SuspendLayout();
@@ -53,35 +54,6 @@
             dgvWagon.Name = "dgvWagon";
             dgvWagon.Size = new Size(598, 98);
             dgvWagon.TabIndex = 0;
-            // 
-            // dgvWagonList
-            // 
-            dgvWagonList.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvWagonList.Columns.AddRange(new DataGridViewColumn[] { colId, colListNumber, colListTareWeight, colListLoadCapacity, colListStatus });
-            dgvWagonList.Location = new Point(12, 206);
-            dgvWagonList.Name = "dgvWagonList";
-            dgvWagonList.Size = new Size(598, 149);
-            dgvWagonList.TabIndex = 1;
-            // 
-            // btnCreate
-            // 
-            btnCreate.Location = new Point(12, 129);
-            btnCreate.Name = "btnCreate";
-            btnCreate.Size = new Size(138, 50);
-            btnCreate.TabIndex = 2;
-            btnCreate.Text = "Добавить";
-            btnCreate.UseVisualStyleBackColor = true;
-            btnCreate.Click += btnCreate_Click;
-            // 
-            // btnChangeStatus
-            // 
-            btnChangeStatus.Location = new Point(418, 129);
-            btnChangeStatus.Name = "btnChangeStatus";
-            btnChangeStatus.Size = new Size(192, 50);
-            btnChangeStatus.TabIndex = 4;
-            btnChangeStatus.Text = "Активировать/Деактивировать";
-            btnChangeStatus.UseVisualStyleBackColor = true;
-            btnChangeStatus.Click += btnChangeStatus_Click;
             // 
             // colNumber
             // 
@@ -100,6 +72,15 @@
             colLoadCapacity.HeaderText = "Грузоподьемность";
             colLoadCapacity.Name = "colLoadCapacity";
             colLoadCapacity.Width = 195;
+            // 
+            // dgvWagonList
+            // 
+            dgvWagonList.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvWagonList.Columns.AddRange(new DataGridViewColumn[] { colId, colListNumber, colListTareWeight, colListLoadCapacity, colListStatus });
+            dgvWagonList.Location = new Point(12, 206);
+            dgvWagonList.Name = "dgvWagonList";
+            dgvWagonList.Size = new Size(598, 149);
+            dgvWagonList.TabIndex = 1;
             // 
             // colId
             // 
@@ -132,11 +113,45 @@
             colListStatus.Name = "colListStatus";
             colListStatus.Width = 125;
             // 
+            // btnCreate
+            // 
+            btnCreate.Location = new Point(12, 129);
+            btnCreate.Name = "btnCreate";
+            btnCreate.Size = new Size(138, 50);
+            btnCreate.TabIndex = 2;
+            btnCreate.Text = "Добавить";
+            btnCreate.UseVisualStyleBackColor = true;
+            btnCreate.Click += btnCreate_Click;
+            // 
+            // btnChangeStatus
+            // 
+            btnChangeStatus.Location = new Point(220, 129);
+            btnChangeStatus.Name = "btnChangeStatus";
+            btnChangeStatus.Size = new Size(192, 50);
+            btnChangeStatus.TabIndex = 4;
+            btnChangeStatus.Text = "Активировать/Деактивировать";
+            btnChangeStatus.UseVisualStyleBackColor = true;
+            btnChangeStatus.Click += btnChangeStatus_Click;
+            // 
+            // buttonDeleateWagon
+            // 
+            buttonDeleateWagon.BackColor = Color.Red;
+            buttonDeleateWagon.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            buttonDeleateWagon.ForeColor = Color.White;
+            buttonDeleateWagon.Location = new Point(418, 129);
+            buttonDeleateWagon.Name = "buttonDeleateWagon";
+            buttonDeleateWagon.Size = new Size(192, 50);
+            buttonDeleateWagon.TabIndex = 5;
+            buttonDeleateWagon.Text = "Удалить вагон";
+            buttonDeleateWagon.UseVisualStyleBackColor = false;
+            buttonDeleateWagon.Click += button1_Click;
+            // 
             // WagonForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(673, 367);
+            Controls.Add(buttonDeleateWagon);
             Controls.Add(btnChangeStatus);
             Controls.Add(btnCreate);
             Controls.Add(dgvWagonList);
@@ -166,5 +181,6 @@
         private DataGridViewTextBoxColumn colListTareWeight;
         private DataGridViewTextBoxColumn colListLoadCapacity;
         private DataGridViewTextBoxColumn colListStatus;
+        private Button buttonDeleateWagon;
     }
 }

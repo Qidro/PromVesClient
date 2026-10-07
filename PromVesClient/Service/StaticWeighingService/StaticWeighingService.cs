@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using PromVesClient.DTO;
 using PromVesClient.Models;
 using System;
@@ -340,7 +341,36 @@ namespace PromVesClient.Service.StaticWeighingService
 
             throw new Exception("Локальный IPv4 адрес не найден.");
         }
-
-       
+        //получение списка вагонов из справочника вагонов
+        public async Task<ServiceResult<List<ReferenceDataDto>>> GetWagonInfoAsync()
+        {
+            try 
+            {
+                //поиск вагонов и внедрение в Dto
+                var wagonList = await _dbContext.Wagons
+                 .Select(w => new ReferenceDataDto
+                 {
+                     WagonNumber = w.Number,
+                     LoadCapacity = w.LoadCapacity
+                 })
+                 .ToListAsync();
+                return ServiceResult<List<ReferenceDataDto>>.Ok(wagonList);
+            }
+            catch (TimeoutException ex)
+            {
+                _logger.LogError("Привышенно время ожидания ответа: " + ex.Message);
+                return ServiceResult<List<ReferenceDataDto>>.Fail("БД не отвечает, причина: " + ex.Message);
+            }
+            catch (NpgsqlException ex)
+            {
+                _logger.LogError("Ошибка сервера БД: " + ex.Message);
+                return ServiceResult<List<ReferenceDataDto>>.Fail("Ошибка сервера БД: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Неизвестная ошибка БД: " + ex.Message);
+                return ServiceResult<List<ReferenceDataDto>>.Fail("Неизвестная ошибка БД: " + ex.Message);
+            }
+        }
     }
 }

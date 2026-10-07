@@ -231,5 +231,38 @@ namespace PromVesClient.Service
                     "Не удалось изменить статус вагона.");
             }
         }
+        //удаление вагона из справояника
+        public async Task<ServiceResult> DeleteWagonAsync(Guid id)
+        {
+            try
+            {
+
+                await using var db = await _dbContextFactory.CreateDbContextAsync();
+
+                var wagon = await db.Wagons.FindAsync(id);
+
+                if (wagon == null)
+                {
+                    return ServiceResult.Fail("Вагон не найден");
+                }
+
+                db.Wagons.Remove(wagon);
+
+                await db.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "Удален вагон {WagonId}.", id);
+
+                return ServiceResult.Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Ошибка при удалении вагона {WagonId}.", id);
+
+                return ServiceResult.Fail(
+                    "Не удалось удалить вагон.");
+            }
+        }
     }
 }
