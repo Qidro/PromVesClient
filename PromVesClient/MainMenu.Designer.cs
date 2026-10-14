@@ -41,6 +41,7 @@
             отчетыToolStripMenuItem = new ToolStripMenuItem();
             справочникВагоновToolStripMenuItem = new ToolStripMenuItem();
             label1 = new Label();
+            PMCalibrationToolStripMenuItem = new ToolStripMenuItem();
             menuStrip1.SuspendLayout();
             SuspendLayout();
             // 
@@ -109,7 +110,7 @@
             // 
             // ServiceToolStrip
             // 
-            ServiceToolStrip.DropDownItems.AddRange(new ToolStripItem[] { ComSetitem, отчетыToolStripMenuItem, справочникВагоновToolStripMenuItem });
+            ServiceToolStrip.DropDownItems.AddRange(new ToolStripItem[] { ComSetitem, отчетыToolStripMenuItem, справочникВагоновToolStripMenuItem, PMCalibrationToolStripMenuItem });
             ServiceToolStrip.Name = "ServiceToolStrip";
             ServiceToolStrip.Size = new Size(59, 20);
             ServiceToolStrip.Text = "Сервис";
@@ -144,6 +145,13 @@
             label1.TabIndex = 4;
             label1.Text = "label1";
             label1.Visible = false;
+            // 
+            // PMCalibrationToolStripMenuItem
+            // 
+            PMCalibrationToolStripMenuItem.Name = "PMCalibrationToolStripMenuItem";
+            PMCalibrationToolStripMenuItem.Size = new Size(195, 22);
+            PMCalibrationToolStripMenuItem.Text = "Калибровка ПН";
+            PMCalibrationToolStripMenuItem.Click += калибровкаПНToolStripMenuItem_Click;
             // 
             // MainMenu
             // 
@@ -182,5 +190,6 @@
         private Label label1;
         private ToolStripMenuItem отчетыToolStripMenuItem;
         private ToolStripMenuItem справочникВагоновToolStripMenuItem;
+        private ToolStripMenuItem PMCalibrationToolStripMenuItem;
     }
 }

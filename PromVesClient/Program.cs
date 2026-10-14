@@ -56,7 +56,7 @@ namespace PromVesClient
             services.AddTransient<ChangeUserForm>();
             services.AddTransient<ReceiptPrintSettingsForm>();
             services.AddTransient<WagonForm>();
-
+            services.AddTransient<PMCalibrationForm>();
             //регистрация сервисов
             services.AddScoped<UserService>();
             services.AddScoped<HashPasswordService>();

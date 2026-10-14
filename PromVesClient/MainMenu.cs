@@ -86,6 +86,13 @@ namespace PromVesClient
 
             form.ShowDialog();
         }
+
+        private void калибровкаПНToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var form = _serviceProvider.GetRequiredService<PMCalibrationForm>();
+
+            form.ShowDialog();
+        }
     }
 
 }
