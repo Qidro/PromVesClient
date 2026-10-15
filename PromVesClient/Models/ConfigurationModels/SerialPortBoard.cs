@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO.Ports;
 using System.Text;
 
-namespace PromVesClient.Models
+namespace PromVesClient.Models.ConfigurationModels
 {
     public class SerialPortBoard
     {

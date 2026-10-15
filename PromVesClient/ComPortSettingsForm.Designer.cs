@@ -825,6 +825,7 @@
             tabPage1.TabIndex = 0;
             tabPage1.Text = "Настройка COM-портов";
             tabPage1.UseVisualStyleBackColor = true;
+            tabPage1.Click += tabPage1_Click;
             // 
             // btnRestartServerCom
             // 

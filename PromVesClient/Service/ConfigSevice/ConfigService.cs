@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using PromVesClient.Models;
+using PromVesClient.Models.ConfigurationModels;
 using System;
 using System.Collections.Generic;
 using System.IO.Ports;

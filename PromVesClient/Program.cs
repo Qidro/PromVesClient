@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using PromVesClient.Service;
 using PromVesClient.Service.AppInfoService;
 using PromVesClient.Service.ConfigSevice;
+using PromVesClient.Service.PNCalibrationService;
 using PromVesClient.Service.ReceiptsService;
 using PromVesClient.Service.StaticWeighingService;
 using PromVesClient.Service.TcpService;
@@ -73,7 +74,7 @@ namespace PromVesClient
             services.AddSingleton<GeneralConfiguratorService>();
             services.AddSingleton<ConfigService>();
             services.AddSingleton<PromVesServerService>();
-
+            services.AddSingleton<CalibrationService>();
             //регистрация одного экземпляра, чтобы все формы работали именно с ним
             services.AddSingleton<CurrentUserService>();
             var provider = services.BuildServiceProvider();

@@ -1,5 +1,4 @@
-﻿using PromVesClient.Models;
-using PromVesClient.Service;
+﻿using PromVesClient.Service;
 using System;
 using System.Collections.Generic;
 using System.IO.Ports;
@@ -9,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.ServiceProcess;
 using System.Threading.Tasks;
+using PromVesClient.Models.ConfigurationModels;
 
 namespace PromVesClient
 {
@@ -677,7 +677,7 @@ namespace PromVesClient
         {
             var configuration = new ModbusTcpConfiguration();
 
-            for (int i = 0; i < _selectedMoxaCount ; i++)
+            for (int i = 0; i < _selectedMoxaCount; i++)
             {
                 string ipAddress = _moxaIpBoxes[i].Text.Trim();
 
@@ -998,6 +998,11 @@ namespace PromVesClient
             groupBox6.Visible = _selectedMoxaCount >= 2;
             groupBox7.Visible = _selectedMoxaCount >= 3;
             groupBox8.Visible = _selectedMoxaCount >= 4;
+        }
+
+        private void tabPage1_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

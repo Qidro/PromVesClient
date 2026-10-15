@@ -28,26 +28,27 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PMCalibrationForm));
             btnReadZeroCode = new Button();
             label1 = new Label();
             dataGridView2 = new DataGridView();
             ChannelNumber = new DataGridViewTextBoxColumn();
             ZeroCode = new DataGridViewTextBoxColumn();
-            CodeKnownCargo = new DataGridViewTextBoxColumn();
-            KnownCargo = new DataGridViewTextBoxColumn();
-            Coefficient = new DataGridViewTextBoxColumn();
+            ReferenceCode = new DataGridViewTextBoxColumn();
+            ReferenceWeight = new DataGridViewTextBoxColumn();
+            WeightCoefficient = new DataGridViewTextBoxColumn();
             panel1 = new Panel();
             comboBoxChanel = new ComboBox();
             btnCalculateTheCoefficient = new Button();
             btnReadReferenceValue = new Button();
-            textBoxCoefficient = new TextBox();
-            textBoxKnownWeight = new TextBox();
+            textBoxWeightCoefficient = new TextBox();
+            textBoxReferenceWeight = new TextBox();
             label12 = new Label();
             label11 = new Label();
             label10 = new Label();
-            textBoxReferenceStake = new TextBox();
+            textBoxReferenceCode = new TextBox();
             label9 = new Label();
-            textBoxCodeZero = new TextBox();
+            textBoxZeroCode = new TextBox();
             textBoxCurrentADCcode = new TextBox();
             label8 = new Label();
             panel2 = new Panel();
@@ -76,6 +77,7 @@
             btnReadZeroCode.TabIndex = 2;
             btnReadZeroCode.Text = "Считать код нуля";
             btnReadZeroCode.UseVisualStyleBackColor = true;
+            btnReadZeroCode.Click += btnReadZeroCode_Click;
             // 
             // label1
             // 
@@ -91,7 +93,7 @@
             // dataGridView2
             // 
             dataGridView2.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridView2.Columns.AddRange(new DataGridViewColumn[] { ChannelNumber, ZeroCode, CodeKnownCargo, KnownCargo, Coefficient });
+            dataGridView2.Columns.AddRange(new DataGridViewColumn[] { ChannelNumber, ZeroCode, ReferenceCode, ReferenceWeight, WeightCoefficient });
             dataGridView2.Location = new Point(3, 54);
             dataGridView2.Name = "dataGridView2";
             dataGridView2.Size = new Size(623, 438);
@@ -109,22 +111,22 @@
             ZeroCode.Name = "ZeroCode";
             ZeroCode.Width = 120;
             // 
-            // CodeKnownCargo
+            // ReferenceCode
             // 
-            CodeKnownCargo.HeaderText = "Код эталона";
-            CodeKnownCargo.Name = "CodeKnownCargo";
-            CodeKnownCargo.Width = 120;
+            ReferenceCode.HeaderText = "Код эталона";
+            ReferenceCode.Name = "ReferenceCode";
+            ReferenceCode.Width = 120;
             // 
-            // KnownCargo
+            // ReferenceWeight
             // 
-            KnownCargo.HeaderText = "Эталонный вес, кг. ";
-            KnownCargo.Name = "KnownCargo";
-            KnownCargo.Width = 120;
+            ReferenceWeight.HeaderText = "Эталонный вес, кг. ";
+            ReferenceWeight.Name = "ReferenceWeight";
+            ReferenceWeight.Width = 120;
             // 
-            // Coefficient
+            // WeightCoefficient
             // 
-            Coefficient.HeaderText = "Коэффицент";
-            Coefficient.Name = "Coefficient";
+            WeightCoefficient.HeaderText = "Коэффицент";
+            WeightCoefficient.Name = "WeightCoefficient";
             // 
             // panel1
             // 
@@ -132,14 +134,14 @@
             panel1.Controls.Add(comboBoxChanel);
             panel1.Controls.Add(btnCalculateTheCoefficient);
             panel1.Controls.Add(btnReadReferenceValue);
-            panel1.Controls.Add(textBoxCoefficient);
-            panel1.Controls.Add(textBoxKnownWeight);
+            panel1.Controls.Add(textBoxWeightCoefficient);
+            panel1.Controls.Add(textBoxReferenceWeight);
             panel1.Controls.Add(label12);
             panel1.Controls.Add(label11);
             panel1.Controls.Add(label10);
-            panel1.Controls.Add(textBoxReferenceStake);
+            panel1.Controls.Add(textBoxReferenceCode);
             panel1.Controls.Add(label9);
-            panel1.Controls.Add(textBoxCodeZero);
+            panel1.Controls.Add(textBoxZeroCode);
             panel1.Controls.Add(textBoxCurrentADCcode);
             panel1.Controls.Add(label8);
             panel1.Controls.Add(panel2);
@@ -171,6 +173,7 @@
             btnCalculateTheCoefficient.TabIndex = 21;
             btnCalculateTheCoefficient.Text = "Рассчитать коэффициент";
             btnCalculateTheCoefficient.UseVisualStyleBackColor = true;
+            btnCalculateTheCoefficient.Click += btnCalculateTheCoefficient_Click;
             // 
             // btnReadReferenceValue
             // 
@@ -181,25 +184,26 @@
             btnReadReferenceValue.TabIndex = 20;
             btnReadReferenceValue.Text = "Считать эталон";
             btnReadReferenceValue.UseVisualStyleBackColor = true;
+            btnReadReferenceValue.Click += btnReadReferenceValue_Click;
             // 
-            // textBoxCoefficient
+            // textBoxWeightCoefficient
             // 
-            textBoxCoefficient.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            textBoxCoefficient.Location = new Point(263, 245);
-            textBoxCoefficient.Multiline = true;
-            textBoxCoefficient.Name = "textBoxCoefficient";
-            textBoxCoefficient.ReadOnly = true;
-            textBoxCoefficient.Size = new Size(237, 30);
-            textBoxCoefficient.TabIndex = 19;
+            textBoxWeightCoefficient.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            textBoxWeightCoefficient.Location = new Point(263, 245);
+            textBoxWeightCoefficient.Multiline = true;
+            textBoxWeightCoefficient.Name = "textBoxWeightCoefficient";
+            textBoxWeightCoefficient.ReadOnly = true;
+            textBoxWeightCoefficient.Size = new Size(237, 30);
+            textBoxWeightCoefficient.TabIndex = 19;
             // 
-            // textBoxKnownWeight
+            // textBoxReferenceWeight
             // 
-            textBoxKnownWeight.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            textBoxKnownWeight.Location = new Point(263, 209);
-            textBoxKnownWeight.Multiline = true;
-            textBoxKnownWeight.Name = "textBoxKnownWeight";
-            textBoxKnownWeight.Size = new Size(237, 30);
-            textBoxKnownWeight.TabIndex = 18;
+            textBoxReferenceWeight.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            textBoxReferenceWeight.Location = new Point(263, 209);
+            textBoxReferenceWeight.Multiline = true;
+            textBoxReferenceWeight.Name = "textBoxReferenceWeight";
+            textBoxReferenceWeight.Size = new Size(237, 30);
+            textBoxReferenceWeight.TabIndex = 18;
             // 
             // label12
             // 
@@ -231,14 +235,14 @@
             label10.TabIndex = 15;
             label10.Text = "Код при эталоне";
             // 
-            // textBoxReferenceStake
+            // textBoxReferenceCode
             // 
-            textBoxReferenceStake.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            textBoxReferenceStake.Location = new Point(263, 173);
-            textBoxReferenceStake.Multiline = true;
-            textBoxReferenceStake.Name = "textBoxReferenceStake";
-            textBoxReferenceStake.Size = new Size(237, 30);
-            textBoxReferenceStake.TabIndex = 14;
+            textBoxReferenceCode.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            textBoxReferenceCode.Location = new Point(263, 173);
+            textBoxReferenceCode.Multiline = true;
+            textBoxReferenceCode.Name = "textBoxReferenceCode";
+            textBoxReferenceCode.Size = new Size(237, 30);
+            textBoxReferenceCode.TabIndex = 14;
             // 
             // label9
             // 
@@ -250,14 +254,14 @@
             label9.TabIndex = 13;
             label9.Text = "Код нуля";
             // 
-            // textBoxCodeZero
+            // textBoxZeroCode
             // 
-            textBoxCodeZero.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            textBoxCodeZero.Location = new Point(263, 137);
-            textBoxCodeZero.Multiline = true;
-            textBoxCodeZero.Name = "textBoxCodeZero";
-            textBoxCodeZero.Size = new Size(237, 30);
-            textBoxCodeZero.TabIndex = 12;
+            textBoxZeroCode.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            textBoxZeroCode.Location = new Point(263, 137);
+            textBoxZeroCode.Multiline = true;
+            textBoxZeroCode.Name = "textBoxZeroCode";
+            textBoxZeroCode.Size = new Size(237, 30);
+            textBoxZeroCode.TabIndex = 12;
             // 
             // textBoxCurrentADCcode
             // 
@@ -265,7 +269,6 @@
             textBoxCurrentADCcode.Location = new Point(263, 101);
             textBoxCurrentADCcode.Multiline = true;
             textBoxCurrentADCcode.Name = "textBoxCurrentADCcode";
-            textBoxCurrentADCcode.ReadOnly = true;
             textBoxCurrentADCcode.Size = new Size(237, 30);
             textBoxCurrentADCcode.TabIndex = 11;
             // 
@@ -378,8 +381,10 @@
             Controls.Add(panel5);
             Controls.Add(panel3);
             Controls.Add(panel1);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "PMCalibrationForm";
             Text = "Калибровка каналов ПН-12";
+            Load += PMCalibrationForm_Load;
             ((System.ComponentModel.ISupportInitialize)dataGridView2).EndInit();
             panel1.ResumeLayout(false);
             panel1.PerformLayout();
@@ -402,14 +407,14 @@
         private Label label7;
         private TextBox textBoxCurrentADCcode;
         private Label label8;
-        private TextBox textBoxCoefficient;
-        private TextBox textBoxKnownWeight;
+        private TextBox textBoxWeightCoefficient;
+        private TextBox textBoxReferenceWeight;
         private Label label12;
         private Label label11;
         private Label label10;
-        private TextBox textBoxReferenceStake;
+        private TextBox textBoxReferenceCode;
         private Label label9;
-        private TextBox textBoxCodeZero;
+        private TextBox textBoxZeroCode;
         private Button btnReadReferenceValue;
         private Button btnCalculateTheCoefficient;
         private Panel panel3;
@@ -422,8 +427,8 @@
         private ComboBox comboBoxChanel;
         private DataGridViewTextBoxColumn ChannelNumber;
         private DataGridViewTextBoxColumn ZeroCode;
-        private DataGridViewTextBoxColumn CodeKnownCargo;
-        private DataGridViewTextBoxColumn KnownCargo;
-        private DataGridViewTextBoxColumn Coefficient;
+        private DataGridViewTextBoxColumn ReferenceCode;
+        private DataGridViewTextBoxColumn ReferenceWeight;
+        private DataGridViewTextBoxColumn WeightCoefficient;
     }
 }
