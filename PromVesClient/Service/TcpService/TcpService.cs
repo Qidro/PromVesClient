@@ -14,6 +14,10 @@ namespace PromVesClient.Service.TcpService
         private NetworkStream? _stream;
         private CancellationTokenSource? _cts;
         private readonly ILogger<TcpService> _logger;
+
+        //DI
+        private readonly CurrentUserService _currentUserService;
+        //логи
         //поле подключения к серверу
         public bool ServerConnected { get; private set; }
         public CancellationToken Token =>

@@ -38,6 +38,8 @@
             ReferenceWeight = new DataGridViewTextBoxColumn();
             WeightCoefficient = new DataGridViewTextBoxColumn();
             panel1 = new Panel();
+            panel6 = new Panel();
+            label3 = new Label();
             comboBoxChanel = new ComboBox();
             btnCalculateTheCoefficient = new Button();
             btnReadReferenceValue = new Button();
@@ -62,6 +64,7 @@
             label2 = new Label();
             ((System.ComponentModel.ISupportInitialize)dataGridView2).BeginInit();
             panel1.SuspendLayout();
+            panel6.SuspendLayout();
             panel2.SuspendLayout();
             panel3.SuspendLayout();
             panel4.SuspendLayout();
@@ -71,7 +74,7 @@
             // btnReadZeroCode
             // 
             btnReadZeroCode.Font = new Font("Segoe UI", 11.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            btnReadZeroCode.Location = new Point(16, 281);
+            btnReadZeroCode.Location = new Point(16, 330);
             btnReadZeroCode.Name = "btnReadZeroCode";
             btnReadZeroCode.Size = new Size(239, 38);
             btnReadZeroCode.TabIndex = 2;
@@ -83,7 +86,7 @@
             // 
             label1.AutoSize = true;
             label1.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            label1.Location = new Point(16, 65);
+            label1.Location = new Point(16, 114);
             label1.Name = "label1";
             label1.Size = new Size(52, 21);
             label1.TabIndex = 8;
@@ -131,6 +134,7 @@
             // panel1
             // 
             panel1.BorderStyle = BorderStyle.FixedSingle;
+            panel1.Controls.Add(panel6);
             panel1.Controls.Add(comboBoxChanel);
             panel1.Controls.Add(btnCalculateTheCoefficient);
             panel1.Controls.Add(btnReadReferenceValue);
@@ -149,16 +153,39 @@
             panel1.Controls.Add(label1);
             panel1.Location = new Point(655, 12);
             panel1.Name = "panel1";
-            panel1.Size = new Size(518, 384);
+            panel1.Size = new Size(518, 438);
             panel1.TabIndex = 15;
             panel1.Paint += panel1_Paint;
+            // 
+            // panel6
+            // 
+            panel6.BackColor = Color.FromArgb(255, 34, 0);
+            panel6.BorderStyle = BorderStyle.FixedSingle;
+            panel6.Controls.Add(label3);
+            panel6.Location = new Point(0, 48);
+            panel6.Name = "panel6";
+            panel6.Size = new Size(517, 49);
+            panel6.TabIndex = 1;
+            panel6.Paint += panel6_Paint;
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            label3.ForeColor = SystemColors.ControlLightLight;
+            label3.Location = new Point(15, 11);
+            label3.Name = "label3";
+            label3.Size = new Size(288, 25);
+            label3.TabIndex = 0;
+            label3.Text = "Соединение с весами отсутвует";
+            label3.Click += label3_Click;
             // 
             // comboBoxChanel
             // 
             comboBoxChanel.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
             comboBoxChanel.FormattingEnabled = true;
             comboBoxChanel.Items.AddRange(new object[] { "Канал 1", "Канал 2", "Канал 3", "Канал 4", "Канал 5", "Канал 6" });
-            comboBoxChanel.Location = new Point(263, 66);
+            comboBoxChanel.Location = new Point(263, 115);
             comboBoxChanel.Name = "comboBoxChanel";
             comboBoxChanel.Size = new Size(237, 29);
             comboBoxChanel.TabIndex = 22;
@@ -167,7 +194,7 @@
             // btnCalculateTheCoefficient
             // 
             btnCalculateTheCoefficient.Font = new Font("Segoe UI", 11.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            btnCalculateTheCoefficient.Location = new Point(16, 332);
+            btnCalculateTheCoefficient.Location = new Point(16, 381);
             btnCalculateTheCoefficient.Name = "btnCalculateTheCoefficient";
             btnCalculateTheCoefficient.Size = new Size(484, 38);
             btnCalculateTheCoefficient.TabIndex = 21;
@@ -178,7 +205,7 @@
             // btnReadReferenceValue
             // 
             btnReadReferenceValue.Font = new Font("Segoe UI", 11.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            btnReadReferenceValue.Location = new Point(261, 281);
+            btnReadReferenceValue.Location = new Point(261, 330);
             btnReadReferenceValue.Name = "btnReadReferenceValue";
             btnReadReferenceValue.Size = new Size(239, 38);
             btnReadReferenceValue.TabIndex = 20;
@@ -189,7 +216,7 @@
             // textBoxWeightCoefficient
             // 
             textBoxWeightCoefficient.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            textBoxWeightCoefficient.Location = new Point(263, 245);
+            textBoxWeightCoefficient.Location = new Point(263, 294);
             textBoxWeightCoefficient.Multiline = true;
             textBoxWeightCoefficient.Name = "textBoxWeightCoefficient";
             textBoxWeightCoefficient.ReadOnly = true;
@@ -199,7 +226,7 @@
             // textBoxReferenceWeight
             // 
             textBoxReferenceWeight.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            textBoxReferenceWeight.Location = new Point(263, 209);
+            textBoxReferenceWeight.Location = new Point(263, 258);
             textBoxReferenceWeight.Multiline = true;
             textBoxReferenceWeight.Name = "textBoxReferenceWeight";
             textBoxReferenceWeight.Size = new Size(237, 30);
@@ -209,7 +236,7 @@
             // 
             label12.AutoSize = true;
             label12.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            label12.Location = new Point(16, 245);
+            label12.Location = new Point(16, 294);
             label12.Name = "label12";
             label12.Size = new Size(203, 21);
             label12.TabIndex = 17;
@@ -219,7 +246,7 @@
             // 
             label11.AutoSize = true;
             label11.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            label11.Location = new Point(16, 209);
+            label11.Location = new Point(16, 258);
             label11.Name = "label11";
             label11.Size = new Size(136, 21);
             label11.TabIndex = 16;
@@ -229,7 +256,7 @@
             // 
             label10.AutoSize = true;
             label10.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            label10.Location = new Point(16, 173);
+            label10.Location = new Point(16, 222);
             label10.Name = "label10";
             label10.Size = new Size(128, 21);
             label10.TabIndex = 15;
@@ -238,7 +265,7 @@
             // textBoxReferenceCode
             // 
             textBoxReferenceCode.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            textBoxReferenceCode.Location = new Point(263, 173);
+            textBoxReferenceCode.Location = new Point(263, 222);
             textBoxReferenceCode.Multiline = true;
             textBoxReferenceCode.Name = "textBoxReferenceCode";
             textBoxReferenceCode.Size = new Size(237, 30);
@@ -248,7 +275,7 @@
             // 
             label9.AutoSize = true;
             label9.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            label9.Location = new Point(16, 137);
+            label9.Location = new Point(16, 186);
             label9.Name = "label9";
             label9.Size = new Size(74, 21);
             label9.TabIndex = 13;
@@ -257,7 +284,7 @@
             // textBoxZeroCode
             // 
             textBoxZeroCode.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            textBoxZeroCode.Location = new Point(263, 137);
+            textBoxZeroCode.Location = new Point(263, 186);
             textBoxZeroCode.Multiline = true;
             textBoxZeroCode.Name = "textBoxZeroCode";
             textBoxZeroCode.Size = new Size(237, 30);
@@ -266,7 +293,7 @@
             // textBoxCurrentADCcode
             // 
             textBoxCurrentADCcode.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            textBoxCurrentADCcode.Location = new Point(263, 101);
+            textBoxCurrentADCcode.Location = new Point(263, 150);
             textBoxCurrentADCcode.Multiline = true;
             textBoxCurrentADCcode.Name = "textBoxCurrentADCcode";
             textBoxCurrentADCcode.Size = new Size(237, 30);
@@ -276,7 +303,7 @@
             // 
             label8.AutoSize = true;
             label8.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            label8.Location = new Point(16, 104);
+            label8.Location = new Point(16, 153);
             label8.Name = "label8";
             label8.Size = new Size(139, 21);
             label8.TabIndex = 10;
@@ -352,6 +379,7 @@
             btnCancelChange.TabIndex = 2;
             btnCancelChange.Text = "Отменить изменения";
             btnCancelChange.UseVisualStyleBackColor = true;
+            btnCancelChange.Click += btnCancelChange_Click;
             // 
             // btnSaveChange
             // 
@@ -362,6 +390,7 @@
             btnSaveChange.TabIndex = 1;
             btnSaveChange.Text = "Сохранить изменения";
             btnSaveChange.UseVisualStyleBackColor = true;
+            btnSaveChange.Click += btnSaveChange_Click;
             // 
             // label2
             // 
@@ -388,6 +417,8 @@
             ((System.ComponentModel.ISupportInitialize)dataGridView2).EndInit();
             panel1.ResumeLayout(false);
             panel1.PerformLayout();
+            panel6.ResumeLayout(false);
+            panel6.PerformLayout();
             panel2.ResumeLayout(false);
             panel2.PerformLayout();
             panel3.ResumeLayout(false);
@@ -430,5 +461,7 @@
         private DataGridViewTextBoxColumn ReferenceCode;
         private DataGridViewTextBoxColumn ReferenceWeight;
         private DataGridViewTextBoxColumn WeightCoefficient;
+        private Panel panel6;
+        private Label label3;
     }
 }

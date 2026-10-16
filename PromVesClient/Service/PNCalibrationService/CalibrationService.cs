@@ -114,5 +114,74 @@ namespace PromVesClient.Service.PNCalibrationService
                     "Не удалось прочитать файл настроек.");
             }
         }
+        // Сохранение настроек протокола взвешивания
+        public async Task<ServiceResult> SaveSettingCalibrationAsync(List<PNSetting> PNSettingList)
+        {
+            const string settingsPath =
+                @"C:\PromVesNew\PromVesServer\Configuration\ConfigСalibration.json";
+
+            try
+            {
+                // Проверяем, что список настроек не равен null
+                if (PNSettingList is null)
+                {
+                    _logger.LogError(
+                        "Список настроек протокола взвешивания равен null.");
+
+                    return ServiceResult.Fail(
+                        "Список настроек не задан.");
+                }
+
+                // Создаём конфигурацию и записываем в неё настройки
+                var configuration = new PNConfiguration
+                {
+                    PNSetting = PNSettingList
+                };
+
+                // Сериализуем конфигурацию в JSON
+                string json = JsonSerializer.Serialize(
+                    configuration,
+                    _jsonOptions);
+
+                // Сохраняем JSON в файл
+                await File.WriteAllTextAsync(settingsPath, json);
+
+                _logger.LogInformation(
+                    "Настройки протокола взвешивания успешно сохранены: {Path}",
+                    settingsPath);
+
+                return ServiceResult.Ok();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Нет доступа к файлу настроек: {Path}",
+                    settingsPath);
+
+                return ServiceResult.Fail(
+                    "Нет доступа к файлу настроек.");
+            }
+            catch (IOException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Ошибка записи файла настроек: {Path}",
+                    settingsPath);
+
+                return ServiceResult.Fail(
+                    "Не удалось сохранить файл настроек.");
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Ошибка сериализации настроек в JSON.");
+
+                return ServiceResult.Fail(
+                    "Не удалось преобразовать настройки в JSON.");
+            }
+        }
+
     }
 }
