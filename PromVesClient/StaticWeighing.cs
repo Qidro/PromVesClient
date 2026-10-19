@@ -231,7 +231,7 @@ namespace PromVesClient
                     //подключение в серверу
                     //await _client.ConnectAsync(ipAddress, 5002)
                     //.WaitAsync(TimeSpan.FromSeconds(5));
-                    await _tcpService.ConnectAsync();
+                    await _tcpService.ConnectAsync(5002);
                     // _stream = _client.GetStream();
 
                     // _cts = new CancellationTokenSource();
@@ -377,7 +377,7 @@ namespace PromVesClient
 
                         await Task.Delay(5000);
 
-                        await _tcpService.ConnectAsync();
+                        await _tcpService.ConnectAsync(5002);
 
                         BeginInvoke(() =>
                         {

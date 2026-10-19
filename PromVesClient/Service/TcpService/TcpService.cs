@@ -29,13 +29,13 @@ namespace PromVesClient.Service.TcpService
         }
 
         //подключение к серверу
-        public async Task ConnectAsync()
+        public async Task ConnectAsync(int port)
         {
             _client = new TcpClient();
             //получение локального IP адреса
             IPAddress ipAddress = await GetLocalIPAddressAsync();
             //подключение к серверу
-            await _client.ConnectAsync(ipAddress, 5002)
+            await _client.ConnectAsync(ipAddress, port)
                         .WaitAsync(TimeSpan.FromSeconds(5));
 
             _stream = _client.GetStream();

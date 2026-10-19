@@ -26,6 +26,7 @@ namespace PromVesClient
 
         //переменная предназначенная для соханения данных веса с бортов
         private readonly decimal[] cartSideWeights = new decimal[6];
+        private readonly CancellationTokenSource _cts = new();
         public PMCalibrationForm(CalibrationService calibrationService, ILogger<PMCalibrationForm> logger, TcpService tcpService)
         {
             _logger = logger;
@@ -37,13 +38,18 @@ namespace PromVesClient
             dataGridView2.Columns["ReferenceCode"].DataPropertyName = "ReferenceCode";
             dataGridView2.Columns["ReferenceWeight"].DataPropertyName = "ReferenceWeight";
             dataGridView2.Columns["WeightCoefficient"].DataPropertyName = "WeightCoefficient";
-
+            this.FormClosing += Form1_FormClosing;
             //регистрации метода на ожидание новых данных
             _tcpService.MessageReceived += ProcessMessage;
             //регистрация метода на ожидание ошибок
             _tcpService.ConnectionError += OnConnectionError;
         }
-
+        //метод закрытия формы
+        private async void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            _cts.Cancel();
+            await _tcpService.DisconnectAsync();
+        }
         private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
 
@@ -109,7 +115,32 @@ namespace PromVesClient
 
         private async Task ConnectToServerAsync()
         {
-            await _tcpService.ConnectAsync();
+            while (!_cts.Token.IsCancellationRequested)
+            {
+                try 
+                {
+                    await _tcpService.ConnectAsync(5003);
+                    break;
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("Ошибка: " + ex.Message.ToString());
+                    //_cts?.Cancel();
+
+                    //_stream?.Close();
+                    //_client?.Close();
+                    await _tcpService.DisconnectAsync();
+                    MessageBox.Show("Произошла ошибка при подключении к серверу: " +
+                    ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                }
+            }
         }
         //--------------------------------кнопка отвечающая за калиброку нуля------------------------------------
         private async void btnReadZeroCode_Click(object sender, EventArgs e)
@@ -451,7 +482,7 @@ namespace PromVesClient
 
                         await Task.Delay(5000);
 
-                        await _tcpService.ConnectAsync();
+                        await _tcpService.ConnectAsync(5003);
                         panel6.BackColor = Color.Green;
                         break;
 
