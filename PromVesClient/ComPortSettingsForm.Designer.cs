@@ -151,6 +151,23 @@
             Boardcb = new ComboBox();
             label43 = new Label();
             label42 = new Label();
+            tabPage4 = new TabPage();
+            groupBox10 = new GroupBox();
+            label53 = new Label();
+            label54 = new Label();
+            label55 = new Label();
+            label56 = new Label();
+            label57 = new Label();
+            label58 = new Label();
+            cbHandshakePN = new ComboBox();
+            cbStopBitsPN = new ComboBox();
+            cbParityPN = new ComboBox();
+            cbDataBitsPN = new ComboBox();
+            cbBaudRatePN = new ComboBox();
+            cbPortPN = new ComboBox();
+            btnRestoreDefaultsPN = new Button();
+            btnSavePN = new Button();
+            btnRestartServerComPN = new Button();
             groupBox1.SuspendLayout();
             groupBox2.SuspendLayout();
             groupBox3.SuspendLayout();
@@ -164,6 +181,8 @@
             groupBox5.SuspendLayout();
             tabPage3.SuspendLayout();
             groupBox9.SuspendLayout();
+            tabPage4.SuspendLayout();
+            groupBox10.SuspendLayout();
             SuspendLayout();
             // 
             // groupBox1
@@ -801,6 +820,7 @@
             tabControl1.Controls.Add(tabPage1);
             tabControl1.Controls.Add(tabPage2);
             tabControl1.Controls.Add(tabPage3);
+            tabControl1.Controls.Add(tabPage4);
             tabControl1.Location = new Point(0, 0);
             tabControl1.Name = "tabControl1";
             tabControl1.SelectedIndex = 0;
@@ -1342,7 +1362,7 @@
             // 
             protocolcb.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
             protocolcb.FormattingEnabled = true;
-            protocolcb.Items.AddRange(new object[] { "ModbusTcp", "ModbusRtu", "St" });
+            protocolcb.Items.AddRange(new object[] { "ModbusTcp", "ModbusRtu", "St", "PN" });
             protocolcb.Location = new Point(266, 120);
             protocolcb.Name = "protocolcb";
             protocolcb.Size = new Size(168, 33);
@@ -1377,6 +1397,176 @@
             label42.Size = new Size(64, 25);
             label42.TabIndex = 0;
             label42.Text = "Табло";
+            // 
+            // tabPage4
+            // 
+            tabPage4.Controls.Add(btnRestartServerComPN);
+            tabPage4.Controls.Add(btnRestoreDefaultsPN);
+            tabPage4.Controls.Add(btnSavePN);
+            tabPage4.Controls.Add(groupBox10);
+            tabPage4.Location = new Point(4, 24);
+            tabPage4.Name = "tabPage4";
+            tabPage4.Padding = new Padding(3);
+            tabPage4.Size = new Size(744, 531);
+            tabPage4.TabIndex = 3;
+            tabPage4.Text = "Настройки ПН-012";
+            tabPage4.UseVisualStyleBackColor = true;
+            // 
+            // groupBox10
+            // 
+            groupBox10.Controls.Add(label53);
+            groupBox10.Controls.Add(label54);
+            groupBox10.Controls.Add(label55);
+            groupBox10.Controls.Add(label56);
+            groupBox10.Controls.Add(label57);
+            groupBox10.Controls.Add(label58);
+            groupBox10.Controls.Add(cbHandshakePN);
+            groupBox10.Controls.Add(cbStopBitsPN);
+            groupBox10.Controls.Add(cbParityPN);
+            groupBox10.Controls.Add(cbDataBitsPN);
+            groupBox10.Controls.Add(cbBaudRatePN);
+            groupBox10.Controls.Add(cbPortPN);
+            groupBox10.Location = new Point(76, 23);
+            groupBox10.Name = "groupBox10";
+            groupBox10.Size = new Size(268, 270);
+            groupBox10.TabIndex = 4;
+            groupBox10.TabStop = false;
+            groupBox10.Text = "COM1";
+            // 
+            // label53
+            // 
+            label53.AutoSize = true;
+            label53.Location = new Point(26, 181);
+            label53.Name = "label53";
+            label53.Size = new Size(66, 15);
+            label53.TabIndex = 25;
+            label53.Text = "Handshake";
+            // 
+            // label54
+            // 
+            label54.AutoSize = true;
+            label54.Location = new Point(42, 152);
+            label54.Name = "label54";
+            label54.Size = new Size(50, 15);
+            label54.TabIndex = 24;
+            label54.Text = "StopBits";
+            // 
+            // label55
+            // 
+            label55.AutoSize = true;
+            label55.Location = new Point(55, 123);
+            label55.Name = "label55";
+            label55.Size = new Size(37, 15);
+            label55.TabIndex = 18;
+            label55.Text = "Parity";
+            // 
+            // label56
+            // 
+            label56.AutoSize = true;
+            label56.Location = new Point(42, 99);
+            label56.Name = "label56";
+            label56.Size = new Size(50, 15);
+            label56.TabIndex = 17;
+            label56.Text = "DataBits";
+            // 
+            // label57
+            // 
+            label57.AutoSize = true;
+            label57.Location = new Point(63, 41);
+            label57.Name = "label57";
+            label57.Size = new Size(29, 15);
+            label57.TabIndex = 16;
+            label57.Text = "Port";
+            // 
+            // label58
+            // 
+            label58.AutoSize = true;
+            label58.Location = new Point(35, 70);
+            label58.Name = "label58";
+            label58.Size = new Size(57, 15);
+            label58.TabIndex = 14;
+            label58.Text = "BaudRate";
+            // 
+            // cbHandshakePN
+            // 
+            cbHandshakePN.FormattingEnabled = true;
+            cbHandshakePN.Items.AddRange(new object[] { "None", "XOnXOff", "RequestToSend", "RequestToSendXOnXOff" });
+            cbHandshakePN.Location = new Point(98, 178);
+            cbHandshakePN.Name = "cbHandshakePN";
+            cbHandshakePN.Size = new Size(135, 23);
+            cbHandshakePN.TabIndex = 6;
+            // 
+            // cbStopBitsPN
+            // 
+            cbStopBitsPN.FormattingEnabled = true;
+            cbStopBitsPN.Items.AddRange(new object[] { "None", "One", "Two", "OnePointFive" });
+            cbStopBitsPN.Location = new Point(98, 149);
+            cbStopBitsPN.Name = "cbStopBitsPN";
+            cbStopBitsPN.Size = new Size(135, 23);
+            cbStopBitsPN.TabIndex = 5;
+            // 
+            // cbParityPN
+            // 
+            cbParityPN.FormattingEnabled = true;
+            cbParityPN.Items.AddRange(new object[] { "None", "Odd", "Even", "Mark", "Space" });
+            cbParityPN.Location = new Point(98, 120);
+            cbParityPN.Name = "cbParityPN";
+            cbParityPN.Size = new Size(135, 23);
+            cbParityPN.TabIndex = 4;
+            // 
+            // cbDataBitsPN
+            // 
+            cbDataBitsPN.FormattingEnabled = true;
+            cbDataBitsPN.Items.AddRange(new object[] { " 5", " 6", " 7", " 8" });
+            cbDataBitsPN.Location = new Point(98, 91);
+            cbDataBitsPN.Name = "cbDataBitsPN";
+            cbDataBitsPN.Size = new Size(135, 23);
+            cbDataBitsPN.TabIndex = 3;
+            // 
+            // cbBaudRatePN
+            // 
+            cbBaudRatePN.FormattingEnabled = true;
+            cbBaudRatePN.Items.AddRange(new object[] { " 300", " 600", " 1200", " 2400", " 4800", " 9600", " 19200", " 38400", " 57600", " 115200" });
+            cbBaudRatePN.Location = new Point(98, 62);
+            cbBaudRatePN.Name = "cbBaudRatePN";
+            cbBaudRatePN.Size = new Size(135, 23);
+            cbBaudRatePN.TabIndex = 2;
+            // 
+            // cbPortPN
+            // 
+            cbPortPN.FormattingEnabled = true;
+            cbPortPN.Location = new Point(98, 33);
+            cbPortPN.Name = "cbPortPN";
+            cbPortPN.Size = new Size(135, 23);
+            cbPortPN.TabIndex = 1;
+            // 
+            // btnRestoreDefaultsPN
+            // 
+            btnRestoreDefaultsPN.Location = new Point(491, 91);
+            btnRestoreDefaultsPN.Name = "btnRestoreDefaultsPN";
+            btnRestoreDefaultsPN.Size = new Size(171, 39);
+            btnRestoreDefaultsPN.TabIndex = 7;
+            btnRestoreDefaultsPN.Text = "По умолчанию";
+            btnRestoreDefaultsPN.UseVisualStyleBackColor = true;
+            // 
+            // btnSavePN
+            // 
+            btnSavePN.Location = new Point(491, 40);
+            btnSavePN.Name = "btnSavePN";
+            btnSavePN.Size = new Size(171, 39);
+            btnSavePN.TabIndex = 6;
+            btnSavePN.Text = "Сохранить";
+            btnSavePN.UseVisualStyleBackColor = true;
+            btnSavePN.Click += btnSavePN_Click;
+            // 
+            // btnRestartServerComPN
+            // 
+            btnRestartServerComPN.Location = new Point(491, 156);
+            btnRestartServerComPN.Name = "btnRestartServerComPN";
+            btnRestartServerComPN.Size = new Size(171, 39);
+            btnRestartServerComPN.TabIndex = 9;
+            btnRestartServerComPN.Text = "Перезапуск службы";
+            btnRestartServerComPN.UseVisualStyleBackColor = true;
             // 
             // ComPortSettingsForm
             // 
@@ -1415,6 +1605,9 @@
             tabPage3.PerformLayout();
             groupBox9.ResumeLayout(false);
             groupBox9.PerformLayout();
+            tabPage4.ResumeLayout(false);
+            groupBox10.ResumeLayout(false);
+            groupBox10.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -1542,5 +1735,22 @@
         private Button btnRestartServerGeneral;
         private ComboBox cbChoiceMoxa;
         private Label label51;
+        private TabPage tabPage4;
+        private GroupBox groupBox10;
+        private Label label53;
+        private Label label54;
+        private Label label55;
+        private Label label56;
+        private Label label57;
+        private Label label58;
+        private ComboBox cbHandshakePN;
+        private ComboBox cbStopBitsPN;
+        private ComboBox cbParityPN;
+        private ComboBox cbDataBitsPN;
+        private ComboBox cbBaudRatePN;
+        private ComboBox cbPortPN;
+        private Button btnRestartServerComPN;
+        private Button btnRestoreDefaultsPN;
+        private Button btnSavePN;
     }
 }

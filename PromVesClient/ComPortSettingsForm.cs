@@ -15,6 +15,7 @@ namespace PromVesClient
     public partial class ComPortSettingsForm : Form
     {
         private readonly ComPortService _comPortService;
+        private readonly PNSerialPortService _pnSerialPortService;
         // для работы с MOXA
         private readonly ModbusTcpService _modbusTcpService;
         // для работы с табло
@@ -49,6 +50,7 @@ namespace PromVesClient
 
         public ComPortSettingsForm(
             ComPortService comPortService,
+            PNSerialPortService pnSerialPortService,
             ModbusTcpService modbusTcpService,
             SerialPortBoardService serialPortBoardService,
             GeneralConfiguratorService generalConfiguratorService,
@@ -57,6 +59,7 @@ namespace PromVesClient
             InitializeComponent();
 
             _comPortService = comPortService;
+            _pnSerialPortService = pnSerialPortService;
             _modbusTcpService = modbusTcpService;
             _serialPortBoardService = serialPortBoardService;
             _generalConfiguratorService = generalConfiguratorService;
@@ -81,7 +84,7 @@ namespace PromVesClient
         }
 
         // обработчик события загрузки формы
-        private void ComPortSettingsForm_Load(object sender, EventArgs e)
+        private async void ComPortSettingsForm_Load(object sender, EventArgs e)
         {
             _initializing = true;
             try
@@ -89,6 +92,7 @@ namespace PromVesClient
                 // Программно заполняются только списки имён COM-портов.
                 RefreshAvailablePorts();
                 LoadSettings();
+                await LoadPNSettingsAsync();
                 LoadMoxaSettings();
                 LoadBoardSettings();
             }
@@ -192,6 +196,33 @@ namespace PromVesClient
             }
 
             ApplyPortSettings(result.Data);
+        }
+
+        /// <summary>
+        /// Загружает настройки PN и переносит их значения в элементы groupBox10.
+        /// </summary>
+        private async Task LoadPNSettingsAsync()
+        {
+            var result = await _pnSerialPortService.LoadAsync();
+
+            if (!result.Success)
+            {
+                MessageBox.Show(
+                    result.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
+            PNSerialPortSettings settings = result.Data!.SerialPorts[0];
+
+            SetPortItems(cbPortPN, _availablePorts, settings.PortName);
+            SelectComboBoxItem(cbBaudRatePN, settings.BaudRate);
+            SelectComboBoxItem(cbDataBitsPN, settings.DataBits);
+            SelectComboBoxItem(cbParityPN, settings.Parity);
+            SelectComboBoxItem(cbStopBitsPN, settings.StopBits);
+            SelectComboBoxItem(cbHandshakePN, settings.Handshake);
         }
 
         // При загрузке и восстановлении сначала возвращаем полные списки портов.
@@ -367,6 +398,9 @@ namespace PromVesClient
             // COM-порт табло, как в исходной форме, выбирается отдельно.
             cbPort5.DropDown -= PortComboBox_DropDown;
             cbPort5.DropDown += PortComboBox_DropDown;
+
+            cbPortPN.DropDown -= PortComboBox_DropDown;
+            cbPortPN.DropDown += PortComboBox_DropDown;
         }
 
         // При раскрытии списка повторно проверяем доступные COM-порты.
@@ -424,6 +458,7 @@ namespace PromVesClient
 
                 // Табло не участвует во взаимном исключении cbPort1–cbPort4.
                 SetPortItems(cbPort5, _availablePorts, cbPort5.Text);
+                SetPortItems(cbPortPN, _availablePorts, cbPortPN.Text);
             }
             finally
             {
@@ -964,6 +999,39 @@ namespace PromVesClient
         {
             await _promVesServerService.RestartServerAsync();
         }
+
+        /// <summary>
+        /// Считывает выбранные значения COM-порта PN из элементов groupBox10.
+        /// </summary>
+        private PNSerialPortSettings ReadPNSettingsFromControls()
+        {
+            return new PNSerialPortSettings
+            {
+                PortName = cbPortPN.Text.Trim(),
+                BaudRate = int.Parse(cbBaudRatePN.Text),
+                DataBits = int.Parse(cbDataBitsPN.Text),
+                Parity = Enum.Parse<Parity>(cbParityPN.Text.Trim(), true),
+                StopBits = Enum.Parse<StopBits>(cbStopBitsPN.Text.Trim(), true),
+                Handshake = Enum.Parse<Handshake>(cbHandshakePN.Text.Trim(), true)
+            };
+        }
+
+        /// <summary>
+        /// Формирует конфигурацию из контролов формы и асинхронно сохраняет её в ConfigPN.json.
+        /// </summary>
+        private async Task SavePNSettingsAsync()
+        {
+            // ConfigPN.json рассчитан на коллекцию портов,
+            // но для устройства PN используется только один COM-порт.
+            var configuration = new PNSerialPortConfiguration();
+            configuration.SerialPorts.Add(ReadPNSettingsFromControls());
+
+            var result = await _pnSerialPortService.SaveAsync(configuration);
+
+            if (!result.Success)
+                throw new Exception(result.Message);
+        }
+
         // метод инициализации выбора количества MOXA
         private void InitializePortCountComboBoxMoxa()
         {
@@ -1003,6 +1071,45 @@ namespace PromVesClient
         private void tabPage1_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private async void btnSavePN_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // До сериализации проверяем, что пользователь выбрал все параметры.
+                if (cbPortPN.SelectedItem == null ||
+                    cbBaudRatePN.SelectedItem == null ||
+                    cbDataBitsPN.SelectedItem == null ||
+                    cbParityPN.SelectedItem == null ||
+                    cbStopBitsPN.SelectedItem == null ||
+                    cbHandshakePN.SelectedItem == null)
+                {
+                    MessageBox.Show(
+                        "Не заполнены настройки COM-порта PN.",
+                        "Ошибка",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+
+                    return;
+                }
+
+                await SavePNSettingsAsync();
+
+                MessageBox.Show(
+                    "Настройки успешно сохранены.",
+                    "PN",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
     }
 }
