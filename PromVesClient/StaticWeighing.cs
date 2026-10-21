@@ -56,9 +56,22 @@ namespace PromVesClient
         //переменная предназначенная для соханения данных веса с бортов
         private readonly decimal[] cartSideWeights;
         //изнчальные данные взвешивания
-        private List<decimal> cartAxesWeightsList = new List<decimal>{ 0,0,0,0};
+        private List<decimal> cartAxesWeightsList = new List<decimal> { 0, 0, 0, 0 };
         //переменная, которая сохраняет полученные значения для расчета стабильности
         private decimal[] stableWeight = new decimal[100];
+        //Полный набор значений, полученный от сервера.
+        //При GraphsCount = 6 массив содержит шесть значений:
+        //  0 и 1 — левая и правая стороны первой платформы;
+        //  2 и 3 — левая и правая стороны второй платформы;
+        //  4 и 5 — левая и правая стороны третьей платформы.
+        //Этот массив хранит исходные данные, чтобы при переключении режима
+        //можно было повторно выбрать нужные значения без нового сообщения сервера.
+        private readonly decimal[] serverWeights;
+
+        //Флаг текущего режима длины вагона:
+        //false — стандартная длина, используются значения 0, 1, 2, 3;
+        //true — удлинённая длина, используются значения 0, 1, 4, 5.
+        private bool isExtendedLengthMode;
         //поля предназначенные для передачи данных в методы сохранения данных  в БД
         private decimal TareWeight;
         private decimal GrossWeight;
@@ -75,14 +88,28 @@ namespace PromVesClient
             _tcpService = tcpService;
             int graphCount = _currentUserService.GetGraphsCount();
 
-            values = new Queue<decimal>[graphCount];
+            //Сервер при GraphsCount = 6 присылает данные для трёх платформ,
+            //но форма должна отображать только четыре графика: по два значения
+            //для выбранной конфигурации вагона. Поэтому количество элементов
+            //интерфейса отделено от количества входных значений сервера.
+            int displayedGraphCount = graphCount == 6 ? 4 : graphCount;
+
+            //Очередь values содержит историю точек для каждого отображаемого графика.
+            //Количество очередей равно числу графиков на форме, а не числу значений
+            //в сообщении сервера.
+            values = new Queue<decimal>[displayedGraphCount];
             //количества платформ
-            CountPlatform = graphCount;
-            for (int i = 0; i < graphCount; i++)
+            CountPlatform = displayedGraphCount;
+            for (int i = 0; i < displayedGraphCount; i++)
             {
                 values[i] = new Queue<decimal>();
             }
-            cartSideWeights = new decimal[graphCount];
+            cartSideWeights = new decimal[displayedGraphCount];
+
+            //serverWeights должен иметь размер graphCount, потому что в нём
+            //сохраняется всё сообщение сервера, включая значения невидимой
+            //в текущем режиме третьей платформы.
+            serverWeights = new decimal[graphCount];
             InitializeComponent();
 
             comboBoxVagonNumber.DropDownStyle = ComboBoxStyle.DropDown;
@@ -115,21 +142,21 @@ namespace PromVesClient
                 formsPlot4
             };
             //отображение label согласно количеству графиков
-            for (int i = 0; i < graphCount; i++)
+            for (int i = 0; i < displayedGraphCount; i++)
             {
                 labelsList[i].Visible = true;
                 //labelsList[i].Font.Size = 14;
                 //labelsList[i].Font = new Font(label1.Font.FontFamily, 25);
             }
             //отображение графиков согласно их количеству
-            for (int i = 0; i < graphCount; i++)
+            for (int i = 0; i < displayedGraphCount; i++)
             {
                 plots[i].Visible = true;
                 plots[i].Plot.Axes.Bottom.TickLabelStyle.IsVisible = false;
             }
             //1078; 668
             //74; 806
-            if (graphCount ==1)
+            if (graphCount == 1)
             {
                 plots[0].Size = new Size(1078, 668);
                 labelsList[0].Font = new Font(label1.Font.FontFamily, 25);
@@ -180,7 +207,7 @@ namespace PromVesClient
             {
                 MessageBox.Show($"Произошла ошибка получения вагонов из справочника, причина: {result.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            else 
+            else
             {
                 ReferenceWagonList = result.Data;
                 foreach (var item in ReferenceWagonList)
@@ -413,14 +440,28 @@ namespace PromVesClient
                 }
                 //Console.WriteLine("мы находится в событии");
                 string[] parts = message.Split(';');
-                if (cartSideWeights.Length == parts.Length)
+
+                //Сообщение принимается только при полном совпадении количества
+                //значений и ожидаемого количества платформ. Например, при GraphsCount = 6
+                //корректным будет сообщение вида "43;54;76;34;65;76".
+                if (serverWeights.Length == parts.Length)
                 {
-                    //обработка 4 графиков
+                    //Сначала сохраняем все значения сервера в исходном порядке.
+                    //Деление на 1000 переводит значение из единиц сервера в тонны.
+                    for (int i = 0; i < serverWeights.Length; i++)
+                    {
+                        if (decimal.TryParse(parts[i], NumberStyles.Number, CultureInfo.InvariantCulture, out var value))
+                            serverWeights[i] = value / 1000;
+                    }
+
+                    //Получаем индексы четырёх значений, которые должны отображаться
+                    //в текущем режиме, и переносим их в массив данных формы.
+                    int[] displayedIndexes = GetDisplayedIndexes();
                     for (int i = 0; i < cartSideWeights.Length; i++)
                     {
-                        if(decimal.TryParse(parts[i], NumberStyles.Number, CultureInfo.InvariantCulture, out var value))
-                            cartSideWeights[i] = value/1000;
+                        cartSideWeights[i] = serverWeights[displayedIndexes[i]];
                     }
+
                     if (cartSideWeights.Length > 3)
                     {
                         lblPlatform1Left.Text = $"Платформа 1 левый борт: {cartSideWeights[0]:F2} Т.";
@@ -428,7 +469,7 @@ namespace PromVesClient
                         lblPlatform2Left.Text = $"Платформа 2 левый борт: {cartSideWeights[2]:F2} Т.";
                         lblPlatform2Right.Text = $"Платформа 2 правый борт: {cartSideWeights[3]:F2} Т.";
                     }
-                    else 
+                    else
                     {
                         if (cartSideWeights.Length > 0)
                         {
@@ -442,7 +483,7 @@ namespace PromVesClient
                         {
                             lblPlatform2Left.Text = $"Платформа 3: {cartSideWeights[2]:F2} Т.";
                         }
-                    } 
+                    }
                     //вызов метода по вывода значения на табло
                     _ = DisplayingValue(cartSideWeights.Sum());
                     stable(cartSideWeights.Sum());
@@ -562,7 +603,7 @@ namespace PromVesClient
             {
                 LoadCapacity = 0;
             }
-            else if(!decimal.TryParse(textLoadCapacity.Trim(), out LoadCapacity))
+            else if (!decimal.TryParse(textLoadCapacity.Trim(), out LoadCapacity))
             {
                 MessageBox.Show("Введите корректное значение грузоподъёмности", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 btnSaveWeight.Enabled = true;
@@ -577,7 +618,7 @@ namespace PromVesClient
                 btnSaveWeight.Enabled = true;
                 return;
             }
-            for (int i = 0; i < cartSideWeights.Length; i++ )
+            for (int i = 0; i < cartSideWeights.Length; i++)
             {
                 cartAxesWeightsList[i] = cartSideWeights[i];
             }
@@ -747,6 +788,75 @@ namespace PromVesClient
         private void lblPlatform1Right_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void btnSwitchingPlatform_Click(object sender, EventArgs e)
+        {
+            //Переключение режимов имеет смысл только для сообщения из шести значений.
+            //Для других конфигураций количество отображаемых графиков не меняется.
+            if (serverWeights.Length != 6)
+            {
+                return;
+            }
+
+            //Меняем режим на противоположный и синхронно обновляем подпись кнопки.
+            isExtendedLengthMode = !isExtendedLengthMode;
+            btnSwitchingPlatform.Text = isExtendedLengthMode
+                ? "Удлиненная длина вагона"
+                : "Стандартная длина вагона";
+
+            //Сразу обновляем четыре отображаемых значения из уже полученного
+            //сообщения сервера. Ожидание следующего сообщения не требуется.
+            int[] displayedIndexes = GetDisplayedIndexes();
+            for (int i = 0; i < cartSideWeights.Length; i++)
+            {
+                cartSideWeights[i] = serverWeights[displayedIndexes[i]];
+            }
+
+            //После смены платформы ранее накопленная стабильность больше
+            //не относится к новому набору данных, поэтому начинаем проверку заново.
+            stableWeight = new decimal[100];
+            pictureBoxStabilityTrue.Visible = false;
+            pictureBoxStabilityFalse.Visible = true;
+
+            //Графики 3 и 4 являются нижними графиками формы.
+            //Их история удаляется, после чего в каждый добавляется одна нулевая точка,
+            //чтобы пользователь сразу видел обнуление, не дожидаясь тика таймера.
+            for (int i = 2; i < values.Length; i++)
+            {
+                values[i].Clear();
+                plots[i].Plot.Clear();
+                plots[i].Plot.Add.Signal(new[] { 0d });
+                plots[i].Plot.Axes.SetLimits(left: 0, right: 0);
+                plots[i].Plot.Axes.AutoScaleY();
+                plots[i].Refresh();
+                cartSideWeights[i] = 0;
+            }
+
+            UpdateDisplayedLabels();
+        }
+
+        private int[] GetDisplayedIndexes()
+        {
+            //Первые два значения относятся к первой платформе и используются
+            //в обоих режимах. Для стандартной длины берутся значения второй платформы
+            //(2, 3), а для удлинённой — третьей платформы (4, 5).
+            return isExtendedLengthMode && serverWeights.Length == 6
+                ? new[] { 0, 1, 4, 5 }
+                : new[] { 0, 1, 2, 3 };
+        }
+
+        private void UpdateDisplayedLabels()
+        {
+            //После переключения режима обновляем подписи теми же значениями,
+            //которые используются для графиков и расчёта общего веса.
+            if (cartSideWeights.Length > 3)
+            {
+                lblPlatform1Left.Text = $"Платформа 1 левый борт: {cartSideWeights[0]:F2} Т.";
+                lblPlatform1Right.Text = $"Платформа 1 правый борт: {cartSideWeights[1]:F2} Т.";
+                lblPlatform2Left.Text = $"Платформа 2 левый борт: {cartSideWeights[2]:F2} Т.";
+                lblPlatform2Right.Text = $"Платформа 2 правый борт: {cartSideWeights[3]:F2} Т.";
+            }
         }
     }
 }

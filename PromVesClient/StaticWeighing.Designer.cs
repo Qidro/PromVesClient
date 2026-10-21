@@ -67,6 +67,7 @@
             lblConnectScale = new Label();
             txtLoadCapacity = new TextBox();
             label10 = new Label();
+            btnSwitchingPlatform = new Button();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBox3).BeginInit();
@@ -438,11 +439,23 @@
             label10.TabIndex = 41;
             label10.Text = "Грузоподъёмность";
             // 
+            // btnSwitchingPlatform
+            // 
+            btnSwitchingPlatform.Font = new Font("Microsoft Sans Serif", 9.75F);
+            btnSwitchingPlatform.Location = new Point(697, 29);
+            btnSwitchingPlatform.Name = "btnSwitchingPlatform";
+            btnSwitchingPlatform.Size = new Size(232, 43);
+            btnSwitchingPlatform.TabIndex = 43;
+            btnSwitchingPlatform.Text = "Стандартная длина вагона";
+            btnSwitchingPlatform.UseVisualStyleBackColor = true;
+            btnSwitchingPlatform.Click += btnSwitchingPlatform_Click;
+            // 
             // StaticWeighing
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1545, 861);
+            Controls.Add(btnSwitchingPlatform);
             Controls.Add(txtLoadCapacity);
             Controls.Add(label10);
             Controls.Add(lblConnectScale);
@@ -539,5 +552,6 @@
         private Label lblConnectScale;
         private TextBox txtLoadCapacity;
         private Label label10;
+        private Button btnSwitchingPlatform;
     }
 }
