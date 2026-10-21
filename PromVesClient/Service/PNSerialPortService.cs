@@ -8,13 +8,16 @@ using System.Threading.Tasks;
 
 namespace PromVesClient.Service
 {
-    /// <summary>
-    /// Загружает и сохраняет настройки COM-порта устройства PN.
-    /// </summary>
+    // Сервис отвечает за чтение и сохранение настроек COM-порта устройства PN.
     public class PNSerialPortService
     {
         private const string ConfigurationPath =
             @"C:\PromVesNew\PromVesServer\Configuration\ConfigPN.json";
+
+        private readonly string _defaultSettingsPath = Path.Combine(
+            AppContext.BaseDirectory,
+            "Configuration",
+            "defaultPNSettings.json");
 
         private readonly ILogger<PNSerialPortService> _logger;
         private readonly JsonSerializerOptions _jsonOptions = new()
@@ -31,9 +34,68 @@ namespace PromVesClient.Service
             _logger = logger;
         }
 
-        /// <summary>
-        /// Асинхронно загружает настройки PN из ConfigPN.json.
-        /// </summary>
+        // Асинхронно загружает стандартные настройки PN из файла,
+        // который поставляется вместе с клиентским приложением.
+        public async Task<ServiceResult<PNSerialPortConfiguration>> LoadDefaultsAsync()
+        {
+            try
+            {
+                if (!File.Exists(_defaultSettingsPath))
+                {
+                    return ServiceResult<PNSerialPortConfiguration>.Fail(
+                        $"Файл стандартных настроек PN не найден: {_defaultSettingsPath}");
+                }
+
+                // Файл используется только для чтения defaults и не изменяется
+                // при сохранении рабочих настроек ConfigPN.json.
+                string json = await File.ReadAllTextAsync(_defaultSettingsPath);
+
+                if (string.IsNullOrWhiteSpace(json))
+                {
+                    return ServiceResult<PNSerialPortConfiguration>.Fail(
+                        "Файл стандартных настроек PN пуст.");
+                }
+
+                var configuration = JsonSerializer.Deserialize<PNSerialPortConfiguration>(
+                    json,
+                    _jsonOptions);
+
+                if (configuration?.SerialPorts is null ||
+                    configuration.SerialPorts.Count == 0)
+                {
+                    return ServiceResult<PNSerialPortConfiguration>.Fail(
+                        "Файл стандартных настроек PN не содержит параметров COM-порта.");
+                }
+
+                return ServiceResult<PNSerialPortConfiguration>.Ok(configuration);
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex,
+                    "Ошибка десериализации стандартных настроек PN {Path}.",
+                    _defaultSettingsPath);
+                return ServiceResult<PNSerialPortConfiguration>.Fail(
+                    "Файл стандартных настроек PN имеет некорректный формат.");
+            }
+            catch (IOException ex)
+            {
+                _logger.LogError(ex,
+                    "Ошибка чтения стандартных настроек PN {Path}.",
+                    _defaultSettingsPath);
+                return ServiceResult<PNSerialPortConfiguration>.Fail(
+                    "Не удалось прочитать стандартные настройки PN.");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogError(ex,
+                    "Нет доступа к стандартным настройкам PN {Path}.",
+                    _defaultSettingsPath);
+                return ServiceResult<PNSerialPortConfiguration>.Fail(
+                    "Нет доступа к стандартным настройкам PN.");
+            }
+        }
+
+        // Асинхронно загружает рабочие настройки PN из ConfigPN.json.
         public async Task<ServiceResult<PNSerialPortConfiguration>> LoadAsync()
         {
             try
@@ -87,9 +149,7 @@ namespace PromVesClient.Service
             }
         }
 
-        /// <summary>
-        /// Асинхронно сохраняет настройки PN в ConfigPN.json.
-        /// </summary>
+        // Асинхронно сохраняет рабочие настройки PN в ConfigPN.json.
         public async Task<ServiceResult> SaveAsync(PNSerialPortConfiguration configuration)
         {
             try

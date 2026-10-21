@@ -2,39 +2,25 @@ using System.IO.Ports;
 
 namespace PromVesClient.Models.ConfigurationModels
 {
-    /// <summary>
-    /// Параметры последовательного порта, используемого устройством PN.
-    /// </summary>
+    // Содержит все параметры последовательного порта, используемого устройством PN.
     public class PNSerialPortSettings
     {
-        /// <summary>
-        /// Имя COM-порта, например COM3.
-        /// </summary>
+        // Имя COM-порта, например COM3.
         public string PortName { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Скорость обмена данными в бодах.
-        /// </summary>
+        // Скорость обмена данными в бодах.
         public int BaudRate { get; set; }
 
-        /// <summary>
-        /// Количество бит данных в одном передаваемом символе.
-        /// </summary>
+        // Количество бит данных в одном передаваемом символе.
         public int DataBits { get; set; }
 
-        /// <summary>
-        /// Режим контроля чётности.
-        /// </summary>
+        // Режим контроля чётности.
         public Parity Parity { get; set; }
 
-        /// <summary>
-        /// Количество стоповых битов.
-        /// </summary>
+        // Количество стоповых битов.
         public StopBits StopBits { get; set; }
 
-        /// <summary>
-        /// Режим управления потоком данных.
-        /// </summary>
+        // Режим управления потоком данных.
         public Handshake Handshake { get; set; }
     }
 }

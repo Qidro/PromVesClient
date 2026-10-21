@@ -1,0 +1,12 @@
+{
+  "SerialPorts": [
+    {
+      "PortName": "",
+      "BaudRate": 115200,
+      "DataBits": 8,
+      "Parity": "None",
+      "StopBits": "One",
+      "Handshake": "None"
+    }
+  ]
+}

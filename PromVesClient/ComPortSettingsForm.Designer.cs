@@ -152,6 +152,9 @@
             label43 = new Label();
             label42 = new Label();
             tabPage4 = new TabPage();
+            btnRestartServerComPN = new Button();
+            btnRestoreDefaultsPN = new Button();
+            btnSavePN = new Button();
             groupBox10 = new GroupBox();
             label53 = new Label();
             label54 = new Label();
@@ -165,9 +168,6 @@
             cbDataBitsPN = new ComboBox();
             cbBaudRatePN = new ComboBox();
             cbPortPN = new ComboBox();
-            btnRestoreDefaultsPN = new Button();
-            btnSavePN = new Button();
-            btnRestartServerComPN = new Button();
             groupBox1.SuspendLayout();
             groupBox2.SuspendLayout();
             groupBox3.SuspendLayout();
@@ -1411,6 +1411,35 @@
             tabPage4.TabIndex = 3;
             tabPage4.Text = "Настройки ПН-012";
             tabPage4.UseVisualStyleBackColor = true;
+            tabPage4.Click += tabPage4_Click;
+            // 
+            // btnRestartServerComPN
+            // 
+            btnRestartServerComPN.Location = new Point(491, 156);
+            btnRestartServerComPN.Name = "btnRestartServerComPN";
+            btnRestartServerComPN.Size = new Size(171, 39);
+            btnRestartServerComPN.TabIndex = 9;
+            btnRestartServerComPN.Text = "Перезапуск службы";
+            btnRestartServerComPN.UseVisualStyleBackColor = true;
+            // 
+            // btnRestoreDefaultsPN
+            // 
+            btnRestoreDefaultsPN.Location = new Point(491, 91);
+            btnRestoreDefaultsPN.Name = "btnRestoreDefaultsPN";
+            btnRestoreDefaultsPN.Size = new Size(171, 39);
+            btnRestoreDefaultsPN.TabIndex = 7;
+            btnRestoreDefaultsPN.Text = "По умолчанию";
+            btnRestoreDefaultsPN.UseVisualStyleBackColor = true;
+            // 
+            // btnSavePN
+            // 
+            btnSavePN.Location = new Point(491, 40);
+            btnSavePN.Name = "btnSavePN";
+            btnSavePN.Size = new Size(171, 39);
+            btnSavePN.TabIndex = 6;
+            btnSavePN.Text = "Сохранить";
+            btnSavePN.UseVisualStyleBackColor = true;
+            btnSavePN.Click += btnSavePN_Click;
             // 
             // groupBox10
             // 
@@ -1539,34 +1568,6 @@
             cbPortPN.Name = "cbPortPN";
             cbPortPN.Size = new Size(135, 23);
             cbPortPN.TabIndex = 1;
-            // 
-            // btnRestoreDefaultsPN
-            // 
-            btnRestoreDefaultsPN.Location = new Point(491, 91);
-            btnRestoreDefaultsPN.Name = "btnRestoreDefaultsPN";
-            btnRestoreDefaultsPN.Size = new Size(171, 39);
-            btnRestoreDefaultsPN.TabIndex = 7;
-            btnRestoreDefaultsPN.Text = "По умолчанию";
-            btnRestoreDefaultsPN.UseVisualStyleBackColor = true;
-            // 
-            // btnSavePN
-            // 
-            btnSavePN.Location = new Point(491, 40);
-            btnSavePN.Name = "btnSavePN";
-            btnSavePN.Size = new Size(171, 39);
-            btnSavePN.TabIndex = 6;
-            btnSavePN.Text = "Сохранить";
-            btnSavePN.UseVisualStyleBackColor = true;
-            btnSavePN.Click += btnSavePN_Click;
-            // 
-            // btnRestartServerComPN
-            // 
-            btnRestartServerComPN.Location = new Point(491, 156);
-            btnRestartServerComPN.Name = "btnRestartServerComPN";
-            btnRestartServerComPN.Size = new Size(171, 39);
-            btnRestartServerComPN.TabIndex = 9;
-            btnRestartServerComPN.Text = "Перезапуск службы";
-            btnRestartServerComPN.UseVisualStyleBackColor = true;
             // 
             // ComPortSettingsForm
             // 

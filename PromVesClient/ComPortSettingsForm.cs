@@ -198,9 +198,7 @@ namespace PromVesClient
             ApplyPortSettings(result.Data);
         }
 
-        /// <summary>
-        /// Загружает настройки PN и переносит их значения в элементы groupBox10.
-        /// </summary>
+        // Загружает настройки PN и переносит их значения в элементы groupBox10.
         private async Task LoadPNSettingsAsync()
         {
             var result = await _pnSerialPortService.LoadAsync();
@@ -215,14 +213,8 @@ namespace PromVesClient
                 return;
             }
 
-            PNSerialPortSettings settings = result.Data!.SerialPorts[0];
-
-            SetPortItems(cbPortPN, _availablePorts, settings.PortName);
-            SelectComboBoxItem(cbBaudRatePN, settings.BaudRate);
-            SelectComboBoxItem(cbDataBitsPN, settings.DataBits);
-            SelectComboBoxItem(cbParityPN, settings.Parity);
-            SelectComboBoxItem(cbStopBitsPN, settings.StopBits);
-            SelectComboBoxItem(cbHandshakePN, settings.Handshake);
+            // ConfigPN.json содержит одну настройку PN-порта.
+            ApplyPNSettings(result.Data!.SerialPorts[0]);
         }
 
         // При загрузке и восстановлении сначала возвращаем полные списки портов.
@@ -539,6 +531,12 @@ namespace PromVesClient
 
             defaultboardbtn.Click -= defaultboardbtn_Click;
             defaultboardbtn.Click += defaultboardbtn_Click;
+
+            btnRestoreDefaultsPN.Click -= btnRestoreDefaultsPN_Click;
+            btnRestoreDefaultsPN.Click += btnRestoreDefaultsPN_Click;
+
+            btnRestartServerComPN.Click -= btnRestartServerComPN_Click;
+            btnRestartServerComPN.Click += btnRestartServerComPN_Click;
         }
 
         // Кнопка восстановления настроек по умолчанию
@@ -1000,9 +998,84 @@ namespace PromVesClient
             await _promVesServerService.RestartServerAsync();
         }
 
-        /// <summary>
-        /// Считывает выбранные значения COM-порта PN из элементов groupBox10.
-        /// </summary>
+        // Обработчик перезапуска службы для настроек COM-порта PN.
+        private async void btnRestartServerComPN_Click(object sender, EventArgs e)
+        {
+            await _promVesServerService.RestartServerAsync();
+        }
+
+        // Применяет параметры PN к элементам groupBox10.
+        // Если имя порта в defaults не задано, выбирается первый доступный порт.
+        private void ApplyPNSettings(
+            PNSerialPortSettings settings,
+            ICollection<string>? missingItems = null)
+        {
+            string portName = settings.PortName.Trim();
+            if (string.IsNullOrWhiteSpace(portName))
+                portName = _availablePorts.FirstOrDefault() ?? string.Empty;
+
+            // Сначала возвращаем полный список, затем выбираем значение с учётом
+            // списка отсутствующих defaults.
+            SetPortItems(cbPortPN, _availablePorts, null);
+            SelectComboBoxItem(cbPortPN, portName, missingItems);
+
+            if (string.IsNullOrWhiteSpace(portName))
+                missingItems?.Add("cbPortPN: доступные COM-порты не найдены.");
+
+            SelectComboBoxItem(cbBaudRatePN, settings.BaudRate, missingItems);
+            SelectComboBoxItem(cbDataBitsPN, settings.DataBits, missingItems);
+            SelectComboBoxItem(cbParityPN, settings.Parity, missingItems);
+            SelectComboBoxItem(cbStopBitsPN, settings.StopBits, missingItems);
+            SelectComboBoxItem(cbHandshakePN, settings.Handshake, missingItems);
+        }
+
+        // Обработчик восстановления стандартных настроек PN.
+        private async void btnRestoreDefaultsPN_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show(
+                "Восстановить настройки PN по умолчанию?",
+                "Подтверждение",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question) != DialogResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                var result = await _pnSerialPortService.LoadDefaultsAsync();
+                if (!result.Success)
+                    throw new InvalidOperationException(result.Message);
+
+                if (result.Data?.SerialPorts == null ||
+                    result.Data.SerialPorts.Count == 0)
+                {
+                    throw new InvalidOperationException(
+                        "Файл стандартных настроек PN не содержит параметров COM-порта.");
+                }
+
+                // Перед восстановлением повторно получаем список портов,
+                // так как состав подключённых устройств мог измениться.
+                RefreshAvailablePorts();
+                var missingItems = new List<string>();
+                ApplyPNSettings(result.Data.SerialPorts[0], missingItems);
+
+                if (ShowMissingDefaults(missingItems, "PN"))
+                    return;
+
+                MessageBox.Show(
+                    "Настройки PN по умолчанию загружены. Для применения нажмите «Сохранить».",
+                    "PN",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // Считывает выбранные значения COM-порта PN из элементов groupBox10.
         private PNSerialPortSettings ReadPNSettingsFromControls()
         {
             return new PNSerialPortSettings
@@ -1016,9 +1089,7 @@ namespace PromVesClient
             };
         }
 
-        /// <summary>
-        /// Формирует конфигурацию из контролов формы и асинхронно сохраняет её в ConfigPN.json.
-        /// </summary>
+        // Формирует конфигурацию из контролов формы и асинхронно сохраняет её в ConfigPN.json.
         private async Task SavePNSettingsAsync()
         {
             // ConfigPN.json рассчитан на коллекцию портов,
@@ -1110,6 +1181,11 @@ namespace PromVesClient
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
+        }
+
+        private void tabPage4_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
