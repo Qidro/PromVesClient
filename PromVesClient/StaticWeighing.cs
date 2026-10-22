@@ -72,6 +72,9 @@ namespace PromVesClient
         //false — стандартная длина, используются значения 0, 1, 2, 3;
         //true — удлинённая длина, используются значения 0, 1, 4, 5.
         private bool isExtendedLengthMode;
+        private volatile bool _isClosing;
+        private volatile bool _isWeighingActive;
+        private int _reconnectInProgress;
         //поля предназначенные для передачи данных в методы сохранения данных  в БД
         private decimal TareWeight;
         private decimal GrossWeight;
@@ -80,6 +83,7 @@ namespace PromVesClient
         //количества платформ
         private int CountPlatform;
         private decimal? InvoiceWeighing;
+        // Настраивает форму, графики, табло и подписывает форму на события TCP-сервиса.
         public StaticWeighing(ILogger<StaticWeighing> logger, StaticWeighingService staticWeighingService, CurrentUserService currentUserService, TcpService tcpService)
         {
             _staticWeighingService = staticWeighingService;
@@ -225,6 +229,29 @@ namespace PromVesClient
 
         }
 
+        // Выполняет действие в UI-потоке, если форма ещё существует и не закрывается.
+        private void InvokeOnUiThread(Action action)
+        {
+            if (_isClosing || IsDisposed || Disposing || !IsHandleCreated)
+            {
+                return;
+            }
+
+            if (!InvokeRequired)
+            {
+                action();
+                return;
+            }
+
+            try
+            {
+                BeginInvoke(action);
+            }
+            catch (InvalidOperationException)
+            {
+            }
+        }
+
         private void label1_Click(object sender, EventArgs e)
         {
 
@@ -244,8 +271,7 @@ namespace PromVesClient
         {
 
         }
-        //нажатие на кнопку, которое отвечает за подключение к серверу и получению данных от него
-        //либо его отключение от сервера
+        // Подключает форму к серверу или завершает текущее взвешивание и отключает соединение.
         private async void button2_Click(object sender, EventArgs e)
         {
             if (btnWeighing.Text == "Начать взвешивание")
@@ -273,6 +299,7 @@ namespace PromVesClient
                     btnSaveWeight.Enabled = true;
                     graphTimer.Start();
                     IdReceipt = Guid.NewGuid();
+                    _isWeighingActive = true;
                     btnWeighing.Text = "Закончить взвешивание";
                 }
                 catch (Exception ex)
@@ -303,6 +330,7 @@ namespace PromVesClient
 
                 //MessageBox.Show("Соединение закрыто");
                 graphTimer.Stop();
+                _isWeighingActive = false;
                 btnWeighing.Text = "Начать взвешивание";
             }
         }
@@ -378,10 +406,16 @@ namespace PromVesClient
 
         //}
 
-        //событие ошибки
+        // Показывает ошибку соединения и выполняет ограниченное переподключение,
+        // пока форма открыта и взвешивание остаётся активным.
         private async void OnConnectionError(Exception ex)
         {
-            BeginInvoke(() =>
+            if (_isClosing || !_isWeighingActive || Interlocked.Exchange(ref _reconnectInProgress, 1) != 0)
+            {
+                return;
+            }
+
+            InvokeOnUiThread(() =>
             {
                 graphTimer.Stop();
                 //btnSaveWeight.Enabled = false;
@@ -393,43 +427,61 @@ namespace PromVesClient
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             });
-            //переподключение к серверу
-            while (true)
+
+            try
             {
-                try
+                //переподключение к серверу
+                while (!_isClosing && _isWeighingActive)
                 {
-                    if (btnWeighing.Text != "Начать взвешивание" && _tcpService.ServerConnected == false)
+                    try
                     {
-                        await _tcpService.DisconnectAsync();
+                        if (!_isClosing && _isWeighingActive && !_tcpService.ServerConnected)
+                        {
+                            await _tcpService.DisconnectAsync();
+
+                            await Task.Delay(5000);
+
+                            if (_isClosing || !_isWeighingActive)
+                            {
+                                break;
+                            }
+
+                            await _tcpService.ConnectAsync(5002);
+
+                            InvokeOnUiThread(() =>
+                            {
+                                graphTimer.Start();
+                                lblConnectScale.BackColor = Color.Green;
+                                //btnSaveWeight.Enabled = true;
+                            });
+                            break;
+                        }
+
+                        break;
+                    }
+                    catch (Exception reconnectEx)
+                    {
+                        InvokeOnUiThread(() => lblConnectScale.BackColor = Color.Red);
+                        _logger.LogWarning(reconnectEx,
+                            "Не удалось подключиться. Повтор через 5 секунд.");
 
                         await Task.Delay(5000);
-
-                        await _tcpService.ConnectAsync(5002);
-
-                        BeginInvoke(() =>
-                        {
-                            graphTimer.Start();
-                            //btnSaveWeight.Enabled = true;
-                        });
-                        lblConnectScale.BackColor = Color.Green;
-                        break;
                     }
-                    else
-                    {
-                        break;
-                    }
-                }
-                catch (Exception reconnectEx)
-                {
-                    lblConnectScale.BackColor = Color.Red;
-                    _logger.LogWarning(reconnectEx,
-                        "Не удалось подключиться. Повтор через 5 секунд.");
-
                 }
             }
+            finally
+            {
+                Interlocked.Exchange(ref _reconnectInProgress, 0);
+            }
         }
-        //метод для события(получения данных с сервака) по обработке полцченных данных
+        // Принимает сообщения TCP-сервиса и передаёт их обработку в UI-поток.
         private void ProcessMessage(string message)
+        {
+            InvokeOnUiThread(() => ProcessMessageOnUiThread(message));
+        }
+
+        // Проверяет сообщение, обновляет текущие веса, подписи, табло и стабильность.
+        private void ProcessMessageOnUiThread(string message)
         {
             try
             {
@@ -448,11 +500,19 @@ namespace PromVesClient
                 {
                     //Сначала сохраняем все значения сервера в исходном порядке.
                     //Деление на 1000 переводит значение из единиц сервера в тонны.
+                    decimal[] parsedWeights = new decimal[serverWeights.Length];
                     for (int i = 0; i < serverWeights.Length; i++)
                     {
-                        if (decimal.TryParse(parts[i], NumberStyles.Number, CultureInfo.InvariantCulture, out var value))
-                            serverWeights[i] = value / 1000;
+                        if (!decimal.TryParse(parts[i], NumberStyles.Number, CultureInfo.InvariantCulture, out var value))
+                        {
+                            _logger.LogWarning("Получено некорректное значение веса: {Value}", parts[i]);
+                            return;
+                        }
+
+                        parsedWeights[i] = value / 1000m;
                     }
+
+                    Array.Copy(parsedWeights, serverWeights, serverWeights.Length);
 
                     //Получаем индексы четырёх значений, которые должны отображаться
                     //в текущем режиме, и переносим их в массив данных формы.
@@ -512,7 +572,7 @@ namespace PromVesClient
         }
 
 
-        //расчет стабильности вагона
+        // Проверяет, удерживается ли общий вес в допустимом диапазоне стабильности.
         private void stable(decimal data)
         {
             for (int i = 0; i < stableWeight.Length; i++)
@@ -534,7 +594,7 @@ namespace PromVesClient
                 }
             }
         }
-        //сохранение
+        // Проверяет введённые данные и сохраняет результат взвешивания в базу данных.
         private async void btnSaveWeight_Click(object sender, EventArgs e)
         {
             btnSaveWeight.Enabled = false;
@@ -662,7 +722,7 @@ namespace PromVesClient
                 btnSaveWeight.Enabled = true;
             }
         }
-        //создание точек на графике
+        // Добавляет новое значение в историю графика и обновляет его отображение.
         private void AddPoint(int indexObject, decimal value)
         {
             //foreach (var plot in plots)
@@ -687,7 +747,7 @@ namespace PromVesClient
             //}
 
         }
-        //ивент на закрытие формы, если взвешивание активно - форма не будет закрыта и будет предупреждение
+        // Не позволяет закрыть форму во время активного взвешивания.
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (!btnWeighing.Text.Equals("Начать взвешивание", StringComparison.OrdinalIgnoreCase))
@@ -699,9 +759,13 @@ namespace PromVesClient
                 MessageBoxIcon.Warning);
 
                 e.Cancel = true;
+                return;
             }
+
+            _isClosing = true;
+            _isWeighingActive = false;
         }
-        //метод записи значений на табло
+        // Преобразует общий вес в изображения и выводит их на табло.
         private async Task DisplayingValue(decimal sumeWeight)
         {
             var ListValuesImage = await _staticWeighingService.GetImageWeighingAsync(sumeWeight);
@@ -714,7 +778,7 @@ namespace PromVesClient
 
             }
         }
-        //метод таймера
+        // Периодически добавляет текущие значения бортов на графики.
         private void GraphTimer_Tick(object? sender, EventArgs e)
         {
             for (int i = 0; i < cartSideWeights.Length; i++)
@@ -731,7 +795,7 @@ namespace PromVesClient
         {
 
         }
-        //проверка сообщения от сервера на связь с весами
+        // Обрабатывает служебный статус соединения весов, полученный от сервера.
         private bool ConnectionScalesCheck(string data)
         {
             string[] parts = data.Split(';');
@@ -751,6 +815,7 @@ namespace PromVesClient
             btnSaveWeight.Enabled = true;
             return true;
         }
+        // Фильтрует список вагонов по уже введённому префиксу номера.
         private void comboBoxVagonNumber_DropDown(object sender, EventArgs e)
         {
             if (ReferenceWagonList == null)
@@ -766,6 +831,7 @@ namespace PromVesClient
             comboBoxVagonNumber.Items.Clear();
             comboBoxVagonNumber.Items.AddRange(filteredWagons);
         }
+        // Показывает грузоподъёмность выбранного вагона.
         private void comboBoxVagonNumber_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (ReferenceWagonList == null)
@@ -790,6 +856,7 @@ namespace PromVesClient
 
         }
 
+        // Переключает набор платформ для шестизначного сообщения сервера.
         private void btnSwitchingPlatform_Click(object sender, EventArgs e)
         {
             //Переключение режимов имеет смысл только для сообщения из шести значений.
@@ -836,6 +903,7 @@ namespace PromVesClient
             UpdateDisplayedLabels();
         }
 
+        // Возвращает индексы серверных значений для текущего режима длины вагона.
         private int[] GetDisplayedIndexes()
         {
             //Первые два значения относятся к первой платформе и используются
@@ -846,6 +914,7 @@ namespace PromVesClient
                 : new[] { 0, 1, 2, 3 };
         }
 
+        // Обновляет подписи платформ после переключения режима отображения.
         private void UpdateDisplayedLabels()
         {
             //После переключения режима обновляем подписи теми же значениями,

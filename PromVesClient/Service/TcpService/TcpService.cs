@@ -28,7 +28,7 @@ namespace PromVesClient.Service.TcpService
             _logger = logger;
         }
 
-        //подключение к серверу
+        // Устанавливает TCP-соединение, создаёт токен отмены и запускает приём сообщений.
         public async Task ConnectAsync(int port)
         {
             _client = new TcpClient();
@@ -45,7 +45,7 @@ namespace PromVesClient.Service.TcpService
             _ = ReceiveMessagesAsync(_cts.Token);
         }
 
-        //получение локального ip адреса компьютера
+        // Находит первый доступный IPv4-адрес компьютера для подключения к серверу.
         public async Task<IPAddress> GetLocalIPAddressAsync()
         {
             var host = Dns.GetHostEntry(Dns.GetHostName());
@@ -58,7 +58,7 @@ namespace PromVesClient.Service.TcpService
 
             throw new Exception("Локальный IPv4 адрес не найден.");
         }
-        //отключаемся от сервера
+        // Отменяет чтение и освобождает ресурсы TCP-соединения.
         public async Task DisconnectAsync()
         {
             _cts?.Cancel();
@@ -73,8 +73,7 @@ namespace PromVesClient.Service.TcpService
             _stream = null;
             _client = null;
         }
-        //считывание с сервера присланных данных
-        // Считывание данных, присланных сервером
+        // Читает строковые сообщения сервера в фоновом режиме и передаёт их подписчикам.
         public async Task ReceiveMessagesAsync(CancellationToken token)
         {
             try
@@ -87,7 +86,7 @@ namespace PromVesClient.Service.TcpService
 
                 while (!token.IsCancellationRequested)
                 {
-                    // Таймаут ожидания сообщения — 10 секунд
+                    // Таймаут защищает соединение от бесконечного ожидания данных.
                     using var timeoutCts =
                         CancellationTokenSource.CreateLinkedTokenSource(token);
 
@@ -101,7 +100,7 @@ namespace PromVesClient.Service.TcpService
                     }
                     catch (OperationCanceledException) when (token.IsCancellationRequested)
                     {
-                        // Штатная отмена всего процесса чтения
+                        // Штатная отмена всего процесса чтения не является ошибкой.
                         _logger.LogInformation(
                             "Получение сообщений от сервера остановлено.");
 
@@ -110,7 +109,7 @@ namespace PromVesClient.Service.TcpService
                     }
                     catch (OperationCanceledException)
                     {
-                        // Истек таймаут 10 секунд
+                        // Истёк таймаут ожидания очередного сообщения.
                         ServerConnected = false;
 
                         _logger.LogWarning(
@@ -123,7 +122,7 @@ namespace PromVesClient.Service.TcpService
                         return;
                     }
 
-                    // null означает, что сервер закрыл соединение
+                    // null означает, что сервер закрыл соединение.
                     if (message is null)
                     {
                         ServerConnected = false;
@@ -138,10 +137,10 @@ namespace PromVesClient.Service.TcpService
                         return;
                     }
 
-                    // Убираем пробелы и \r
+                    // Убираем пробелы и символы перевода строки.
                     message = message.Trim();
 
-                    // Пустые сообщения игнорируем
+                    // Пустые сообщения не содержат данных для обработки.
                     if (string.IsNullOrWhiteSpace(message))
                         continue;
 
@@ -156,6 +155,12 @@ namespace PromVesClient.Service.TcpService
             {
                 ServerConnected = false;
 
+                // При штатном отключении ошибка не передаётся в UI и не запускает переподключение.
+                if (token.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 _logger.LogError(
                     ex,
                     "Ошибка ввода-вывода при получении данных от сервера.");
@@ -169,6 +174,12 @@ namespace PromVesClient.Service.TcpService
             {
                 ServerConnected = false;
 
+                // Поток мог быть закрыт штатной отменой соединения.
+                if (token.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 _logger.LogError(
                     ex,
                     "Попытка чтения из закрытого потока.");
@@ -181,6 +192,12 @@ namespace PromVesClient.Service.TcpService
             catch (SocketException ex)
             {
                 ServerConnected = false;
+
+                // Не уведомляем подписчиков об ошибке, если соединение закрывается штатно.
+                if (token.IsCancellationRequested)
+                {
+                    return;
+                }
 
                 _logger.LogError(
                     ex,
@@ -200,6 +217,12 @@ namespace PromVesClient.Service.TcpService
             catch (Exception ex)
             {
                 ServerConnected = false;
+
+                // Игнорируем исключение, возникшее во время штатной остановки чтения.
+                if (token.IsCancellationRequested)
+                {
+                    return;
+                }
 
                 _logger.LogError(
                     ex,
