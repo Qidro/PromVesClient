@@ -102,6 +102,10 @@ namespace PromVesClient.Service.ConfigSevice
                 {
                     _serverSettingsPath = @"C:\PromVesNew\PromVesServer\Configuration\ConfigModbusTcp.json";
                 }
+                else if (protocolName == "PN") 
+                {
+                    return ServiceResult<int>.Ok(6);
+                }
                 else
                 {
                     _serverSettingsPath = @"C:\PromVesNew\PromVesServer\Configuration\ConfigPort.json";
