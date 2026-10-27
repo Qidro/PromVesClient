@@ -857,7 +857,7 @@ namespace PromVesClient
         }
 
         // Переключает набор платформ для шестизначного сообщения сервера.
-        private void btnSwitchingPlatform_Click(object sender, EventArgs e)
+        private async void btnSwitchingPlatform_Click(object sender, EventArgs e)
         {
             //Переключение режимов имеет смысл только для сообщения из шести значений.
             //Для других конфигураций количество отображаемых графиков не меняется.
@@ -871,6 +871,12 @@ namespace PromVesClient
             btnSwitchingPlatform.Text = isExtendedLengthMode
                 ? "Удлиненная длина вагона"
                 : "Стандартная длина вагона";
+
+            // При активном соединении передаём на сервер текущее состояние длины вагона.
+            if (_tcpService.ServerConnected)
+            {
+                await _tcpService.SendMessageAsync(isExtendedLengthMode ? "1" : "0");
+            }
 
             //Сразу обновляем четыре отображаемых значения из уже полученного
             //сообщения сервера. Ожидание следующего сообщения не требуется.
@@ -926,6 +932,6 @@ namespace PromVesClient
                 lblPlatform2Left.Text = $"Платформа 2 левый борт: {cartSideWeights[2]:F2} Т.";
                 lblPlatform2Right.Text = $"Платформа 2 правый борт: {cartSideWeights[3]:F2} Т.";
             }
-        }
+        }     
     }
 }

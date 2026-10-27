@@ -234,8 +234,23 @@ namespace PromVesClient.Service.TcpService
                         ex));
             }
         }
+
+        // Отправляет текстовую команду серверу в формате одной строки.
+        public async Task SendMessageAsync(string message)
+        {
+            if (_client is null || _stream is null || !_client.Connected)
+            {
+                return;
+            }
+
+            byte[] data = Encoding.UTF8.GetBytes($"{message}\n");
+            await _stream.WriteAsync(data, 0, data.Length);
+            await _stream.FlushAsync();
+        }
+
         //обьявление событий
         public event Action<string>? MessageReceived;
         public event Action<Exception>? ConnectionError;
     }
 }
+
