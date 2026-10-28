@@ -1187,5 +1187,30 @@ namespace PromVesClient
         {
 
         }
+
+        private void tabPage5_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void groupBox16_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        private async void btnRestartServerComCamera_Click(object sender, EventArgs e)
+        {
+            await _promVesServerService.RestartServerAsync();
+        }
+
+        private void btnSaveCamera_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private async void btnRestartServerComPN_Click_1(object sender, EventArgs e)
+        {
+            await _promVesServerService.RestartServerAsync();
+        }
     }
 }
