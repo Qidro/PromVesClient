@@ -169,36 +169,39 @@
             cbBaudRatePN = new ComboBox();
             cbPortPN = new ComboBox();
             tabPage5 = new TabPage();
+            cbChoiceCamera = new ComboBox();
+            label52 = new Label();
             btnRestartServerComCamera = new Button();
             btnRestoreDefaultsCamera = new Button();
             btnSaveCamera = new Button();
             groupBox16 = new GroupBox();
-            txtCamera6Type = new TextBox();
+            cbType6 = new ComboBox();
             txtCamera6Login = new TextBox();
             txtCamera6Password = new TextBox();
             txtCamera6Ip = new TextBox();
             groupBox15 = new GroupBox();
-            txtCamera5Type = new TextBox();
+            cbType5 = new ComboBox();
             txtCamera5Login = new TextBox();
             txtCamera5Password = new TextBox();
             txtCamera5Ip = new TextBox();
             groupBox14 = new GroupBox();
-            txtCamera4Type = new TextBox();
+            cbType4 = new ComboBox();
             txtCamera4Login = new TextBox();
             txtCamera4Password = new TextBox();
             txtCamera4Ip = new TextBox();
             groupBox13 = new GroupBox();
-            txtCamera3Type = new TextBox();
+            comboBox1 = new ComboBox();
+            cbType3 = new ComboBox();
             txtCamera3Login = new TextBox();
             txtCamera3Password = new TextBox();
             txtCamera3Ip = new TextBox();
             groupBox12 = new GroupBox();
-            txtCamera2Type = new TextBox();
+            cbType2 = new ComboBox();
             txtCamera2Login = new TextBox();
             txtCamera2Password = new TextBox();
             txtCamera2Ip = new TextBox();
             groupBox11 = new GroupBox();
-            txtCamera1Type = new TextBox();
+            cbType1 = new ComboBox();
             txtCamera1Login = new TextBox();
             txtCamera1Password = new TextBox();
             txtCamera1Ip = new TextBox();
@@ -214,8 +217,6 @@
             label68 = new Label();
             label69 = new Label();
             label70 = new Label();
-            cbChoiceCamera = new ComboBox();
-            label52 = new Label();
             groupBox1.SuspendLayout();
             groupBox2.SuspendLayout();
             groupBox3.SuspendLayout();
@@ -1648,6 +1649,24 @@
             tabPage5.UseVisualStyleBackColor = true;
             tabPage5.Click += tabPage5_Click;
             // 
+            // cbChoiceCamera
+            // 
+            cbChoiceCamera.FormattingEnabled = true;
+            cbChoiceCamera.Items.AddRange(new object[] { "1", "2", "3", "4", "5", "6" });
+            cbChoiceCamera.Location = new Point(665, 136);
+            cbChoiceCamera.Name = "cbChoiceCamera";
+            cbChoiceCamera.Size = new Size(51, 23);
+            cbChoiceCamera.TabIndex = 11;
+            // 
+            // label52
+            // 
+            label52.AutoSize = true;
+            label52.Location = new Point(545, 139);
+            label52.Name = "label52";
+            label52.Size = new Size(109, 15);
+            label52.TabIndex = 12;
+            label52.Text = "Количество камер";
+            // 
             // btnRestartServerComCamera
             // 
             btnRestartServerComCamera.Location = new Point(545, 182);
@@ -1666,6 +1685,7 @@
             btnRestoreDefaultsCamera.TabIndex = 8;
             btnRestoreDefaultsCamera.Text = "По умолчанию";
             btnRestoreDefaultsCamera.UseVisualStyleBackColor = true;
+            btnRestoreDefaultsCamera.Click += btnRestoreDefaultsCamera_Click;
             // 
             // btnSaveCamera
             // 
@@ -1679,7 +1699,7 @@
             // 
             // groupBox16
             // 
-            groupBox16.Controls.Add(txtCamera6Type);
+            groupBox16.Controls.Add(cbType6);
             groupBox16.Controls.Add(txtCamera6Login);
             groupBox16.Controls.Add(txtCamera6Password);
             groupBox16.Controls.Add(txtCamera6Ip);
@@ -1691,13 +1711,15 @@
             groupBox16.Text = "Камера 6";
             groupBox16.Enter += groupBox16_Enter;
             // 
-            // txtCamera6Type
+            // cbType6
             // 
-            txtCamera6Type.Location = new Point(14, 22);
-            txtCamera6Type.Name = "txtCamera6Type";
-            txtCamera6Type.PlaceholderText = "Тип";
-            txtCamera6Type.Size = new Size(153, 23);
-            txtCamera6Type.TabIndex = 1;
+            cbType6.DropDownStyle = ComboBoxStyle.DropDownList;
+            cbType6.FormattingEnabled = true;
+            cbType6.Items.AddRange(new object[] { "video", "photo", "recognition" });
+            cbType6.Location = new Point(14, 22);
+            cbType6.Name = "cbType6";
+            cbType6.Size = new Size(153, 23);
+            cbType6.TabIndex = 5;
             // 
             // txtCamera6Login
             // 
@@ -1725,7 +1747,7 @@
             // 
             // groupBox15
             // 
-            groupBox15.Controls.Add(txtCamera5Type);
+            groupBox15.Controls.Add(cbType5);
             groupBox15.Controls.Add(txtCamera5Login);
             groupBox15.Controls.Add(txtCamera5Password);
             groupBox15.Controls.Add(txtCamera5Ip);
@@ -1736,13 +1758,15 @@
             groupBox15.TabStop = false;
             groupBox15.Text = "Камера 5";
             // 
-            // txtCamera5Type
+            // cbType5
             // 
-            txtCamera5Type.Location = new Point(14, 22);
-            txtCamera5Type.Name = "txtCamera5Type";
-            txtCamera5Type.PlaceholderText = "Тип";
-            txtCamera5Type.Size = new Size(153, 23);
-            txtCamera5Type.TabIndex = 1;
+            cbType5.DropDownStyle = ComboBoxStyle.DropDownList;
+            cbType5.FormattingEnabled = true;
+            cbType5.Items.AddRange(new object[] { "video", "photo", "recognition" });
+            cbType5.Location = new Point(14, 22);
+            cbType5.Name = "cbType5";
+            cbType5.Size = new Size(153, 23);
+            cbType5.TabIndex = 5;
             // 
             // txtCamera5Login
             // 
@@ -1770,7 +1794,7 @@
             // 
             // groupBox14
             // 
-            groupBox14.Controls.Add(txtCamera4Type);
+            groupBox14.Controls.Add(cbType4);
             groupBox14.Controls.Add(txtCamera4Login);
             groupBox14.Controls.Add(txtCamera4Password);
             groupBox14.Controls.Add(txtCamera4Ip);
@@ -1781,13 +1805,15 @@
             groupBox14.TabStop = false;
             groupBox14.Text = "Камера 4";
             // 
-            // txtCamera4Type
+            // cbType4
             // 
-            txtCamera4Type.Location = new Point(14, 22);
-            txtCamera4Type.Name = "txtCamera4Type";
-            txtCamera4Type.PlaceholderText = "Тип";
-            txtCamera4Type.Size = new Size(153, 23);
-            txtCamera4Type.TabIndex = 1;
+            cbType4.DropDownStyle = ComboBoxStyle.DropDownList;
+            cbType4.FormattingEnabled = true;
+            cbType4.Items.AddRange(new object[] { "video", "photo", "recognition" });
+            cbType4.Location = new Point(14, 22);
+            cbType4.Name = "cbType4";
+            cbType4.Size = new Size(153, 23);
+            cbType4.TabIndex = 5;
             // 
             // txtCamera4Login
             // 
@@ -1815,7 +1841,8 @@
             // 
             // groupBox13
             // 
-            groupBox13.Controls.Add(txtCamera3Type);
+            groupBox13.Controls.Add(comboBox1);
+            groupBox13.Controls.Add(cbType3);
             groupBox13.Controls.Add(txtCamera3Login);
             groupBox13.Controls.Add(txtCamera3Password);
             groupBox13.Controls.Add(txtCamera3Ip);
@@ -1826,13 +1853,24 @@
             groupBox13.TabStop = false;
             groupBox13.Text = "Камера 3";
             // 
-            // txtCamera3Type
+            // comboBox1
             // 
-            txtCamera3Type.Location = new Point(14, 22);
-            txtCamera3Type.Name = "txtCamera3Type";
-            txtCamera3Type.PlaceholderText = "Тип";
-            txtCamera3Type.Size = new Size(153, 23);
-            txtCamera3Type.TabIndex = 1;
+            comboBox1.FormattingEnabled = true;
+            comboBox1.Items.AddRange(new object[] { "video", "photo", "recognition" });
+            comboBox1.Location = new Point(318, -136);
+            comboBox1.Name = "comboBox1";
+            comboBox1.Size = new Size(153, 23);
+            comboBox1.TabIndex = 5;
+            // 
+            // cbType3
+            // 
+            cbType3.DropDownStyle = ComboBoxStyle.DropDownList;
+            cbType3.FormattingEnabled = true;
+            cbType3.Items.AddRange(new object[] { "video", "photo", "recognition" });
+            cbType3.Location = new Point(14, 22);
+            cbType3.Name = "cbType3";
+            cbType3.Size = new Size(153, 23);
+            cbType3.TabIndex = 5;
             // 
             // txtCamera3Login
             // 
@@ -1844,7 +1882,7 @@
             // 
             // txtCamera3Password
             // 
-            txtCamera3Password.Location = new Point(16, 80);
+            txtCamera3Password.Location = new Point(14, 80);
             txtCamera3Password.Name = "txtCamera3Password";
             txtCamera3Password.PlaceholderText = "Пароль";
             txtCamera3Password.Size = new Size(153, 23);
@@ -1860,7 +1898,7 @@
             // 
             // groupBox12
             // 
-            groupBox12.Controls.Add(txtCamera2Type);
+            groupBox12.Controls.Add(cbType2);
             groupBox12.Controls.Add(txtCamera2Login);
             groupBox12.Controls.Add(txtCamera2Password);
             groupBox12.Controls.Add(txtCamera2Ip);
@@ -1871,13 +1909,15 @@
             groupBox12.TabStop = false;
             groupBox12.Text = "Камера 2";
             // 
-            // txtCamera2Type
+            // cbType2
             // 
-            txtCamera2Type.Location = new Point(14, 28);
-            txtCamera2Type.Name = "txtCamera2Type";
-            txtCamera2Type.PlaceholderText = "Тип";
-            txtCamera2Type.Size = new Size(153, 23);
-            txtCamera2Type.TabIndex = 1;
+            cbType2.DropDownStyle = ComboBoxStyle.DropDownList;
+            cbType2.FormattingEnabled = true;
+            cbType2.Items.AddRange(new object[] { "video", "photo", "recognition" });
+            cbType2.Location = new Point(14, 28);
+            cbType2.Name = "cbType2";
+            cbType2.Size = new Size(153, 23);
+            cbType2.TabIndex = 5;
             // 
             // txtCamera2Login
             // 
@@ -1905,7 +1945,7 @@
             // 
             // groupBox11
             // 
-            groupBox11.Controls.Add(txtCamera1Type);
+            groupBox11.Controls.Add(cbType1);
             groupBox11.Controls.Add(txtCamera1Login);
             groupBox11.Controls.Add(txtCamera1Password);
             groupBox11.Controls.Add(txtCamera1Ip);
@@ -1916,13 +1956,15 @@
             groupBox11.TabStop = false;
             groupBox11.Text = "Камера 1";
             // 
-            // txtCamera1Type
+            // cbType1
             // 
-            txtCamera1Type.Location = new Point(16, 28);
-            txtCamera1Type.Name = "txtCamera1Type";
-            txtCamera1Type.PlaceholderText = "Тип";
-            txtCamera1Type.Size = new Size(153, 23);
-            txtCamera1Type.TabIndex = 1;
+            cbType1.DropDownStyle = ComboBoxStyle.DropDownList;
+            cbType1.FormattingEnabled = true;
+            cbType1.Items.AddRange(new object[] { "video", "photo", "recognition" });
+            cbType1.Location = new Point(16, 28);
+            cbType1.Name = "cbType1";
+            cbType1.Size = new Size(153, 23);
+            cbType1.TabIndex = 5;
             // 
             // txtCamera1Login
             // 
@@ -2031,24 +2073,6 @@
             label70.Name = "label70";
             label70.Size = new Size(100, 23);
             label70.TabIndex = 0;
-            // 
-            // cbChoiceCamera
-            // 
-            cbChoiceCamera.FormattingEnabled = true;
-            cbChoiceCamera.Items.AddRange(new object[] { "1", "2", "3", "4" });
-            cbChoiceCamera.Location = new Point(665, 136);
-            cbChoiceCamera.Name = "cbChoiceCamera";
-            cbChoiceCamera.Size = new Size(51, 23);
-            cbChoiceCamera.TabIndex = 11;
-            // 
-            // label52
-            // 
-            label52.AutoSize = true;
-            label52.Location = new Point(545, 139);
-            label52.Name = "label52";
-            label52.Size = new Size(109, 15);
-            label52.TabIndex = 12;
-            label52.Text = "Количество камер";
             // 
             // ComPortSettingsForm
             // 
@@ -2262,11 +2286,9 @@
         private Label label68;
         private Label label69;
         private Label label70;
-        private TextBox txtCamera1Type;
         private TextBox txtCamera1Login;
         private TextBox txtCamera1Password;
         private TextBox txtCamera1Ip;
-        private TextBox txtCamera2Type;
         private TextBox txtCamera2Login;
         private TextBox txtCamera2Password;
         private TextBox txtCamera2Ip;
@@ -2275,19 +2297,15 @@
         private GroupBox groupBox14;
         private GroupBox groupBox15;
         private GroupBox groupBox16;
-        private TextBox txtCamera3Type;
         private TextBox txtCamera3Login;
         private TextBox txtCamera3Password;
         private TextBox txtCamera3Ip;
-        private TextBox txtCamera4Type;
         private TextBox txtCamera4Login;
         private TextBox txtCamera4Password;
         private TextBox txtCamera4Ip;
-        private TextBox txtCamera5Type;
         private TextBox txtCamera5Login;
         private TextBox txtCamera5Password;
         private TextBox txtCamera5Ip;
-        private TextBox txtCamera6Type;
         private TextBox txtCamera6Login;
         private TextBox txtCamera6Password;
         private TextBox txtCamera6Ip;
@@ -2296,5 +2314,12 @@
         private Button btnRestartServerComCamera;
         private ComboBox cbChoiceCamera;
         private Label label52;
+        private ComboBox cbType6;
+        private ComboBox cbType5;
+        private ComboBox cbType4;
+        private ComboBox cbType3;
+        private ComboBox cbType2;
+        private ComboBox cbType1;
+        private ComboBox comboBox1;
     }
 }

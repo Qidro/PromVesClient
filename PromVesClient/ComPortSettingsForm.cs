@@ -15,6 +15,7 @@ namespace PromVesClient
     public partial class ComPortSettingsForm : Form
     {
         private readonly ComPortService _comPortService;
+        private readonly CameraService _cameraService;
         private readonly PNSerialPortService _pnSerialPortService;
         // для работы с MOXA
         private readonly ModbusTcpService _modbusTcpService;
@@ -47,9 +48,13 @@ namespace PromVesClient
         private List<TextBox> _moxaPortBoxes;
         private List<ComboBox> _moxaSlaveIdBoxes;
         private List<GroupBox> _moxaGroupBoxes;
+        private List<ComboBox> _cameraTypeBoxes;
+        private List<GroupBox> _cameraGroupBoxes;
+        private int _selectedCameraCount = 6;
 
         public ComPortSettingsForm(
             ComPortService comPortService,
+            CameraService cameraService,
             PNSerialPortService pnSerialPortService,
             ModbusTcpService modbusTcpService,
             SerialPortBoardService serialPortBoardService,
@@ -59,6 +64,7 @@ namespace PromVesClient
             InitializeComponent();
 
             _comPortService = comPortService;
+            _cameraService = cameraService;
             _pnSerialPortService = pnSerialPortService;
             _modbusTcpService = modbusTcpService;
             _serialPortBoardService = serialPortBoardService;
@@ -69,6 +75,7 @@ namespace PromVesClient
             InitializeMoxaCollections();
             InitializeMoxaControls();
             InitializeBoardSettings();
+            InitializeCameraControls();
             InitializePortCountComboBox();
             InitializePortCountComboBoxMoxa();
             SubscribePortEvents();
@@ -81,6 +88,7 @@ namespace PromVesClient
             UpdatePortVisibility();
             UpdateMoxaVisibility();
             UpdateBoardVisibility();
+            UpdateCameraVisibility();
         }
 
         // обработчик события загрузки формы
@@ -92,6 +100,7 @@ namespace PromVesClient
                 // Программно заполняются только списки имён COM-портов.
                 RefreshAvailablePorts();
                 LoadSettings();
+                await LoadCameraSettingsAsync();
                 await LoadPNSettingsAsync();
                 LoadMoxaSettings();
                 LoadBoardSettings();
@@ -106,7 +115,25 @@ namespace PromVesClient
                 UpdatePortVisibility();
                 UpdateMoxaVisibility();
                 UpdateBoardVisibility();
+                UpdateCameraVisibility();
             }
+        }
+
+        private void InitializeCameraControls()
+        {
+            _cameraTypeBoxes = new List<ComboBox>
+            {
+                cbType1, cbType2, cbType3, cbType4, cbType5, cbType6
+            };
+            _cameraGroupBoxes = new List<GroupBox>
+            {
+                groupBox11, groupBox12, groupBox13,
+                groupBox14, groupBox15, groupBox16
+            };
+
+            cbChoiceCamera.SelectedIndexChanged -= cbChoiceCamera_SelectedIndexChanged;
+            cbChoiceCamera.SelectedIndexChanged += cbChoiceCamera_SelectedIndexChanged;
+            cbChoiceCamera.DropDownStyle = ComboBoxStyle.DropDownList;
         }
 
         // Коллекции элементов формы для COM-портов
@@ -196,6 +223,89 @@ namespace PromVesClient
             }
 
             ApplyPortSettings(result.Data);
+        }
+
+        // Загрузка настроек камер из ConfigCameras.json.
+        private async Task LoadCameraSettingsAsync()
+        {
+            var result = await _cameraService.LoadAsync();
+
+            if (!result.Success)
+            {
+                MessageBox.Show(
+                    result.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
+                result = await _cameraService.LoadDefaultsAsync();
+                if (!result.Success)
+                {
+                    MessageBox.Show(
+                        result.Message,
+                        "Ошибка",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                    return;
+                }
+            }
+
+            ApplyCameraSettings(result.Data);
+        }
+
+        // Переносит конфигурацию камер в элементы управления формы.
+        private void ApplyCameraSettings(CameraConfiguration? configuration)
+        {
+            TextBox[][] cameraTextFields =
+            [
+                [txtCamera1Login, txtCamera1Password, txtCamera1Ip],
+                [txtCamera2Login, txtCamera2Password, txtCamera2Ip],
+                [txtCamera3Login, txtCamera3Password, txtCamera3Ip],
+                [txtCamera4Login, txtCamera4Password, txtCamera4Ip],
+                [txtCamera5Login, txtCamera5Password, txtCamera5Ip],
+                [txtCamera6Login, txtCamera6Password, txtCamera6Ip]
+            ];
+
+            ComboBox[] cameraTypeFields =
+            [cbType1, cbType2, cbType3, cbType4, cbType5, cbType6];
+
+            foreach (TextBox[] fields in cameraTextFields)
+                foreach (TextBox field in fields)
+                    field.Text = string.Empty;
+
+            foreach (ComboBox field in cameraTypeFields)
+                field.SelectedIndex = -1;
+
+            int count = Math.Min(configuration?.Cameras.Count ?? 0, cameraTextFields.Length);
+            for (int i = 0; i < count; i++)
+            {
+                CameraSettings camera = configuration!.Cameras[i];
+                cameraTypeFields[i].Text = camera.Type ?? string.Empty;
+                cameraTextFields[i][0].Text = camera.Login ?? string.Empty;
+                cameraTextFields[i][1].Text = camera.Password ?? string.Empty;
+                cameraTextFields[i][2].Text = camera.Ip ?? string.Empty;
+            }
+
+            _selectedCameraCount = Math.Clamp(count, 1, _cameraGroupBoxes.Count);
+            SelectComboBoxItem(cbChoiceCamera, _selectedCameraCount);
+            UpdateCameraVisibility();
+        }
+
+        private void cbChoiceCamera_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            if (int.TryParse(cbChoiceCamera.Text, out int count))
+                _selectedCameraCount = Math.Clamp(count, 1, _cameraGroupBoxes.Count);
+
+            UpdateCameraVisibility();
+        }
+
+        private void UpdateCameraVisibility()
+        {
+            if (_cameraGroupBoxes == null)
+                return;
+
+            for (int i = 0; i < _cameraGroupBoxes.Count; i++)
+                _cameraGroupBoxes[i].Visible = i < _selectedCameraCount;
         }
 
         // Загружает настройки PN и переносит их значения в элементы groupBox10.
@@ -1203,11 +1313,93 @@ namespace PromVesClient
             await _promVesServerService.RestartServerAsync();
         }
 
-        private void btnSaveCamera_Click(object sender, EventArgs e)
+        // Восстанавливает настройки камер из локального файла defaults.
+        private async void btnRestoreDefaultsCamera_Click(object sender, EventArgs e)
         {
+            try
+            {
+                var result = await _cameraService.LoadDefaultsAsync();
+                if (!result.Success)
+                {
+                    MessageBox.Show(result.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
 
+                ApplyCameraSettings(result.Data);
+                MessageBox.Show(
+                    "Настройки камер по умолчанию загружены.",
+                    "Камеры",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
+        // Сохраняет только те камеры, чьи GroupBox видимы на форме.
+        private async void btnSaveCamera_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ServiceResult result = await _cameraService.SaveAsync(
+                    BuildCameraConfigurationFromVisibleControls());
+
+                if (!result.Success)
+                {
+                    MessageBox.Show(result.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                MessageBox.Show(
+                    "Настройки камер сохранены.",
+                    "Камеры",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // Собирает настройки из видимых элементов формы перед сериализацией.
+        private CameraConfiguration BuildCameraConfigurationFromVisibleControls()
+        {
+            TextBox[][] cameraTextFields =
+            [
+                [txtCamera1Login, txtCamera1Password, txtCamera1Ip],
+                [txtCamera2Login, txtCamera2Password, txtCamera2Ip],
+                [txtCamera3Login, txtCamera3Password, txtCamera3Ip],
+                [txtCamera4Login, txtCamera4Password, txtCamera4Ip],
+                [txtCamera5Login, txtCamera5Password, txtCamera5Ip],
+                [txtCamera6Login, txtCamera6Password, txtCamera6Ip]
+            ];
+
+            ComboBox[] cameraTypeFields =
+            [
+                cbType1, cbType2, cbType3, cbType4, cbType5, cbType6
+            ];
+
+            CameraConfiguration configuration = new();
+            for (int i = 0; i < _cameraGroupBoxes.Count; i++)
+            {
+                if (!_cameraGroupBoxes[i].Visible)
+                    continue;
+
+                configuration.Cameras.Add(new CameraSettings
+                {
+                    Id = configuration.Cameras.Count + 1,
+                    Type = cameraTypeFields[i].Text.Trim(),
+                    Login = cameraTextFields[i][0].Text,
+                    Password = cameraTextFields[i][1].Text,
+                    Ip = cameraTextFields[i][2].Text.Trim()
+                });
+            }
+
+            return configuration;
+        }
         private async void btnRestartServerComPN_Click_1(object sender, EventArgs e)
         {
             await _promVesServerService.RestartServerAsync();
