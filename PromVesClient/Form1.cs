@@ -22,6 +22,8 @@ namespace PromVesClient
         private readonly ConfigService _configService;
 
         private int CountGraphs;
+
+        private bool UseCamera;
         //в конструкторе открываем файл о версии приложения
         public Form1(ILogger<Form1> logger, UserService userService, CurrentUserService currentUserService, IServiceProvider serviceProvider
             , AppInfoService appInfoService
@@ -71,7 +73,17 @@ namespace PromVesClient
             }
             else 
             {
-                MessageBox.Show($"Произошла ошибка, причина: {result.Message}","Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Произошла ошибка получения количества графиков, причина: {result.Message}","Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            //получаем результат статуса использования камеры
+            var resultCamera = await _configService.GetUseCameraAsync();
+            if (resultCamera.Success == true)
+            {
+                UseCamera = resultCamera.Data;
+            }
+            else
+            {
+                MessageBox.Show($"Произошла ошибка получения статуса использования камеры, причина: {resultCamera.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -85,7 +97,7 @@ namespace PromVesClient
             //результат авторизации
             if (result.Success == true)
             {
-                _currentUserService.Login(result.Data!, CountGraphs);
+                _currentUserService.Login(result.Data!, CountGraphs, UseCamera);
                 //MessageBox.Show("успешно", result.Data.PasswordHash);
                 var form = _serviceProvider.GetRequiredService<MainMenu>();
                 //var form = new MainMenu();

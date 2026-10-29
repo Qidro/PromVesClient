@@ -90,6 +90,95 @@ namespace PromVesClient.Service.ConfigSevice
             return ServiceResult<string>.Ok(configuration.GeneralConfigurator.Protocol);
         }
 
+        // Асинхронно получает признак использования камер из общей конфигурации сервера.
+        // Результат возвращается через ServiceResult, чтобы вызывающий код мог отличить
+        // успешно прочитанное значение от ошибки чтения или повреждённого JSON-файла.
+        public async Task<ServiceResult<bool>> GetUseCameraAsync()
+        {
+            const string serverSettingsPath =
+                @"C:\PromVesNew\PromVesServer\Configuration\GeneralConfigurator.json";
+
+            try
+            {
+                // До чтения проверяем наличие файла, чтобы вернуть понятное сообщение.
+                if (!File.Exists(serverSettingsPath))
+                {
+                    _logger.LogError(
+                        "Файл настроек {Path} не найден.",
+                        serverSettingsPath);
+
+                    return ServiceResult<bool>.Fail(
+                        "Файл общих настроек не найден.");
+                }
+
+                // Асинхронное чтение не блокирует поток пользовательского интерфейса.
+                string json = await File.ReadAllTextAsync(serverSettingsPath);
+                if (string.IsNullOrWhiteSpace(json))
+                {
+                    _logger.LogError(
+                        "Файл настроек {Path} пустой.",
+                        serverSettingsPath);
+
+                    return ServiceResult<bool>.Fail(
+                        "Файл общих настроек пустой.");
+                }
+
+                var configuration =
+                    JsonSerializer.Deserialize<GeneralConfiguratorConfiguration>(
+                        json,
+                        _jsonOptions);
+
+                if (configuration == null)
+                {
+                    _logger.LogError(
+                        "Не удалось десериализовать файл настроек: {Path}.",
+                        serverSettingsPath);
+
+                    return ServiceResult<bool>.Fail(
+                        "Не удалось прочитать общие настройки.");
+                }
+
+                return ServiceResult<bool>.Ok(
+                    configuration.GeneralConfigurator.UseCamera);
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Ошибка десериализации файла общих настроек.");
+
+                return ServiceResult<bool>.Fail(
+                    "Файл общих настроек повреждён.");
+            }
+            catch (IOException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Ошибка чтения файла общих настроек.");
+
+                return ServiceResult<bool>.Fail(
+                    "Не удалось прочитать общие настройки.");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Нет доступа к файлу общих настроек.");
+
+                return ServiceResult<bool>.Fail(
+                    "Нет доступа к файлу общих настроек.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Неизвестная ошибка при получении UseCamera.");
+
+                return ServiceResult<bool>.Fail(
+                    "Не удалось получить параметр UseCamera.");
+            }
+        }
+
         //получение количества портов/серверов
         private async Task<ServiceResult<int>> GetGraphsCountAsync(string protocolName)
         {

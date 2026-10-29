@@ -13,10 +13,13 @@ namespace PromVesClient.Service
 
         private int GraphsCount { get; set; }
 
-        public void Login(User user, int graphsCount)
+        public bool UseCamera { get; set; }
+
+        public void Login(User user, int graphsCount, bool useCamera)
         {
             CurrentUser = user;
             GraphsCount = graphsCount;
+            UseCamera = useCamera;
         }
         //получение числа графиков
         public int GetGraphsCount()

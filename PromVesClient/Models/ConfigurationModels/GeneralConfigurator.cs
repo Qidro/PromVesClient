@@ -9,5 +9,7 @@ namespace PromVesClient.Models.ConfigurationModels
         public string Protocol { get; set; } = string.Empty;
 
         public string Board { get; set; } = string.Empty;
+
+        public bool UseCamera { get; set; }
     }
 }

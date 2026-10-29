@@ -300,6 +300,14 @@ namespace PromVesClient
                     graphTimer.Start();
                     IdReceipt = Guid.NewGuid();
                     _isWeighingActive = true;
+
+                    if (_currentUserService.UseCamera)
+                    {
+                        // Уведомляем сервер о начале захвата. Ошибка связи не должна
+                        // отменять локальное начало операции взвешивания.
+                        await TrySendCaptureCommandAsync("StartCapture");
+                    }
+
                     btnWeighing.Text = "Закончить взвешивание";
                 }
                 catch (Exception ex)
@@ -326,12 +334,47 @@ namespace PromVesClient
 
                 //_stream?.Close();
                 //_client?.Close();
+                if(_currentUserService.UseCamera)
+                {
+                    // Уведомляем сервер о завершении захвата. Ошибка связи не должна
+                    // отменять локальное завершение операции взвешивания.
+                    await TrySendCaptureCommandAsync("EndCapture");
+                }
+                // Команду необходимо отправить до отключения TCP-соединения.
+                await TrySendCaptureCommandAsync("EndCapture");
                 await _tcpService.DisconnectAsync();
 
                 //MessageBox.Show("Соединение закрыто");
                 graphTimer.Stop();
                 _isWeighingActive = false;
+
                 btnWeighing.Text = "Начать взвешивание";
+            }
+        }
+
+        // Безопасно отправляет команду управления захватом и не выбрасывает
+        // исключение в основной сценарий взвешивания.
+        private async Task TrySendCaptureCommandAsync(string command)
+        {
+            try
+            {
+                if (!await _tcpService.SendMessageAsync(command))
+                {
+                    MessageBox.Show(
+                        $"Не удалось отправить серверу команду {command}.",
+                        "Ошибка отправки",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка отправки команды {Command}.", command);
+                MessageBox.Show(
+                    $"Не удалось отправить серверу команду {command}: {ex.Message}",
+                    "Ошибка отправки",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
             }
         }
 

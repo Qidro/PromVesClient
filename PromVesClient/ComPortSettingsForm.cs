@@ -977,7 +977,8 @@ namespace PromVesClient
                 GeneralConfigurator = new GeneralConfigurator
                 {
                     Protocol = protocolcb.Text,
-                    Board = Boardcb.Text
+                    Board = Boardcb.Text,
+                    UseCamera = cameraUsecb.Text == "Да"
                 }
             };
 
@@ -1043,6 +1044,10 @@ namespace PromVesClient
                     SelectComboBoxItem(protocolcb, generalResult.Data.GeneralConfigurator.Protocol);
 
                     SelectComboBoxItem(Boardcb, generalResult.Data.GeneralConfigurator.Board);
+
+                    SelectComboBoxItem(
+                        cameraUsecb,
+                        generalResult.Data.GeneralConfigurator.UseCamera ? "Да" : "Нет");
                 }
             }
         }
@@ -1085,6 +1090,7 @@ namespace PromVesClient
                 RefreshAvailablePorts();
                 var missingItems = new List<string>();
                 SelectBoardDefaults(missingItems);
+                SelectComboBoxItem(cameraUsecb, "Нет", missingItems);
                 ShowMissingDefaults(missingItems, "Табло");
             }
             catch (Exception ex)
@@ -1403,6 +1409,11 @@ namespace PromVesClient
         private async void btnRestartServerComPN_Click_1(object sender, EventArgs e)
         {
             await _promVesServerService.RestartServerAsync();
+        }
+
+        private void tabPage3_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
