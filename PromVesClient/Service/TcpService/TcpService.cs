@@ -235,36 +235,92 @@ namespace PromVesClient.Service.TcpService
             }
         }
 
-        // Отправляет текстовую команду серверу в формате одной строки.
-        // Возвращает false, если соединение отсутствует или отправка завершилась ошибкой.
+        // Отправляет команду серверу строкой "команда\n" ("\n" обязателен — разделитель для ReadLineAsync на приёме).
+        // При ошибке отправки повторяет попытки каждые 500 мс, пока соединение живо.
+        // Возвращает false, если соединения нет или оно закрылось до успешной отправки.
+        // ВАЖНО: true означает лишь запись в сокет — подтверждений сервер не шлёт.
         public async Task<bool> SendMessageAsync(string message)
         {
+            // Нет соединения (до подключения или после DisconnectAsync).
             if (_client is null || _stream is null || !_client.Connected)
             {
                 return false;
             }
 
-            try
+            // Кодируем один раз: при повторах содержимое не меняется.
+            byte[] data = Encoding.UTF8.GetBytes($"{message}\n");
+
+            // Цикл, пока соединение живо. _client/_stream могут обнулиться в
+            // DisconnectAsync параллельно с отправкой, поэтому проверяем на каждой итерации.
+            while (ServerConnected
+                && _client is not null
+                && _stream is not null
+                && _client.Connected)
             {
-                byte[] data = Encoding.UTF8.GetBytes($"{message}\n");
-                await _stream.WriteAsync(data, 0, data.Length);
-                await _stream.FlushAsync();
-                return true;
+                try
+                {
+                    // Token прерывает запись при штатном закрытии соединения.
+                    await _stream.WriteAsync(data, 0, data.Length, Token);
+                    await _stream.FlushAsync(Token);
+
+                    return true;
+                }
+                catch (OperationCanceledException) when (Token.IsCancellationRequested)
+                {
+                    // Соединение закрывается штатно — повторять бессмысленно.
+                    break;
+                }
+                catch (IOException ex)
+                {
+                    // Временный сбой ввода-вывода: повторяем. При окончательном разрыве
+                    // ServerConnected станет false в ReceiveMessagesAsync и цикл остановится.
+                    _logger.LogWarning(
+                        ex,
+                        "Не удалось отправить команду серверу, будет повтор: {Message}",
+                        message);
+                }
+                catch (ObjectDisposedException ex)
+                {
+                    // Поток уже освобождён — повторы невозможны.
+                    _logger.LogWarning(
+                        ex,
+                        "Соединение закрыто во время отправки команды: {Message}",
+                        message);
+
+                    break;
+                }
+                catch (SocketException ex)
+                {
+                    // Ошибка сокета: повторяем, как и с IOException.
+                    _logger.LogWarning(
+                        ex,
+                        "Ошибка сокета при отправке команды, будет повтор: {Message}",
+                        message);
+                }
+
+                // Пауза между попытками; при закрытии соединения во время паузы выйдет OCE.
+                try
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(500), Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
             }
-            catch (IOException ex)
-            {
-                _logger.LogError(ex, "Ошибка отправки команды серверу: {Message}", message);
-                return false;
-            }
-            catch (ObjectDisposedException ex)
-            {
-                _logger.LogError(ex, "Соединение закрыто во время отправки команды: {Message}", message);
-                return false;
-            }
+
+            // Соединение закрылось раньше, чем команда ушла в сеть.
+            _logger.LogError(
+                "Команда не доставлена: соединение с сервером закрыто. {Message}",
+                message);
+
+            return false;
         }
 
-        //обьявление событий
+        // Сообщение от сервера (строка без "\n"); команды обрабатывают формы-подписчики.
         public event Action<string>? MessageReceived;
+
+        // Потеряна связь с сервером (таймаут, обрыв, закрытие сервером); используется для переподключения.
         public event Action<Exception>? ConnectionError;
     }
 }

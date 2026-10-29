@@ -340,8 +340,6 @@ namespace PromVesClient
                     // отменять локальное завершение операции взвешивания.
                     await TrySendCaptureCommandAsync("EndCapture");
                 }
-                // Команду необходимо отправить до отключения TCP-соединения.
-                await TrySendCaptureCommandAsync("EndCapture");
                 await _tcpService.DisconnectAsync();
 
                 //MessageBox.Show("Соединение закрыто");
