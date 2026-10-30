@@ -18,7 +18,7 @@ using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Text;
+using System.Text.Json;
 using System.Windows.Forms;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -87,6 +87,24 @@ namespace PromVesClient
         //После переподключения канала 5005 её нужно повторить, иначе сервер
         //останется в старом состоянии и захват видео не возобновится.
         private string? _lastCaptureCommand;
+
+        //Ожидание ответа сервера на команду CapturePhoto (канал команд, порт 5005).
+        //Ответ сопоставляется с запросом по requestId: сервер может прислать
+        //ответ на устаревшую команду, и его нельзя принимать за текущий.
+        private readonly object _capturePhotoLock = new();
+        private TaskCompletionSource<CapturePhotoResponseDto>? _pendingCapturePhoto;
+        private string? _pendingCapturePhotoRequestId;
+
+        //Максимальное время ожидания ответа сервера на команду CapturePhoto.
+        private const int CapturePhotoResponseTimeoutMs = 15000;
+        //Максимальное время ожидания записи команды CapturePhoto в сокет.
+        private const int CapturePhotoSendTimeoutMs = 5000;
+        //Настройки разбора JSON-ответов сервера (имена полей в ответе могут
+        //отличаться регистром).
+        private static readonly JsonSerializerOptions CameraJsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
 
         //Таймер периодической проверки канала команд (порт 5005).
         //По этому порту данные могут не приходить очень долго, поэтому следить
@@ -635,6 +653,10 @@ namespace PromVesClient
         {
             _logger.LogWarning(ex, "Потеряна связь по каналу команд (порт 5005).");
 
+            //Ответ на уже отправленную команду CapturePhoto по разорванному
+            //соединению не придёт — не ждём его до таймаута.
+            FailPendingCapturePhoto();
+
             // Канал команд нужен только при включённой камере и активном взвешивании.
             if (_isClosing
                 || !_isWeighingActive
@@ -722,10 +744,201 @@ namespace PromVesClient
                 new IOException("Канал команд (порт 5005): соединение потеряно."));
         }
 
+        // Отправляет серверу JSON-команду CapturePhoto и ждёт ответ с тем же requestId.
+        // Возвращает ответ сервера или null, если команду отправить не удалось
+        // либо ответ не пришёл за отведённое время.
+        private async Task<CapturePhotoResponseDto?> RequestCapturePhotoAsync()
+        {
+            //requestId создаётся для каждого запроса: по нему сервер и клиент
+            //понимают, что ответ относится именно к этой команде.
+            string requestId = Guid.NewGuid().ToString();
+
+            var completion = new TaskCompletionSource<CapturePhotoResponseDto>(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+
+            lock (_capturePhotoLock)
+            {
+                _pendingCapturePhoto = completion;
+                _pendingCapturePhotoRequestId = requestId;
+            }
+
+            try
+            {
+                //Проверяем не только флаг, но и сам сокет: соединение могло
+                //пропасть без получения ошибки чтения.
+                if (!_commandTcpService.IsConnectionAlive())
+                {
+                    await _commandTcpService.DisconnectAsync();
+                }
+
+                if (!_commandTcpService.ServerConnected)
+                {
+                    await ConnectCommandChannelAsync(showErrorMessage: false);
+                }
+
+                var request = new CapturePhotoRequestDto
+                {
+                    command = "CapturePhoto",
+                    requestId = requestId
+                };
+
+                //Сериализуем в JSON. SendMessageAsync добавляет "\n" — разделитель
+                //строк, по которому сервер читает сообщение.
+                string json = JsonSerializer.Serialize(request);
+
+                bool sent = await _commandTcpService.SendMessageAsync(json)
+                    .WaitAsync(TimeSpan.FromMilliseconds(CapturePhotoSendTimeoutMs));
+
+                if (!sent)
+                {
+                    _logger.LogWarning(
+                        "Не удалось отправить команду CapturePhoto (requestId: {RequestId}).",
+                        requestId);
+
+                    return null;
+                }
+
+                _logger.LogInformation(
+                    "Команда CapturePhoto отправлена (requestId: {RequestId}).",
+                    requestId);
+
+                return await completion.Task.WaitAsync(
+                    TimeSpan.FromMilliseconds(CapturePhotoResponseTimeoutMs));
+            }
+            catch (TaskCanceledException)
+            {
+                _logger.LogWarning(
+                    "Ожидание ответа на команду CapturePhoto прервано: соединение потеряно (requestId: {RequestId}).",
+                    requestId);
+
+                return null;
+            }
+            catch (TimeoutException)
+            {
+                _logger.LogWarning(
+                    "Сервер не ответил на команду CapturePhoto за {Timeout} мс (requestId: {RequestId}).",
+                    CapturePhotoResponseTimeoutMs,
+                    requestId);
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Ошибка при отправке команды CapturePhoto (requestId: {RequestId}).",
+                    requestId);
+
+                return null;
+            }
+            finally
+            {
+                //Снимаем ожидание, если оно ещё не завершено ответом сервера.
+                lock (_capturePhotoLock)
+                {
+                    if (_pendingCapturePhoto == completion)
+                    {
+                        _pendingCapturePhoto = null;
+                        _pendingCapturePhotoRequestId = null;
+                    }
+                }
+            }
+        }
+
+        // Пытается разобрать сообщение канала команд как ответ на запрос с requestId.
+        // Возвращает true, если сообщение является таким ответом (его не нужно
+        // показывать пользователю как есть). Ожидающую команду завершает, только
+        // если requestId совпадает с текущим запросом.
+        private bool TryHandleCapturePhotoResponse(string message)
+        {
+            //Ответ сервера — JSON-объект; остальные сообщения обрабатываем как раньше.
+            if (!message.TrimStart().StartsWith('{'))
+            {
+                return false;
+            }
+
+            CapturePhotoResponseDto? response;
+
+            try
+            {
+                response = JsonSerializer.Deserialize<CapturePhotoResponseDto>(
+                    message,
+                    CameraJsonOptions);
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Получено сообщение канала команд с некорректным JSON: {Message}",
+                    message);
+
+                return false;
+            }
+
+            //Ответ без requestId нельзя сопоставить с запросом.
+            if (response is null || string.IsNullOrWhiteSpace(response.requestId))
+            {
+                return false;
+            }
+
+            TaskCompletionSource<CapturePhotoResponseDto>? completion = null;
+
+            lock (_capturePhotoLock)
+            {
+                if (_pendingCapturePhoto is not null
+                    && _pendingCapturePhotoRequestId == response.requestId)
+                {
+                    completion = _pendingCapturePhoto;
+                    _pendingCapturePhoto = null;
+                    _pendingCapturePhotoRequestId = null;
+                }
+            }
+
+            if (completion is null)
+            {
+                //Ответ на чужой или уже завершённый запрос — ожидание не трогаем.
+                _logger.LogWarning(
+                    "Получен ответ на CapturePhoto с неизвестным requestId: {RequestId}. Ответ проигнорирован.",
+                    response.requestId);
+
+                return true;
+            }
+
+            _logger.LogInformation(
+                "Получен ответ на CapturePhoto (requestId: {RequestId}, success: {Success}, fileName: {FileName}).",
+                response.requestId,
+                response.success,
+                response.fileName);
+
+            completion.TrySetResult(response);
+            return true;
+        }
+
+        // Прерывает ожидание ответа на CapturePhoto (например, при обрыве связи).
+        private void FailPendingCapturePhoto()
+        {
+            TaskCompletionSource<CapturePhotoResponseDto>? completion;
+
+            lock (_capturePhotoLock)
+            {
+                completion = _pendingCapturePhoto;
+                _pendingCapturePhoto = null;
+                _pendingCapturePhotoRequestId = null;
+            }
+
+            completion?.TrySetCanceled();
+        }
+
         // Выводит данные, принятые сервером по каналу команд (порт 5005).
-        // Временный MessageBox — только для теста.
+        // Ответ на CapturePhoto передаётся ожидающей команде, остальные сообщения
+        // временно показываются в MessageBox — только для теста.
         private void OnCommandMessageReceived(string message)
         {
+            if (TryHandleCapturePhotoResponse(message))
+            {
+                return;
+            }
+
             InvokeOnUiThread(() => MessageBox.Show(
                 message,
                 "Канал команд (порт 5005)",
@@ -1066,6 +1279,26 @@ namespace PromVesClient
                 MessageBox.Show("Введите корректное значение грузоподъёмности", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 btnSaveWeight.Enabled = true;
                 return;
+            }
+            //После успешной проверки полей запрашиваем у сервера фотофиксацию
+            //взвешивания. Ошибка фотофиксации не отменяет сохранение данных:
+            //результат взвешивания уже получен и проверен.
+            if (_currentUserService.UseCamera)
+            {
+                CapturePhotoResponseDto? photoResponse = await RequestCapturePhotoAsync();
+
+                if (photoResponse is null)
+                {
+                    MessageBox.Show("Сервер не ответил на запрос фотофиксации взвешивания", "Ошибка фотофиксации", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                else if (!photoResponse.success)
+                {
+                    MessageBox.Show("Сервер не смог выполнить фотофиксацию взвешивания", "Ошибка фотофиксации", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                else
+                {
+                    MessageBox.Show($"Фотофиксация выполнена. Файл: {photoResponse.fileName}", "Фотофиксация", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             }
             //ссоздание квитанции
             var resultsaveReceipt = await _staticWeighingService.saveReceiptAsync(IdReceipt, "Статическое взвешивание", _currentUserService.CurrentUser.Name);
