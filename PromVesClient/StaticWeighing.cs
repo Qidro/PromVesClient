@@ -79,6 +79,34 @@ namespace PromVesClient
         private volatile bool _isClosing;
         private volatile bool _isWeighingActive;
         private int _reconnectInProgress;
+        //Отдельный флаг переподключения для канала команд (порт 5005).
+        //Каналы веса (5002) и команд (5005) живут независимо: обрыв одного
+        //не должен останавливать переподключение другого, поэтому флаги разные.
+        private int _commandReconnectInProgress;
+        //Последняя команда, успешно отправленная камере ("StartCapture"/"EndCapture").
+        //После переподключения канала 5005 её нужно повторить, иначе сервер
+        //останется в старом состоянии и захват видео не возобновится.
+        private string? _lastCaptureCommand;
+
+        //Таймер периодической проверки канала команд (порт 5005).
+        //По этому порту данные могут не приходить очень долго, поэтому следить
+        //за связью по приёму сообщений нельзя — проверяем само TCP-соединение.
+        private readonly System.Windows.Forms.Timer commandChannelTimer = new();
+        //Интервал проверки живости канала команд.
+        private const int CommandChannelCheckIntervalMs = 30000;
+        //Пауза между попытками переподключения канала команд.
+        private const int CommandChannelReconnectDelayMs = 5000;
+        //Ограниченное число попыток отправки завершающей команды (EndCapture).
+        //Отправка идёт в фоне, поэтому окончание взвешивания не ждёт 5005.
+        private const int FinalCaptureCommandAttempts = 3;
+        //Максимальное время ожидания одной попытки отправки завершающей команды.
+        //Ограничение нужно, если SendMessageAsync зациклится на «наполовину живом» сокете.
+        private const int FinalCaptureCommandTimeoutMs = 2000;
+        //Пауза между попытками отправки завершающей команды.
+        private const int FinalCaptureCommandDelayMs = 500;
+        //Номер текущего взвешивания. Фоновая отправка EndCapture проверяет его,
+        //чтобы не отключить канал 5005 уже начавшегося нового взвешивания.
+        private int _weighingSession;
         //поля предназначенные для передачи данных в методы сохранения данных  в БД
         private decimal TareWeight;
         private decimal GrossWeight;
@@ -134,8 +162,8 @@ namespace PromVesClient
             //приём данных канала команд (5005): на время теста показываем полученное в MessageBox
             _commandTcpService.MessageReceived += OnCommandMessageReceived;
             //ошибки канала команд не должны влиять на взвешивание — только лог
-            _commandTcpService.ConnectionError += ex =>
-                _logger.LogWarning(ex, "Ошибка канала команд (порт 5005).");
+            //и отдельное (независимое от канала веса) переподключение этого канала
+            _commandTcpService.ConnectionError += OnCommandConnectionError;
             //добавляем при закрытии формы проверку на окончания взвешивания
             this.FormClosing += Form1_FormClosing;
             //formsPlot1.Plot.Axes.Bottom.TickLabelStyle.IsVisible = false;
@@ -185,6 +213,11 @@ namespace PromVesClient
             graphTimer.Interval = 1000; // 1 секунда
             //сохраняем функцию, которая будет работать с тиком
             graphTimer.Tick += GraphTimer_Tick;
+
+            //таймер проверки живости канала команд (порт 5005):
+            //при обрыве запускает отдельное переподключение этого канала
+            commandChannelTimer.Interval = CommandChannelCheckIntervalMs;
+            commandChannelTimer.Tick += CommandChannelTimer_Tick;
             formsPlot1.Refresh();
             //сохраняем ссылки
             pictureBoxesList = new List<PictureBox>
@@ -311,11 +344,20 @@ namespace PromVesClient
                     graphTimer.Start();
                     IdReceipt = Guid.NewGuid();
                     _isWeighingActive = true;
+                    //новый номер взвешивания: старая фоновая задача завершения
+                    //канала команд увидит несовпадение и не тронет новый канал
+                    Interlocked.Increment(ref _weighingSession);
+                    //новое взвешивание — прежняя команда камеры больше не актуальна
+                    _lastCaptureCommand = null;
 
                     if (_currentUserService.UseCamera)
                     {
                         // Второе соединение к тому же IP, но на порт 5005 — канал команд.
                         await ConnectCommandChannelAsync();
+                        // Периодически проверяем живость канала команд: данные по
+                        // нему могут не приходить долго, поэтому обрыв определяем
+                        // не по молчанию сервера, а по состоянию сокета.
+                        commandChannelTimer.Start();
                         // Уведомляем сервер о начале захвата. Ошибка связи не должна
                         // отменять локальное начало операции взвешивания.
                         await TrySendCaptureCommandAsync("StartCapture");
@@ -332,6 +374,7 @@ namespace PromVesClient
                     //_client?.Close();
                     await _tcpService.DisconnectAsync();
                     //закрываем и канал команд, если он успел подключиться
+                    commandChannelTimer.Stop();
                     await _commandTcpService.DisconnectAsync();
                     //MessageBox.Show("Соединение закрыто");
                     graphTimer.Stop();
@@ -349,19 +392,33 @@ namespace PromVesClient
 
                 //_stream?.Close();
                 //_client?.Close();
-                if(_currentUserService.UseCamera)
+                // Сначала помечаем взвешивание завершённым: все фоновые циклы
+                // переподключения (канал веса 5002 и канал команд 5005) должны
+                // прекратиться, иначе они могут ждать сеть и мешать окончанию.
+                _isWeighingActive = false;
+                //канал команд больше не проверяем: взвешивание завершено
+                commandChannelTimer.Stop();
+
+                if (_currentUserService.UseCamera)
                 {
-                    // Уведомляем сервер о завершении захвата. Ошибка связи не должна
-                    // отменять локальное завершение операции взвешивания.
-                    await TrySendCaptureCommandAsync("EndCapture");
+                    // Отправка EndCapture и последующее отключение порта 5005
+                    // выполняются в фоне: окончание взвешивания не ждёт канал
+                    // команд, даже если он отвалился. Число попыток ограничено,
+                    // при неудаче — только лог.
+                    _ = FinishCommandChannelAsync(
+                        "EndCapture",
+                        Volatile.Read(ref _weighingSession));
                 }
+                else
+                {
+                    // Камера не используется — канал команд не нужен, закрываем сразу.
+                    await _commandTcpService.DisconnectAsync();
+                }
+
                 await _tcpService.DisconnectAsync();
-                //закрываем канал команд (порт 5005) вместе с каналом веса
-                await _commandTcpService.DisconnectAsync();
 
                 //MessageBox.Show("Соединение закрыто");
                 graphTimer.Stop();
-                _isWeighingActive = false;
 
                 btnWeighing.Text = "Начать взвешивание";
             }
@@ -369,8 +426,16 @@ namespace PromVesClient
 
         // Подключает канал команд к тому же IP, но на порт 5005.
         // Ошибка подключения не отменяет взвешивание — только предупреждение.
-        private async Task ConnectCommandChannelAsync()
+        // showErrorMessage = false используется при внутренних повторах, чтобы
+        // не показывать пользователю несколько окон подряд.
+        private async Task ConnectCommandChannelAsync(bool showErrorMessage = true)
         {
+            // Уже подключены — повторное подключение не требуется.
+            if (_commandTcpService.ServerConnected)
+            {
+                return;
+            }
+
             try
             {
                 await _commandTcpService.ConnectAsync(5005);
@@ -379,38 +444,282 @@ namespace PromVesClient
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Не удалось подключиться к каналу команд (порт 5005).");
-                MessageBox.Show(
-                    $"Не удалось подключиться к каналу команд (порт 5005): {ex.Message}",
-                    "Ошибка подключения",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
+
+                if (showErrorMessage)
+                {
+                    InvokeOnUiThread(() => MessageBox.Show(
+                        $"Не удалось подключиться к каналу команд (порт 5005): {ex.Message}",
+                        "Ошибка подключения",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning));
+                }
             }
         }
 
-        // Безопасно отправляет команду управления захватом через канал команд (порт 5005)
-        // и не выбрасывает исключение в основной сценарий взвешивания.
-        private async Task TrySendCaptureCommandAsync(string command)
+        // Безопасно отправляет команду управления захватом через канал команд (порт 5005).
+        // Если команду отправить не удалось (нет соединения или запись в сокет не прошла),
+        // канал переподключается и команда отправляется снова — до maxAttempts попыток.
+        // Исключения не выбрасываются в основной сценарий взвешивания.
+        private async Task<bool> TrySendCaptureCommandAsync(string command, int maxAttempts = 3)
         {
-            try
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
-                if (!await _commandTcpService.SendMessageAsync(command))
+                try
                 {
-                    MessageBox.Show(
-                        $"Не удалось отправить серверу команду {command}.",
-                        "Ошибка отправки",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning);
+                    // Соединения нет (канал ещё не подключён или был потерян) —
+                    // восстанавливаем его перед отправкой, иначе отправлять некуда.
+                    if (!_commandTcpService.ServerConnected)
+                    {
+                        await ConnectCommandChannelAsync(showErrorMessage: false);
+                    }
+
+                    if (await _commandTcpService.SendMessageAsync(command))
+                    {
+                        // Запоминаем применённую команду: после переподключения
+                        // канала её нужно будет повторить.
+                        _lastCaptureCommand = command;
+
+                        _logger.LogInformation(
+                            "Команда {Command} отправлена по каналу команд (порт 5005), попытка {Attempt}.",
+                            command,
+                            attempt);
+
+                        return true;
+                    }
+
+                    _logger.LogWarning(
+                        "Не удалось отправить команду {Command} по каналу команд (порт 5005), попытка {Attempt} из {MaxAttempts}.",
+                        command,
+                        attempt,
+                        maxAttempts);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(
+                        ex,
+                        "Ошибка отправки команды {Command} по каналу команд (порт 5005), попытка {Attempt} из {MaxAttempts}.",
+                        command,
+                        attempt,
+                        maxAttempts);
+                }
+
+                // Перед следующей попыткой даём каналу время восстановиться.
+                if (attempt < maxAttempts)
+                {
+                    await Task.Delay(CommandChannelReconnectDelayMs);
                 }
             }
-            catch (Exception ex)
+
+            // Все попытки исчерпаны — сообщаем пользователю, но взвешивание не прерываем.
+            InvokeOnUiThread(() => MessageBox.Show(
+                $"Не удалось отправить серверу команду {command} после {maxAttempts} попыток.",
+                "Ошибка отправки",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning));
+
+            return false;
+        }
+
+        // Отправляет завершающую команду камеры (EndCapture) в фоне и закрывает канал команд.
+        // Вызывается БЕЗ await при окончании взвешивания, поэтому не задерживает
+        // ни интерфейс, ни другие процессы: даже если порт 5005 отвалился,
+        // пользователь сразу видит завершённое взвешивание.
+        // Число попыток ограничено, переподключений нет. Если команду отправить
+        // не удалось — только запись в лог, затем отключение от 5005.
+        // session — номер взвешивания: если за это время начали новое,
+        // задача считается устаревшей и не трогает уже новый канал команд.
+        private async Task FinishCommandChannelAsync(string command, int session)
+        {
+            bool sent = false;
+
+            try
             {
-                _logger.LogError(ex, "Ошибка отправки команды {Command}.", command);
-                MessageBox.Show(
-                    $"Не удалось отправить серверу команду {command}: {ex.Message}",
-                    "Ошибка отправки",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
+                // Ограниченное число попыток отправки.
+                for (int attempt = 1; attempt <= FinalCaptureCommandAttempts; attempt++)
+                {
+                    // Началось новое взвешивание — старую команду не отправляем.
+                    if (Volatile.Read(ref _weighingSession) != session)
+                    {
+                        return;
+                    }
+
+                    try
+                    {
+                        // WaitAsync защищает от бесконечного цикла повторов внутри
+                        // SendMessageAsync, если сокет «наполовину живой».
+                        sent = await _commandTcpService.SendMessageAsync(command)
+                            .WaitAsync(TimeSpan.FromMilliseconds(FinalCaptureCommandTimeoutMs));
+
+                        if (sent)
+                        {
+                            _logger.LogInformation(
+                                "Завершающая команда {Command} отправлена по каналу команд (порт 5005), попытка {Attempt}.",
+                                command,
+                                attempt);
+
+                            break;
+                        }
+
+                        _logger.LogWarning(
+                            "Не удалось отправить завершающую команду {Command} по каналу команд (порт 5005), попытка {Attempt} из {MaxAttempts}.",
+                            command,
+                            attempt,
+                            FinalCaptureCommandAttempts);
+                    }
+                    catch (TimeoutException)
+                    {
+                        _logger.LogWarning(
+                            "Канал команд (порт 5005) не подтвердил отправку команды {Command} за {Timeout} мс, попытка {Attempt} из {MaxAttempts}.",
+                            command,
+                            FinalCaptureCommandTimeoutMs,
+                            attempt,
+                            FinalCaptureCommandAttempts);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(
+                            ex,
+                            "Ошибка отправки завершающей команды {Command} по каналу команд (порт 5005), попытка {Attempt} из {MaxAttempts}.",
+                            command,
+                            attempt,
+                            FinalCaptureCommandAttempts);
+                    }
+
+                    // Небольшая пауза перед следующей попыткой.
+                    if (attempt < FinalCaptureCommandAttempts)
+                    {
+                        await Task.Delay(FinalCaptureCommandDelayMs);
+                    }
+                }
+
+                if (!sent)
+                {
+                    // Команду отправить не удалось — только лог, без окон.
+                    _logger.LogWarning(
+                        "Завершающая команда {Command} не отправлена по каналу команд (порт 5005) после {MaxAttempts} попыток.",
+                        command,
+                        FinalCaptureCommandAttempts);
+                }
             }
+            finally
+            {
+                // Отключаемся от 5005 только если это всё ещё то же взвешивание.
+                if (Volatile.Read(ref _weighingSession) == session)
+                {
+                    // Повторять команду при возможных переподключениях больше не нужно.
+                    _lastCaptureCommand = null;
+
+                    try
+                    {
+                        await _commandTcpService.DisconnectAsync();
+
+                        _logger.LogInformation(
+                            "Канал команд (порт 5005) отключён после завершения взвешивания.");
+                    }
+                    catch (Exception ex)
+                    {
+                        // Отключение в фоне не должно порождать необработанных исключений.
+                        _logger.LogWarning(
+                            ex,
+                            "Ошибка отключения канала команд (порт 5005) после завершения взвешивания.");
+                    }
+                }
+            }
+        }
+
+        // Отдельное переподключение канала команд (порт 5005), независимое от канала веса.
+        // Вызывается из события ConnectionError этого канала и из таймера проверки живости.
+        // Своё подключение, свой флаг и свой цикл повторов: обрыв 5005 не трогает 5002,
+        // а обрыв 5002 не мешает восстановить 5005.
+        private async void OnCommandConnectionError(Exception ex)
+        {
+            _logger.LogWarning(ex, "Потеряна связь по каналу команд (порт 5005).");
+
+            // Канал команд нужен только при включённой камере и активном взвешивании.
+            if (_isClosing
+                || !_isWeighingActive
+                || !_currentUserService.UseCamera
+                || Interlocked.Exchange(ref _commandReconnectInProgress, 1) != 0)
+            {
+                return;
+            }
+
+            try
+            {
+                // Повторяем попытки, пока канал не восстановлен и взвешивание активно.
+                while (!_isClosing && _isWeighingActive)
+                {
+                    try
+                    {
+                        if (_commandTcpService.ServerConnected)
+                        {
+                            break;
+                        }
+
+                        // Закрываем остатки старого соединения перед новой попыткой.
+                        await _commandTcpService.DisconnectAsync();
+                        await Task.Delay(CommandChannelReconnectDelayMs);
+
+                        if (_isClosing || !_isWeighingActive)
+                        {
+                            break;
+                        }
+
+                        await _commandTcpService.ConnectAsync(5005);
+                        _logger.LogInformation(
+                            "Канал команд (порт 5005) переподключён.");
+
+                        // Восстанавливаем состояние камеры на сервере: без повторной
+                        // команды сервер может остаться в состоянии «захват остановлен».
+                        if (!string.IsNullOrEmpty(_lastCaptureCommand)
+                            && _isWeighingActive
+                            && !_isClosing)
+                        {
+                            await TrySendCaptureCommandAsync(_lastCaptureCommand);
+                        }
+
+                        break;
+                    }
+                    catch (Exception reconnectEx)
+                    {
+                        _logger.LogWarning(
+                            reconnectEx,
+                            "Не удалось переподключиться к каналу команд (порт 5005). Повтор через {Delay} мс.",
+                            CommandChannelReconnectDelayMs);
+
+                        await Task.Delay(CommandChannelReconnectDelayMs);
+                    }
+                }
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _commandReconnectInProgress, 0);
+            }
+        }
+
+        // Периодическая проверка канала команд (порт 5005).
+        // Данные по этому порту могут не приходить часами, поэтому судить о связи
+        // по приёму сообщений нельзя (в отличие от канала веса, где есть таймаут).
+        // Проверяем сам сокет: если соединение разорвано — запускаем переподключение.
+        private void CommandChannelTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_isClosing || !_isWeighingActive || !_currentUserService.UseCamera)
+            {
+                return;
+            }
+
+            // Сокет ещё жив — ничего не делаем: отсутствие данных для 5005 нормально.
+            if (_commandTcpService.IsConnectionAlive())
+            {
+                return;
+            }
+
+            _logger.LogWarning(
+                "Проверка канала команд (порт 5005): соединение потеряно, запускаем переподключение.");
+
+            // Переиспользуем тот же обработчик, что и при обрыве, обнаруженном при чтении.
+            OnCommandConnectionError(
+                new IOException("Канал команд (порт 5005): соединение потеряно."));
         }
 
         // Выводит данные, принятые сервером по каналу команд (порт 5005).
@@ -853,6 +1162,8 @@ namespace PromVesClient
 
             _isClosing = true;
             _isWeighingActive = false;
+            //останавливаем проверку канала команд, чтобы таймер не сработал после закрытия
+            commandChannelTimer.Stop();
         }
         // Преобразует общий вес в изображения и выводит их на табло.
         private async Task DisplayingValue(decimal sumeWeight)

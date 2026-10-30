@@ -41,11 +41,63 @@ namespace PromVesClient.Service.TcpService
             _stream = _client.GetStream();
             _cts = new CancellationTokenSource();
             ServerConnected = true;
+
+            // Для командного порта 5005 включаем TCP keep-alive.
+            // Данные по этому порту могут не приходить часами, поэтому обычный
+            // таймаут чтения здесь не используется. Без keep-alive «тихий» обрыв
+            // (например, пропало питание сервера и FIN/RST не пришёл) остался бы
+            // незамеченным: ReadLineAsync просто ждал бы данные бесконечно.
+            // Keep-alive заставляет ОС периодически проверять соединение и
+            // разрывать его, после чего чтение завершится и сработает
+            // ConnectionError — форма запустит переподключение канала команд.
+            if (port == 5005)
+            {
+                EnableKeepAlive(_client.Client);
+            }
+
             // Для командного порта 5005 сервер может длительное время не отвечать.
             // Поэтому на нём отключаем таймаут ожидания строки.
             _ = port == 5005
                 ? ReceiveMessagesWithoutTimeoutAsync(_cts.Token)
                 : ReceiveMessagesAsync(_cts.Token);
+        }
+
+        // Настраивает TCP keep-alive с короткими интервалами (значения в секундах).
+        // Используется только для командного канала (5005), где долгое молчание
+        // сервера — норма, но обрыв связи всё равно нужно обнаруживать.
+        private void EnableKeepAlive(Socket socket)
+        {
+            try
+            {
+                socket.SetSocketOption(
+                    SocketOptionLevel.Socket,
+                    SocketOptionName.KeepAlive,
+                    true);
+
+                // Первая проверка после 30 секунд простоя, далее каждые 10 секунд.
+                socket.SetSocketOption(
+                    SocketOptionLevel.Tcp,
+                    SocketOptionName.TcpKeepAliveTime,
+                    30);
+                socket.SetSocketOption(
+                    SocketOptionLevel.Tcp,
+                    SocketOptionName.TcpKeepAliveInterval,
+                    10);
+                // После 3 неудачных проверок соединение считается разорванным.
+                socket.SetSocketOption(
+                    SocketOptionLevel.Tcp,
+                    SocketOptionName.TcpKeepAliveRetryCount,
+                    3);
+            }
+            catch (Exception ex)
+            {
+                // Тонкая настройка поддерживается не всеми системами.
+                // В этом случае keep-alive остаётся включённым, но с системными
+                // интервалами по умолчанию — это тоже рабочий вариант.
+                _logger.LogWarning(
+                    ex,
+                    "Не удалось настроить параметры TCP keep-alive. Используются системные значения.");
+            }
         }
 
         // Находит первый доступный IPv4-адрес компьютера для подключения к серверу.
@@ -76,6 +128,53 @@ namespace PromVesClient.Service.TcpService
             _stream = null;
             _client = null;
         }
+
+        // Проверяет живость текущего TCP-соединения без отправки данных в сеть.
+        // Нужен для командного канала (5005): сервер может молчать часами, поэтому
+        // отсутствие сообщений нельзя считать признаком обрыва, а таймаут чтения
+        // на этом порту отключён. Poll(SelectRead) возвращает true, если в сокете
+        // есть данные ИЛИ соединение закрыто удалённой стороной (тогда Available == 0).
+        public bool IsConnectionAlive()
+        {
+            TcpClient? client = _client;
+
+            // Соединения нет вовсе (до подключения или после DisconnectAsync).
+            if (client is null || !ServerConnected)
+            {
+                return false;
+            }
+
+            try
+            {
+                Socket? socket = client.Client;
+
+                if (socket is null)
+                {
+                    ServerConnected = false;
+                    return false;
+                }
+
+                // Данные для чтения есть — соединение точно живо, их дочитает
+                // фоновый цикл ReceiveMessagesCoreAsync. Если же сокет «читаем»,
+                // но данных нет, значит пришёл FIN — соединение закрыто.
+                if (socket.Poll(0, SelectMode.SelectRead) && socket.Available == 0)
+                {
+                    ServerConnected = false;
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Не удалось проверить состояние TCP-соединения.");
+                ServerConnected = false;
+                return false;
+            }
+        }
+
         // Читает строковые сообщения сервера в фоновом режиме и передаёт их подписчикам.
         public async Task ReceiveMessagesAsync(CancellationToken token)
         {
