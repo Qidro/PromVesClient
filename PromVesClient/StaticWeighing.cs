@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Drawing;
 using DocumentFormat.OpenXml.Office2010.ExcelAc;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PromVesClient.DTO;
 using PromVesClient.Service;
@@ -34,6 +35,9 @@ namespace PromVesClient
         private readonly StaticWeighingService _staticWeighingService;
         //обьект, который отвечает за подключение/отключение/получение данных сервера
         private readonly TcpService _tcpService;
+        //отдельный канал команд камеры (тот же IP, порт 5005):
+        //отправка StartCapture/EndCapture и приём данных сервера
+        private readonly TcpService _commandTcpService;
 
         //private TcpClient? _client;
         //private NetworkStream? _stream;
@@ -84,12 +88,14 @@ namespace PromVesClient
         private int CountPlatform;
         private decimal? InvoiceWeighing;
         // Настраивает форму, графики, табло и подписывает форму на события TCP-сервиса.
-        public StaticWeighing(ILogger<StaticWeighing> logger, StaticWeighingService staticWeighingService, CurrentUserService currentUserService, TcpService tcpService)
+        public StaticWeighing(ILogger<StaticWeighing> logger, StaticWeighingService staticWeighingService, CurrentUserService currentUserService, TcpService tcpService,
+            [FromKeyedServices("CommandTcpService")] TcpService commandTcpService)
         {
             _staticWeighingService = staticWeighingService;
             _logger = logger;
             _currentUserService = currentUserService;
             _tcpService = tcpService;
+            _commandTcpService = commandTcpService;
             int graphCount = _currentUserService.GetGraphsCount();
 
             //Сервер при GraphsCount = 6 присылает данные для трёх платформ,
@@ -125,6 +131,11 @@ namespace PromVesClient
             _tcpService.MessageReceived += ProcessMessage;
             //регистрация метода на ожидание ошибок
             _tcpService.ConnectionError += OnConnectionError;
+            //приём данных канала команд (5005): на время теста показываем полученное в MessageBox
+            _commandTcpService.MessageReceived += OnCommandMessageReceived;
+            //ошибки канала команд не должны влиять на взвешивание — только лог
+            _commandTcpService.ConnectionError += ex =>
+                _logger.LogWarning(ex, "Ошибка канала команд (порт 5005).");
             //добавляем при закрытии формы проверку на окончания взвешивания
             this.FormClosing += Form1_FormClosing;
             //formsPlot1.Plot.Axes.Bottom.TickLabelStyle.IsVisible = false;
@@ -303,6 +314,8 @@ namespace PromVesClient
 
                     if (_currentUserService.UseCamera)
                     {
+                        // Второе соединение к тому же IP, но на порт 5005 — канал команд.
+                        await ConnectCommandChannelAsync();
                         // Уведомляем сервер о начале захвата. Ошибка связи не должна
                         // отменять локальное начало операции взвешивания.
                         await TrySendCaptureCommandAsync("StartCapture");
@@ -318,6 +331,8 @@ namespace PromVesClient
                     //_stream?.Close();
                     //_client?.Close();
                     await _tcpService.DisconnectAsync();
+                    //закрываем и канал команд, если он успел подключиться
+                    await _commandTcpService.DisconnectAsync();
                     //MessageBox.Show("Соединение закрыто");
                     graphTimer.Stop();
                     MessageBox.Show(
@@ -341,6 +356,8 @@ namespace PromVesClient
                     await TrySendCaptureCommandAsync("EndCapture");
                 }
                 await _tcpService.DisconnectAsync();
+                //закрываем канал команд (порт 5005) вместе с каналом веса
+                await _commandTcpService.DisconnectAsync();
 
                 //MessageBox.Show("Соединение закрыто");
                 graphTimer.Stop();
@@ -350,13 +367,33 @@ namespace PromVesClient
             }
         }
 
-        // Безопасно отправляет команду управления захватом и не выбрасывает
-        // исключение в основной сценарий взвешивания.
+        // Подключает канал команд к тому же IP, но на порт 5005.
+        // Ошибка подключения не отменяет взвешивание — только предупреждение.
+        private async Task ConnectCommandChannelAsync()
+        {
+            try
+            {
+                await _commandTcpService.ConnectAsync(5005);
+                _logger.LogInformation("Успешное подключение к серверу 5005 порта");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Не удалось подключиться к каналу команд (порт 5005).");
+                MessageBox.Show(
+                    $"Не удалось подключиться к каналу команд (порт 5005): {ex.Message}",
+                    "Ошибка подключения",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
+        }
+
+        // Безопасно отправляет команду управления захватом через канал команд (порт 5005)
+        // и не выбрасывает исключение в основной сценарий взвешивания.
         private async Task TrySendCaptureCommandAsync(string command)
         {
             try
             {
-                if (!await _tcpService.SendMessageAsync(command))
+                if (!await _commandTcpService.SendMessageAsync(command))
                 {
                     MessageBox.Show(
                         $"Не удалось отправить серверу команду {command}.",
@@ -374,6 +411,17 @@ namespace PromVesClient
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
             }
+        }
+
+        // Выводит данные, принятые сервером по каналу команд (порт 5005).
+        // Временный MessageBox — только для теста.
+        private void OnCommandMessageReceived(string message)
+        {
+            InvokeOnUiThread(() => MessageBox.Show(
+                message,
+                "Канал команд (порт 5005)",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information));
         }
 
         //получение значения с весов

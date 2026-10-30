@@ -41,8 +41,11 @@ namespace PromVesClient.Service.TcpService
             _stream = _client.GetStream();
             _cts = new CancellationTokenSource();
             ServerConnected = true;
-            //вызов метода по получению значения с сервера
-            _ = ReceiveMessagesAsync(_cts.Token);
+            // Для командного порта 5005 сервер может длительное время не отвечать.
+            // Поэтому на нём отключаем таймаут ожидания строки.
+            _ = port == 5005
+                ? ReceiveMessagesWithoutTimeoutAsync(_cts.Token)
+                : ReceiveMessagesAsync(_cts.Token);
         }
 
         // Находит первый доступный IPv4-адрес компьютера для подключения к серверу.
@@ -76,6 +79,20 @@ namespace PromVesClient.Service.TcpService
         // Читает строковые сообщения сервера в фоновом режиме и передаёт их подписчикам.
         public async Task ReceiveMessagesAsync(CancellationToken token)
         {
+            await ReceiveMessagesCoreAsync(token, useReadTimeout: true);
+        }
+
+        // Используется для командного порта 5005, где отсутствие сообщения
+        // в течение 10 секунд не означает потерю соединения.
+        private async Task ReceiveMessagesWithoutTimeoutAsync(CancellationToken token)
+        {
+            await ReceiveMessagesCoreAsync(token, useReadTimeout: false);
+        }
+
+        private async Task ReceiveMessagesCoreAsync(
+            CancellationToken token,
+            bool useReadTimeout)
+        {
             try
             {
                 using var reader = new StreamReader(
@@ -86,17 +103,24 @@ namespace PromVesClient.Service.TcpService
 
                 while (!token.IsCancellationRequested)
                 {
-                    // Таймаут защищает соединение от бесконечного ожидания данных.
-                    using var timeoutCts =
-                        CancellationTokenSource.CreateLinkedTokenSource(token);
-
-                    timeoutCts.CancelAfter(TimeSpan.FromSeconds(10));
-
                     string? message;
 
                     try
                     {
-                        message = await reader.ReadLineAsync(timeoutCts.Token);
+                        if (useReadTimeout)
+                        {
+                            // Таймаут защищает обычные порты от бесконечного ожидания данных.
+                            using var timeoutCts =
+                                CancellationTokenSource.CreateLinkedTokenSource(token);
+
+                            timeoutCts.CancelAfter(TimeSpan.FromSeconds(10));
+                            message = await reader.ReadLineAsync(timeoutCts.Token);
+                        }
+                        else
+                        {
+                            // Для порта 5005 ожидаем строку только до отмены соединения.
+                            message = await reader.ReadLineAsync(token);
+                        }
                     }
                     catch (OperationCanceledException) when (token.IsCancellationRequested)
                     {
@@ -107,7 +131,7 @@ namespace PromVesClient.Service.TcpService
                         ServerConnected = false;
                         return;
                     }
-                    catch (OperationCanceledException)
+                    catch (OperationCanceledException) when (useReadTimeout)
                     {
                         // Истёк таймаут ожидания очередного сообщения.
                         ServerConnected = false;

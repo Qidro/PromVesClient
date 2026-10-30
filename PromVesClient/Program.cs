@@ -66,7 +66,10 @@ namespace PromVesClient
             services.AddSingleton<ComPortService>();
             services.AddSingleton<CameraService>();
             services.AddSingleton<PNSerialPortService>();
+            //канал веса (порт 5002)
             services.AddScoped<TcpService>();
+            //отдельный канал команд камеры (порт 5005): отправка StartCapture/EndCapture и приём ответов
+            services.AddKeyedScoped<TcpService, TcpService>("CommandTcpService");
             services.AddScoped<ReceiptsService>();
             services.AddScoped<ExcelReportService>();
             services.AddSingleton<ReceiptPrintSettingsService>();
