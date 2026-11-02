@@ -22,6 +22,38 @@ namespace PromVesClient.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("PromVesClient.Models.MediaWeighing", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FileNamePhoto")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FileNameVideo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FilePathPhoto")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FilePathVideo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("WeighingId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WeighingId");
+
+                    b.ToTable("MediaWeighings");
+                });
+
             modelBuilder.Entity("PromVesClient.Models.Receipt", b =>
                 {
                     b.Property<Guid>("Id")
@@ -179,6 +211,17 @@ namespace PromVesClient.Migrations
                     b.HasIndex("ReceiptId");
 
                     b.ToTable("Weighings");
+                });
+
+            modelBuilder.Entity("PromVesClient.Models.MediaWeighing", b =>
+                {
+                    b.HasOne("PromVesClient.Models.Weighing", "Weighing")
+                        .WithMany()
+                        .HasForeignKey("WeighingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Weighing");
                 });
 
             modelBuilder.Entity("PromVesClient.Models.Weighing", b =>

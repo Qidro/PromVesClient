@@ -93,6 +93,11 @@ namespace PromVesClient
 
             form.ShowDialog();
         }
+
+        private void dynamicWeighing_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 
 }

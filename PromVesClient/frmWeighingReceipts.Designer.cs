@@ -52,6 +52,7 @@
             receiptInfoLabel = new Label();
             btnPrintReceipt = new Button();
             btnSaveChanges = new Button();
+            btnMedia = new Button();
             ((System.ComponentModel.ISupportInitialize)dataGridViewReceipts).BeginInit();
             groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridViewСards).BeginInit();
@@ -211,6 +212,7 @@
             dataGridViewСards.ReadOnly = true;
             dataGridViewСards.Size = new Size(1097, 417);
             dataGridViewСards.TabIndex = 3;
+            dataGridViewСards.CellContentClick += dataGridViewСards_CellContentClick;
             // 
             // btnResetFilter
             // 
@@ -239,7 +241,7 @@
             btnDeleteCard.BackColor = Color.Red;
             btnDeleteCard.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
             btnDeleteCard.ForeColor = SystemColors.ControlLightLight;
-            btnDeleteCard.Location = new Point(1132, 543);
+            btnDeleteCard.Location = new Point(1132, 585);
             btnDeleteCard.Name = "btnDeleteCard";
             btnDeleteCard.Size = new Size(355, 36);
             btnDeleteCard.TabIndex = 6;
@@ -252,7 +254,7 @@
             btnDeleteReceipt.BackColor = Color.Red;
             btnDeleteReceipt.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
             btnDeleteReceipt.ForeColor = SystemColors.ControlLightLight;
-            btnDeleteReceipt.Location = new Point(1132, 585);
+            btnDeleteReceipt.Location = new Point(1132, 627);
             btnDeleteReceipt.Name = "btnDeleteReceipt";
             btnDeleteReceipt.Size = new Size(355, 36);
             btnDeleteReceipt.TabIndex = 7;
@@ -292,11 +294,23 @@
             btnSaveChanges.UseVisualStyleBackColor = true;
             btnSaveChanges.Click += btnSaveChanges_Click_1;
             // 
+            // btnMedia
+            // 
+            btnMedia.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            btnMedia.Location = new Point(1132, 543);
+            btnMedia.Name = "btnMedia";
+            btnMedia.Size = new Size(355, 36);
+            btnMedia.TabIndex = 13;
+            btnMedia.Text = "Медиа взвешивания";
+            btnMedia.UseVisualStyleBackColor = true;
+            btnMedia.Click += btnMedia_Click;
+            // 
             // frmWeighingReceipts
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1548, 909);
+            Controls.Add(btnMedia);
             Controls.Add(btnSaveChanges);
             Controls.Add(btnPrintReceipt);
             Controls.Add(receiptInfoLabel);
@@ -347,5 +361,6 @@
         private TextBox shipperTextBox;
         private TextBox cargoTextBox;
         private Button btnSaveChanges;
+        private Button btnMedia;
     }
 }

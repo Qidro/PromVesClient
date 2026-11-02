@@ -273,6 +273,17 @@ namespace PromVesClient.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap png_transparent_video_production_freemake_video_er_video_icon_free_angle_text_rectangle {
+            get {
+                object obj = ResourceManager.GetObject("png-transparent-video-production-freemake-video-er-video-icon-free-angle-text-rec" +
+                        "tangle", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap vesy_vagonnie {
             get {
                 object obj = ResourceManager.GetObject("vesy-vagonnie", resourceCulture);

@@ -40,8 +40,8 @@
             ComSetitem = new ToolStripMenuItem();
             отчетыToolStripMenuItem = new ToolStripMenuItem();
             справочникВагоновToolStripMenuItem = new ToolStripMenuItem();
-            label1 = new Label();
             PMCalibrationToolStripMenuItem = new ToolStripMenuItem();
+            label1 = new Label();
             menuStrip1.SuspendLayout();
             SuspendLayout();
             // 
@@ -65,6 +65,7 @@
             dynamicWeighing.TabIndex = 1;
             dynamicWeighing.Text = "Динамическое взвешивание";
             dynamicWeighing.UseVisualStyleBackColor = true;
+            dynamicWeighing.Click += dynamicWeighing_Click;
             // 
             // button1
             // 
@@ -136,6 +137,13 @@
             справочникВагоновToolStripMenuItem.Text = "Справочник вагонов";
             справочникВагоновToolStripMenuItem.Click += справочникВагоновToolStripMenuItem_Click;
             // 
+            // PMCalibrationToolStripMenuItem
+            // 
+            PMCalibrationToolStripMenuItem.Name = "PMCalibrationToolStripMenuItem";
+            PMCalibrationToolStripMenuItem.Size = new Size(195, 22);
+            PMCalibrationToolStripMenuItem.Text = "Калибровка ПН";
+            PMCalibrationToolStripMenuItem.Click += калибровкаПНToolStripMenuItem_Click;
+            // 
             // label1
             // 
             label1.AutoSize = true;
@@ -145,13 +153,6 @@
             label1.TabIndex = 4;
             label1.Text = "label1";
             label1.Visible = false;
-            // 
-            // PMCalibrationToolStripMenuItem
-            // 
-            PMCalibrationToolStripMenuItem.Name = "PMCalibrationToolStripMenuItem";
-            PMCalibrationToolStripMenuItem.Size = new Size(195, 22);
-            PMCalibrationToolStripMenuItem.Text = "Калибровка ПН";
-            PMCalibrationToolStripMenuItem.Click += калибровкаПНToolStripMenuItem_Click;
             // 
             // MainMenu
             // 

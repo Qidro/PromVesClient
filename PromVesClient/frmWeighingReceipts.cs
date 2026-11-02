@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PromVesClient.DTO;
 using PromVesClient.Models;
@@ -20,7 +21,7 @@ namespace PromVesClient
         private readonly CurrentUserService _currentUserService;
         private readonly ExcelReportService _excelReportService;
         private readonly ILogger<frmWeighingReceipts> _logger;
-
+        private readonly IServiceProvider _serviceProvider;
         private List<ReceiptDto> receiptList;
 
         private List<CardsDto> cardsList = new();
@@ -34,12 +35,13 @@ namespace PromVesClient
         private string Shipper;
         //поле для печати квитанции
         private string OperatorReceipt;
-        public frmWeighingReceipts(ReceiptsService receiptsService, CurrentUserService currentUserService, ILogger<frmWeighingReceipts> logger, ExcelReportService excelReportService)
+        public frmWeighingReceipts(ReceiptsService receiptsService, CurrentUserService currentUserService, ILogger<frmWeighingReceipts> logger, ExcelReportService excelReportService, IServiceProvider serviceProvider)
         {
             _receiptsService = receiptsService;
             _currentUserService = currentUserService;
             _excelReportService = excelReportService;
             _logger = logger;
+            _serviceProvider = serviceProvider;
             InitializeComponent();
             dataGridViewСards.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
             dataGridViewСards.CellValidating += dataGridViewСards_CellValidating;
@@ -814,6 +816,18 @@ namespace PromVesClient
         }
 
         private void frmWeighingReceipts_Load_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnMedia_Click(object sender, EventArgs e)
+        {
+            var form = _serviceProvider.GetRequiredService<MediaWeighingForm>();
+
+            form.ShowDialog();
+        }
+
+        private void dataGridViewСards_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
 
         }

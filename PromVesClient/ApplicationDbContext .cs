@@ -17,6 +17,7 @@ namespace PromVesClient
         public DbSet<Receipt> Receipts => Set<Receipt>();
         public DbSet<Weighing> Weighings => Set<Weighing>();
         public DbSet<Wagon> Wagons => Set<Wagon>();
+        public DbSet<MediaWeighing> MediaWeighings => Set<MediaWeighing>();
         //настрйока каскадного удаления
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
