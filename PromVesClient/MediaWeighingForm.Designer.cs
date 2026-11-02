@@ -28,25 +28,26 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MediaWeighingForm));
             button1 = new Button();
             panel1 = new Panel();
-            button2 = new Button();
-            btnReadZeroCode = new Button();
-            textBox1 = new TextBox();
+            btnOpenFolderVideo = new Button();
+            btnOpenFolderPhoto = new Button();
+            textBoxVagonNumber = new TextBox();
             label10 = new Label();
-            textBoxReferenceCode = new TextBox();
+            textBoxVideoName = new TextBox();
             label9 = new Label();
-            textBoxZeroCode = new TextBox();
-            textBoxCurrentADCcode = new TextBox();
+            textBoxPhotoName = new TextBox();
+            textBoxDataTime = new TextBox();
             label8 = new Label();
             label1 = new Label();
             panel2 = new Panel();
             label7 = new Label();
             panel3 = new Panel();
-            pictureBox1 = new PictureBox();
-            labelTimeVideo = new Label();
             labelDateVideo = new Label();
             labelNameVideo = new Label();
+            pictureBox1 = new PictureBox();
+            labelTimeVideo = new Label();
             pictureBoxWagon = new PictureBox();
             panel1.SuspendLayout();
             panel2.SuspendLayout();
@@ -68,14 +69,14 @@
             // panel1
             // 
             panel1.BorderStyle = BorderStyle.FixedSingle;
-            panel1.Controls.Add(button2);
-            panel1.Controls.Add(btnReadZeroCode);
-            panel1.Controls.Add(textBox1);
+            panel1.Controls.Add(btnOpenFolderVideo);
+            panel1.Controls.Add(btnOpenFolderPhoto);
+            panel1.Controls.Add(textBoxVagonNumber);
             panel1.Controls.Add(label10);
-            panel1.Controls.Add(textBoxReferenceCode);
+            panel1.Controls.Add(textBoxVideoName);
             panel1.Controls.Add(label9);
-            panel1.Controls.Add(textBoxZeroCode);
-            panel1.Controls.Add(textBoxCurrentADCcode);
+            panel1.Controls.Add(textBoxPhotoName);
+            panel1.Controls.Add(textBoxDataTime);
             panel1.Controls.Add(label8);
             panel1.Controls.Add(label1);
             panel1.Location = new Point(551, 3);
@@ -83,35 +84,37 @@
             panel1.Size = new Size(518, 314);
             panel1.TabIndex = 2;
             // 
-            // button2
+            // btnOpenFolderVideo
             // 
-            button2.Font = new Font("Segoe UI", 11.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            button2.Location = new Point(261, 247);
-            button2.Name = "button2";
-            button2.Size = new Size(239, 38);
-            button2.TabIndex = 34;
-            button2.Text = "Открыть папку с видео";
-            button2.UseVisualStyleBackColor = true;
+            btnOpenFolderVideo.Font = new Font("Segoe UI", 11.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            btnOpenFolderVideo.Location = new Point(261, 247);
+            btnOpenFolderVideo.Name = "btnOpenFolderVideo";
+            btnOpenFolderVideo.Size = new Size(239, 38);
+            btnOpenFolderVideo.TabIndex = 34;
+            btnOpenFolderVideo.Text = "Открыть папку с видео";
+            btnOpenFolderVideo.UseVisualStyleBackColor = true;
+            btnOpenFolderVideo.Click += button2_Click;
             // 
-            // btnReadZeroCode
+            // btnOpenFolderPhoto
             // 
-            btnReadZeroCode.Font = new Font("Segoe UI", 11.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            btnReadZeroCode.Location = new Point(16, 247);
-            btnReadZeroCode.Name = "btnReadZeroCode";
-            btnReadZeroCode.Size = new Size(239, 38);
-            btnReadZeroCode.TabIndex = 33;
-            btnReadZeroCode.Text = "Открыть папку с фотографией";
-            btnReadZeroCode.UseVisualStyleBackColor = true;
+            btnOpenFolderPhoto.Font = new Font("Segoe UI", 11.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            btnOpenFolderPhoto.Location = new Point(16, 247);
+            btnOpenFolderPhoto.Name = "btnOpenFolderPhoto";
+            btnOpenFolderPhoto.Size = new Size(239, 38);
+            btnOpenFolderPhoto.TabIndex = 33;
+            btnOpenFolderPhoto.Text = "Открыть папку с фотографией";
+            btnOpenFolderPhoto.UseVisualStyleBackColor = true;
+            btnOpenFolderPhoto.Click += btnReadZeroCode_Click;
             // 
-            // textBox1
+            // textBoxVagonNumber
             // 
-            textBox1.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            textBox1.Location = new Point(263, 70);
-            textBox1.Multiline = true;
-            textBox1.Name = "textBox1";
-            textBox1.ReadOnly = true;
-            textBox1.Size = new Size(237, 30);
-            textBox1.TabIndex = 32;
+            textBoxVagonNumber.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            textBoxVagonNumber.Location = new Point(263, 70);
+            textBoxVagonNumber.Multiline = true;
+            textBoxVagonNumber.Name = "textBoxVagonNumber";
+            textBoxVagonNumber.ReadOnly = true;
+            textBoxVagonNumber.Size = new Size(237, 30);
+            textBoxVagonNumber.TabIndex = 32;
             // 
             // label10
             // 
@@ -123,15 +126,15 @@
             label10.TabIndex = 29;
             label10.Text = "Название видео";
             // 
-            // textBoxReferenceCode
+            // textBoxVideoName
             // 
-            textBoxReferenceCode.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            textBoxReferenceCode.Location = new Point(263, 181);
-            textBoxReferenceCode.Multiline = true;
-            textBoxReferenceCode.Name = "textBoxReferenceCode";
-            textBoxReferenceCode.ReadOnly = true;
-            textBoxReferenceCode.Size = new Size(237, 30);
-            textBoxReferenceCode.TabIndex = 28;
+            textBoxVideoName.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            textBoxVideoName.Location = new Point(263, 181);
+            textBoxVideoName.Multiline = true;
+            textBoxVideoName.Name = "textBoxVideoName";
+            textBoxVideoName.ReadOnly = true;
+            textBoxVideoName.Size = new Size(237, 30);
+            textBoxVideoName.TabIndex = 28;
             // 
             // label9
             // 
@@ -143,25 +146,25 @@
             label9.TabIndex = 27;
             label9.Text = "Название фотографии";
             // 
-            // textBoxZeroCode
+            // textBoxPhotoName
             // 
-            textBoxZeroCode.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            textBoxZeroCode.Location = new Point(263, 145);
-            textBoxZeroCode.Multiline = true;
-            textBoxZeroCode.Name = "textBoxZeroCode";
-            textBoxZeroCode.ReadOnly = true;
-            textBoxZeroCode.Size = new Size(237, 30);
-            textBoxZeroCode.TabIndex = 26;
+            textBoxPhotoName.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            textBoxPhotoName.Location = new Point(263, 145);
+            textBoxPhotoName.Multiline = true;
+            textBoxPhotoName.Name = "textBoxPhotoName";
+            textBoxPhotoName.ReadOnly = true;
+            textBoxPhotoName.Size = new Size(237, 30);
+            textBoxPhotoName.TabIndex = 26;
             // 
-            // textBoxCurrentADCcode
+            // textBoxDataTime
             // 
-            textBoxCurrentADCcode.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            textBoxCurrentADCcode.Location = new Point(263, 109);
-            textBoxCurrentADCcode.Multiline = true;
-            textBoxCurrentADCcode.Name = "textBoxCurrentADCcode";
-            textBoxCurrentADCcode.ReadOnly = true;
-            textBoxCurrentADCcode.Size = new Size(237, 30);
-            textBoxCurrentADCcode.TabIndex = 25;
+            textBoxDataTime.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            textBoxDataTime.Location = new Point(263, 109);
+            textBoxDataTime.Multiline = true;
+            textBoxDataTime.Name = "textBoxDataTime";
+            textBoxDataTime.ReadOnly = true;
+            textBoxDataTime.Size = new Size(237, 30);
+            textBoxDataTime.TabIndex = 25;
             // 
             // label8
             // 
@@ -216,24 +219,6 @@
             panel3.Size = new Size(518, 99);
             panel3.TabIndex = 3;
             // 
-            // pictureBox1
-            // 
-            pictureBox1.Image = Properties.Resources.png_transparent_video_production_freemake_video_er_video_icon_free_angle_text_rectangle;
-            pictureBox1.Location = new Point(-1, -1);
-            pictureBox1.Name = "pictureBox1";
-            pictureBox1.Size = new Size(74, 61);
-            pictureBox1.TabIndex = 5;
-            pictureBox1.TabStop = false;
-            // 
-            // labelTimeVideo
-            // 
-            labelTimeVideo.AutoSize = true;
-            labelTimeVideo.Location = new Point(16, 63);
-            labelTimeVideo.Name = "labelTimeVideo";
-            labelTimeVideo.Size = new Size(38, 15);
-            labelTimeVideo.TabIndex = 4;
-            labelTimeVideo.Text = "label2";
-            // 
             // labelDateVideo
             // 
             labelDateVideo.AutoSize = true;
@@ -252,11 +237,29 @@
             labelNameVideo.TabIndex = 2;
             labelNameVideo.Text = "label2";
             // 
+            // pictureBox1
+            // 
+            pictureBox1.Image = Properties.Resources.png_transparent_video_production_freemake_video_er_video_icon_free_angle_text_rectangle;
+            pictureBox1.Location = new Point(-1, -1);
+            pictureBox1.Name = "pictureBox1";
+            pictureBox1.Size = new Size(74, 61);
+            pictureBox1.TabIndex = 5;
+            pictureBox1.TabStop = false;
+            // 
+            // labelTimeVideo
+            // 
+            labelTimeVideo.AutoSize = true;
+            labelTimeVideo.Location = new Point(16, 63);
+            labelTimeVideo.Name = "labelTimeVideo";
+            labelTimeVideo.Size = new Size(38, 15);
+            labelTimeVideo.TabIndex = 4;
+            labelTimeVideo.Text = "label2";
+            // 
             // pictureBoxWagon
             // 
             pictureBoxWagon.Location = new Point(12, 3);
             pictureBoxWagon.Name = "pictureBoxWagon";
-            pictureBoxWagon.Size = new Size(508, 441);
+            pictureBoxWagon.Size = new Size(533, 441);
             pictureBoxWagon.TabIndex = 4;
             pictureBoxWagon.TabStop = false;
             // 
@@ -269,8 +272,9 @@
             Controls.Add(panel3);
             Controls.Add(panel2);
             Controls.Add(panel1);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "MediaWeighingForm";
-            Text = "MediaWeighingForm";
+            Text = "Фотовидеофиксация";
             Load += MediaWeighingForm_Load;
             panel1.ResumeLayout(false);
             panel1.PerformLayout();
@@ -288,16 +292,16 @@
         private Panel panel1;
         private Panel panel2;
         private Label label7;
-        private TextBox textBox1;
+        private TextBox textBoxVagonNumber;
         private Label label10;
-        private TextBox textBoxReferenceCode;
+        private TextBox textBoxVideoName;
         private Label label9;
-        private TextBox textBoxZeroCode;
-        private TextBox textBoxCurrentADCcode;
+        private TextBox textBoxPhotoName;
+        private TextBox textBoxDataTime;
         private Label label8;
         private Label label1;
-        private Button button2;
-        private Button btnReadZeroCode;
+        private Button btnOpenFolderVideo;
+        private Button btnOpenFolderPhoto;
         private Panel panel3;
         private Label labelTimeVideo;
         private Label labelDateVideo;

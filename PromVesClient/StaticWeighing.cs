@@ -33,6 +33,7 @@ namespace PromVesClient
         private readonly ILogger<StaticWeighing> _logger;
 
         private readonly StaticWeighingService _staticWeighingService;
+        private readonly PhotofixationService _photofixationService;
         //обьект, который отвечает за подключение/отключение/получение данных сервера
         private readonly TcpService _tcpService;
         //отдельный канал команд камеры (тот же IP, порт 5005):
@@ -133,11 +134,19 @@ namespace PromVesClient
         //количества платформ
         private int CountPlatform;
         private decimal? InvoiceWeighing;
-        // Настраивает форму, графики, табло и подписывает форму на события TCP-сервиса.
-        public StaticWeighing(ILogger<StaticWeighing> logger, StaticWeighingService staticWeighingService, CurrentUserService currentUserService, TcpService tcpService,
+
+        // Имена файлов, полученные от сервера фотофиксации.
+        // Эти значения сохраняются в MediaWeighings после записи самого взвешивания.
+        private string? fileNameVideo;
+        private string? fileNamePhoto;
+        // PhotofixationService сохраняет имена файлов и пути к ним в БД.
+        // StaticWeighing передаёт ему идентификатор созданной записи Weighing.
+        // Конструктор настраивает форму, графики, табло и подписывает форму на события TCP-сервисов.
+        public StaticWeighing(ILogger<StaticWeighing> logger, StaticWeighingService staticWeighingService, PhotofixationService photofixationService, CurrentUserService currentUserService, TcpService tcpService,
             [FromKeyedServices("CommandTcpService")] TcpService commandTcpService)
         {
             _staticWeighingService = staticWeighingService;
+            _photofixationService = photofixationService;
             _logger = logger;
             _currentUserService = currentUserService;
             _tcpService = tcpService;
@@ -929,9 +938,9 @@ namespace PromVesClient
             completion?.TrySetCanceled();
         }
 
-        // Выводит данные, принятые сервером по каналу команд (порт 5005).
-        // Ответ на CapturePhoto передаётся ожидающей команде, остальные сообщения
-        // временно показываются в MessageBox — только для теста.
+        // Обрабатывает данные, принятые сервером по каналу команд (порт 5005).
+        // Ответ CapturePhoto передаётся ожидающей команде, а отдельное сообщение
+        // с именем видео сохраняется до нажатия кнопки сохранения взвешивания.
         private void OnCommandMessageReceived(string message)
         {
             if (TryHandleCapturePhotoResponse(message))
@@ -939,11 +948,9 @@ namespace PromVesClient
                 return;
             }
 
-            InvokeOnUiThread(() => MessageBox.Show(
-                message,
-                "Канал команд (порт 5005)",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information));
+            InvokeOnUiThread(() =>
+            fileNameVideo = message.Replace("VideoFile:", "").Trim()
+            );
         }
 
         //получение значения с весов
@@ -1280,9 +1287,9 @@ namespace PromVesClient
                 btnSaveWeight.Enabled = true;
                 return;
             }
-            //После успешной проверки полей запрашиваем у сервера фотофиксацию
-            //взвешивания. Ошибка фотофиксации не отменяет сохранение данных:
-            //результат взвешивания уже получен и проверен.
+            // После проверки полей запрашиваем фотофиксацию у сервера.
+            // Ответ содержит имя фотографии, которое будет записано в MediaWeighings.
+            // Ошибка запроса не отменяет сохранение самого взвешивания.
             if (_currentUserService.UseCamera)
             {
                 CapturePhotoResponseDto? photoResponse = await RequestCapturePhotoAsync();
@@ -1297,7 +1304,8 @@ namespace PromVesClient
                 }
                 else
                 {
-                    MessageBox.Show($"Фотофиксация выполнена. Файл: {photoResponse.fileName}", "Фотофиксация", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    //MessageBox.Show($"Фотофиксация выполнена. Файл: {photoResponse.fileName}", "Фотофиксация", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    fileNamePhoto = photoResponse.fileName;
                 }
             }
             //ссоздание квитанции
@@ -1341,7 +1349,7 @@ namespace PromVesClient
                 dto.Platform2Right = cartAxesWeightsList[2];
             }
             var result = await _staticWeighingService.saveWeighingAsync(dto);
-            //проерка на сохранение данных
+            // Сначала сохраняем Weighing, потому что MediaWeighing содержит его внешний ключ.
             if (result.Success == false)
             {
                 MessageBox.Show("Данные взвешивания не были сохранены в БД. Причина: " + result.Message, "Возникла ошибки при сохранении в БД", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -1349,7 +1357,26 @@ namespace PromVesClient
             }
             else
             {
-                MessageBox.Show("Данные успешно сохранены в БД", "Данные сохранены", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // Используем Id только что созданного Weighing, чтобы связать с ним фото и видео.
+                // Путь задаётся внутри PhotofixationService и сейчас равен "моя папка".
+                var mediaResult = await _photofixationService.SaveAsync(
+                    result.Data!,
+                    fileNamePhoto,
+                    fileNameVideo);
+
+                if (!mediaResult.Success)
+                {
+                    MessageBox.Show(
+                        "Данные взвешивания сохранены, но фотофиксация не была сохранена в БД. Причина: " + mediaResult.Message,
+                        "Ошибка сохранения фотофиксации",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                }
+                else
+                {
+                    MessageBox.Show("Данные и фотофиксация успешно сохранены в БД", "Данные сохранены", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+
                 btnSaveWeight.Enabled = true;
             }
         }

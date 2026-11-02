@@ -64,6 +64,7 @@ namespace PromVesClient
             services.AddScoped<HashPasswordService>();
             services.AddScoped<AppInfoService>();
             services.AddScoped<StaticWeighingService>();
+            services.AddScoped<PhotofixationService>();
             services.AddSingleton<ComPortService>();
             services.AddSingleton<CameraService>();
             services.AddSingleton<PNSerialPortService>();

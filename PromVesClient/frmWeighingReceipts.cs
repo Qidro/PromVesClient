@@ -822,7 +822,29 @@ namespace PromVesClient
 
         private void btnMedia_Click(object sender, EventArgs e)
         {
+            if (cardsList == null || cardsList.Count == 0 || dataGridViewСards.CurrentRow == null)
+            {
+                MessageBox.Show(
+                    "Сначала выберите карточку вагона.",
+                    "Предупреждение",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            int selectedIndex = dataGridViewСards.CurrentRow.Index;
+            if (selectedIndex < 0 || selectedIndex >= cardsList.Count)
+            {
+                MessageBox.Show(
+                    "Не удалось определить выбранную карточку вагона.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
             var form = _serviceProvider.GetRequiredService<MediaWeighingForm>();
+            form.SetWeighingId(cardsList[selectedIndex].Id);
 
             form.ShowDialog();
         }

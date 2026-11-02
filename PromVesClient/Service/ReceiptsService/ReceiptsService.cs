@@ -174,6 +174,56 @@ namespace PromVesClient.Service.ReceiptsService
             }
             
         }
+        // Возвращает данные выбранного взвешивания и связанные с ним медиафайлы.
+        public async Task<ServiceResult<MediaWeighingDto>> GetMediaWeighingAsync(Guid weighingId)
+        {
+            try
+            {
+                var weighing = await _dbContext.Weighings
+                    .Include(w => w.Receipt)
+                    .FirstOrDefaultAsync(w => w.Id == weighingId);
+
+                if (weighing == null)
+                {
+                    return ServiceResult<MediaWeighingDto>.Fail("Выбранное взвешивание не найдено.");
+                }
+
+                var media = await _dbContext.MediaWeighings
+                    .Where(m => m.WeighingId == weighingId)
+                    .OrderByDescending(m => m.Id)
+                    .FirstOrDefaultAsync();
+
+                var weighingDateTime = DateTime.SpecifyKind(
+                    weighing.Receipt.DateTime,
+                    DateTimeKind.Utc).ToLocalTime();
+
+                return ServiceResult<MediaWeighingDto>.Ok(new MediaWeighingDto
+                {
+                    VagonNumber = weighing.VagonNumber,
+                    WeighingDateTime = weighingDateTime,
+                    PhotoName = media?.FileNamePhoto ?? string.Empty,
+                    PhotoPath = media?.FilePathPhoto ?? string.Empty,
+                    VideoName = media?.FileNameVideo ?? string.Empty,
+                    VideoPath = media?.FilePathVideo ?? string.Empty
+                });
+            }
+            catch (TimeoutException ex)
+            {
+                _logger.LogError(ex, "Превышено время ожидания при загрузке медиа взвешивания {WeighingId}.", weighingId);
+                return ServiceResult<MediaWeighingDto>.Fail("БД не отвечает, причина: " + ex.Message);
+            }
+            catch (NpgsqlException ex)
+            {
+                _logger.LogError(ex, "Ошибка сервера БД при загрузке медиа взвешивания {WeighingId}.", weighingId);
+                return ServiceResult<MediaWeighingDto>.Fail("Ошибка сервера БД: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка загрузки медиа взвешивания {WeighingId}.", weighingId);
+                return ServiceResult<MediaWeighingDto>.Fail("Неизвестная ошибка БД: " + ex.Message);
+            }
+        }
+
         //метод получения видимых колонок для печати квитанции
         public async Task<ServiceResult<Dictionary<string, bool>>> GetVisibalColumn()
         {

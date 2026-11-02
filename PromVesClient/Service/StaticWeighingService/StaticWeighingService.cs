@@ -34,7 +34,7 @@ namespace PromVesClient.Service.StaticWeighingService
         }
         //метод отвечающий за сохранение данных взвешивания WeighingDto dto
         //public async Task<ServiceResult> saveWeighingAsync(decimal Platform1Left, decimal Platform1Right, decimal Platform2Left, decimal Platform2Right, string VagonNumber, decimal TareWeight, decimal GrossWeight)
-        public async Task<ServiceResult> saveWeighingAsync(WeighingDto dtoWeighing)
+        public async Task<ServiceResult<Guid>> saveWeighingAsync(WeighingDto dtoWeighing)
         {
             //Запись сторон платформы
             decimal L1 = dtoWeighing.Platform1Left;
@@ -125,13 +125,13 @@ namespace PromVesClient.Service.StaticWeighingService
             catch (InvalidOperationException ex)
             {
                 _logger.LogError("Ошибка выполнения запроса: " + ex.Message);
-                return ServiceResult.Fail("Ошибка выполнения запроса: " + ex.Message);
+                return ServiceResult<Guid>.Fail("Ошибка выполнения запроса: " + ex.Message);
                 //  return ServiceResult.Fail("Ошибка выполнения запроса.");
             }
             catch (Exception ex)
             {
                 _logger.LogError("Ошибка получения данных: " + ex.Message);
-                return ServiceResult.Fail("Ошибка получения данных: "+ ex.Message);
+                return ServiceResult<Guid>.Fail("Ошибка получения данных: "+ ex.Message);
             }
             
 
@@ -169,17 +169,17 @@ namespace PromVesClient.Service.StaticWeighingService
             {
                 _dbContext.Weighings.Add(weighingResult);
                 await _dbContext.SaveChangesAsync();
-                return ServiceResult.Ok();
+                return ServiceResult<Guid>.Ok(weighingResult.Id);
             }
             catch (DbUpdateException ex)
             {
                 _logger.LogError("Ошибка обновления БД:" + ex.Message);
-                return ServiceResult.Fail("Ошибка обновления БД: " + ex.Message);
+                return ServiceResult<Guid>.Fail("Ошибка обновления БД: " + ex.Message);
             }
 
             catch (Exception ex)
             {
-                return ServiceResult.Fail("Ошибка в записи в БД: " + ex.Message);
+                return ServiceResult<Guid>.Fail("Ошибка в записи в БД: " + ex.Message);
             }
 
 
