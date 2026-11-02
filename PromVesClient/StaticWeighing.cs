@@ -1355,7 +1355,7 @@ namespace PromVesClient
                 MessageBox.Show("Данные взвешивания не были сохранены в БД. Причина: " + result.Message, "Возникла ошибки при сохранении в БД", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 btnSaveWeight.Enabled = true;
             }
-            else
+            else if(_currentUserService.UseCamera)
             {
                 // Используем Id только что созданного Weighing, чтобы связать с ним фото и видео.
                 // Путь задаётся внутри PhotofixationService и сейчас равен "моя папка".
