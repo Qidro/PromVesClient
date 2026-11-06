@@ -121,7 +121,7 @@ namespace PromVesClient
         }
 
         // Разбирает дату из имени видео вида yyyyMMdd_HHmmss_fff_номер.mp4.
-        private static DateTime? GetVideoDateTime(string videoName)
+        private static DateTime? GetVideoDateTime(string videoName) 
         {
             if (string.IsNullOrWhiteSpace(videoName))
             {

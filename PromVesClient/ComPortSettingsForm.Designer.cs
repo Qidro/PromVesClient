@@ -130,6 +130,10 @@
             IPtb1 = new TextBox();
             label30 = new Label();
             tabPage3 = new TabPage();
+            Dynamiccb = new ComboBox();
+            label72 = new Label();
+            cameraUsecb = new ComboBox();
+            label71 = new Label();
             btnRestartServerGeneral = new Button();
             defaultboardbtn = new Button();
             SaveTablebtn = new Button();
@@ -217,8 +221,6 @@
             label68 = new Label();
             label69 = new Label();
             label70 = new Label();
-            cameraUsecb = new ComboBox();
-            label71 = new Label();
             groupBox1.SuspendLayout();
             groupBox2.SuspendLayout();
             groupBox3.SuspendLayout();
@@ -1234,6 +1236,8 @@
             // 
             // tabPage3
             // 
+            tabPage3.Controls.Add(Dynamiccb);
+            tabPage3.Controls.Add(label72);
             tabPage3.Controls.Add(cameraUsecb);
             tabPage3.Controls.Add(label71);
             tabPage3.Controls.Add(btnRestartServerGeneral);
@@ -1252,6 +1256,48 @@
             tabPage3.Text = "Настройка дублирующего табла";
             tabPage3.UseVisualStyleBackColor = true;
             tabPage3.Click += tabPage3_Click;
+            // 
+            // Dynamiccb
+            // 
+            Dynamiccb.DropDownStyle = ComboBoxStyle.DropDownList;
+            Dynamiccb.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            Dynamiccb.FormattingEnabled = true;
+            Dynamiccb.Items.AddRange(new object[] { "Да", "Нет" });
+            Dynamiccb.Location = new Point(266, 204);
+            Dynamiccb.Name = "Dynamiccb";
+            Dynamiccb.Size = new Size(168, 33);
+            Dynamiccb.TabIndex = 14;
+            // 
+            // label72
+            // 
+            label72.AutoSize = true;
+            label72.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            label72.Location = new Point(22, 207);
+            label72.Name = "label72";
+            label72.Size = new Size(239, 25);
+            label72.TabIndex = 13;
+            label72.Text = "Использование динамики";
+            // 
+            // cameraUsecb
+            // 
+            cameraUsecb.DropDownStyle = ComboBoxStyle.DropDownList;
+            cameraUsecb.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            cameraUsecb.FormattingEnabled = true;
+            cameraUsecb.Items.AddRange(new object[] { "Да", "Нет" });
+            cameraUsecb.Location = new Point(266, 161);
+            cameraUsecb.Name = "cameraUsecb";
+            cameraUsecb.Size = new Size(168, 33);
+            cameraUsecb.TabIndex = 12;
+            // 
+            // label71
+            // 
+            label71.AutoSize = true;
+            label71.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            label71.Location = new Point(55, 164);
+            label71.Name = "label71";
+            label71.Size = new Size(206, 25);
+            label71.TabIndex = 11;
+            label71.Text = "Использование камер";
             // 
             // btnRestartServerGeneral
             // 
@@ -2079,26 +2125,6 @@
             label70.Size = new Size(100, 23);
             label70.TabIndex = 0;
             // 
-            // cameraUsecb
-            // 
-            cameraUsecb.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            cameraUsecb.FormattingEnabled = true;
-            cameraUsecb.Items.AddRange(new object[] { "Да", "Нет" });
-            cameraUsecb.Location = new Point(266, 161);
-            cameraUsecb.Name = "cameraUsecb";
-            cameraUsecb.Size = new Size(168, 33);
-            cameraUsecb.TabIndex = 12;
-            // 
-            // label71
-            // 
-            label71.AutoSize = true;
-            label71.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            label71.Location = new Point(55, 164);
-            label71.Name = "label71";
-            label71.Size = new Size(206, 25);
-            label71.TabIndex = 11;
-            label71.Text = "Использование камер";
-            // 
             // ComPortSettingsForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -2348,5 +2374,7 @@
         private ComboBox comboBox1;
         private ComboBox cameraUsecb;
         private Label label71;
+        private ComboBox Dynamiccb;
+        private Label label72;
     }
 }

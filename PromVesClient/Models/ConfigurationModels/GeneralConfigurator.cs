@@ -11,5 +11,8 @@ namespace PromVesClient.Models.ConfigurationModels
         public string Board { get; set; } = string.Empty;
 
         public bool UseCamera { get; set; }
+
+        //режим динамического отображения состояния
+        public bool StateDynamic { get; set; }
     }
 }

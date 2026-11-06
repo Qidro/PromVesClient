@@ -971,14 +971,16 @@ namespace PromVesClient
 
             if (string.IsNullOrWhiteSpace(protocolcb.Text))
                 throw new Exception("Не выбран протокол.");
-
+            if (string.IsNullOrWhiteSpace(Dynamiccb.Text))
+                throw new Exception("Не выбран протокол.");
             var configuration = new GeneralConfiguratorConfiguration
             {
                 GeneralConfigurator = new GeneralConfigurator
                 {
                     Protocol = protocolcb.Text,
                     Board = Boardcb.Text,
-                    UseCamera = cameraUsecb.Text == "Да"
+                    UseCamera = cameraUsecb.Text == "Да",
+                    StateDynamic = Dynamiccb.Text == "Да"
                 }
             };
 
@@ -1048,6 +1050,9 @@ namespace PromVesClient
                     SelectComboBoxItem(
                         cameraUsecb,
                         generalResult.Data.GeneralConfigurator.UseCamera ? "Да" : "Нет");
+                    SelectComboBoxItem(
+                        Dynamiccb,
+                        generalResult.Data.GeneralConfigurator.StateDynamic ? "Да" : "Нет");
                 }
             }
         }
