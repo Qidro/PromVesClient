@@ -1355,7 +1355,7 @@ namespace PromVesClient
                 MessageBox.Show("Данные взвешивания не были сохранены в БД. Причина: " + result.Message, "Возникла ошибки при сохранении в БД", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 btnSaveWeight.Enabled = true;
             }
-            else if(_currentUserService.UseCamera)
+            else if (_currentUserService.UseCamera)
             {
                 // Используем Id только что созданного Weighing, чтобы связать с ним фото и видео.
                 // Путь задаётся внутри PhotofixationService и сейчас равен "моя папка".
@@ -1377,6 +1377,11 @@ namespace PromVesClient
                     MessageBox.Show("Данные и фотофиксация успешно сохранены в БД", "Данные сохранены", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
 
+                btnSaveWeight.Enabled = true;
+            }
+            else
+            {
+                MessageBox.Show("Данные успешно сохранены в БД", "Данные сохранены", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 btnSaveWeight.Enabled = true;
             }
         }
