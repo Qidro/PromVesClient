@@ -59,6 +59,7 @@ namespace PromVesClient
             services.AddTransient<WagonForm>();
             services.AddTransient<PMCalibrationForm>();
             services.AddTransient<MediaWeighingForm>();
+            services.AddTransient<DynamicWeighing>();
             //регистрация сервисов
             services.AddScoped<UserService>();
             services.AddScoped<HashPasswordService>();

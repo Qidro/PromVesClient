@@ -55,9 +55,9 @@ namespace PromVesClient.Service.TcpService
                 EnableKeepAlive(_client.Client);
             }
 
-            // Для командного порта 5005 сервер может длительное время не отвечать.
+            // Для командного порта 5005 и 5004 сервер может длительное время не отвечать.
             // Поэтому на нём отключаем таймаут ожидания строки.
-            _ = port == 5005
+            _ = port == 5005 || port == 5004
                 ? ReceiveMessagesWithoutTimeoutAsync(_cts.Token)
                 : ReceiveMessagesAsync(_cts.Token);
         }
@@ -217,7 +217,7 @@ namespace PromVesClient.Service.TcpService
                         }
                         else
                         {
-                            // Для порта 5005 ожидаем строку только до отмены соединения.
+                            // Для порта 5005 и 5004 ожидаем строку только до отмены соединения.
                             message = await reader.ReadLineAsync(token);
                         }
                     }

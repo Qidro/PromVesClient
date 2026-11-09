@@ -96,7 +96,9 @@ namespace PromVesClient
 
         private void dynamicWeighing_Click(object sender, EventArgs e)
         {
+            var form = _serviceProvider.GetRequiredService<DynamicWeighing>();
 
+            form.ShowDialog();
         }
     }
 
