@@ -23,13 +23,23 @@ namespace PromVesClient
         // Не показывать пользователю ошибку, если соединение закрывается
         // после завершения динамического взвешивания.
         private bool _isFinishingWeighing;
+        // Показывает, что пользователь запустил взвешивание и переподключение разрешено.
+        private bool _isWeighingActive;
+        // Не допускает запуск нескольких циклов переподключения одновременно.
+        private int _reconnectInProgress;
+        // Гарантирует одно уведомление за один случай потери связи.
+        private int _serverErrorShown;
 
         // Таймер проверки активности сервера.
         private readonly System.Windows.Forms.Timer _pingTimer = new();
+        // Не допускает отправку нового Ping, пока предыдущая проверка ещё выполняется.
         private int _pingInProgress;
+        // Ожидание ответа Pong от сервера на текущий Ping.
         private TaskCompletionSource<bool>? _pendingPong;
 
+        // Интервал между проверками доступности сервера.
         private const int PingIntervalMs = 5000;
+        // Максимальное время отправки Ping и ожидания ответа Pong.
         private const int PingTimeoutMs = 3000;
 
         // Настройки разбора JSON: сервер может отдавать свойства как в PascalCase,
@@ -76,6 +86,12 @@ namespace PromVesClient
                     _knownResultStartTimes.Clear();
                     _isFinishingWeighing = false;
                     await _tcpService.ConnectAsync(5004);
+                    _isWeighingActive = true;
+                    Interlocked.Exchange(ref _serverErrorShown, 0);
+
+                    // Сразу после подключения проверяем, что сервер действительно
+                    // активен и отвечает на команду Ping.
+                    await CheckServerConnectionAsync();
                     _pingTimer.Start();
                     btnWeighing.Text = "Закончить взвешивание";
                 }
@@ -90,6 +106,7 @@ namespace PromVesClient
                 // Перед закрытием соединения сообщаем серверу о завершении
                 // динамического взвешивания. Сервис выполнит максимум 5 попыток.
                 _isFinishingWeighing = true;
+                _isWeighingActive = false;
                 _pingTimer.Stop();
                 await _tcpService.SendMessageAsync("EndDynamic", 5);
                 await _tcpService.DisconnectAsync();
@@ -146,11 +163,18 @@ namespace PromVesClient
         // Каждые 5 секунд отправляет Ping и ожидает ответ Pong.
         private async void PingTimer_Tick(object? sender, EventArgs e)
         {
+            await CheckServerConnectionAsync();
+        }
+
+        // Выполняет одну проверку доступности сервера.
+        private async Task<bool> CheckServerConnectionAsync()
+        {
+            // Проверку не запускаем во время завершения или если другая проверка уже идёт.
             if (_isFinishingWeighing
                 || !_tcpService.ServerConnected
                 || Interlocked.Exchange(ref _pingInProgress, 1) != 0)
             {
-                return;
+                return false;
             }
 
             var pong = new TaskCompletionSource<bool>(
@@ -167,25 +191,32 @@ namespace PromVesClient
 
                 if (!sent)
                 {
+                    // Команда не записалась в сокет — соединение считаем недоступным.
                     SetServerConnectionStatus(Color.Red);
                     _logger.LogWarning("Не удалось отправить Ping серверу.");
-                    return;
+                    return false;
                 }
 
                 try
                 {
+                    // Отправка успешна, но сервер должен дополнительно подтвердить
+                    // активность ответом Pong.
                     await pong.Task.WaitAsync(TimeSpan.FromMilliseconds(PingTimeoutMs));
                     _logger.LogDebug("Сервер подтвердил доступность соединения: Pong.");
+                    return true;
                 }
                 catch (TimeoutException)
                 {
                     SetServerConnectionStatus(Color.Red);
                     _logger.LogWarning("Сервер не ответил на Ping в течение 3 секунд.");
+                    return false;
                 }
             }
             catch (OperationCanceledException)
             {
+                SetServerConnectionStatus(Color.Red);
                 _logger.LogWarning("Истёк таймаут отправки Ping.");
+                return false;
             }
             finally
             {
@@ -195,6 +226,53 @@ namespace PromVesClient
                 }
 
                 Interlocked.Exchange(ref _pingInProgress, 0);
+            }
+        }
+
+        // Переподключается к серверу, пока пользователь не завершил взвешивание.
+        private async Task ReconnectToServerAsync()
+        {
+            // Событие ошибки может прийти несколько раз от разных фоновых операций.
+            // Только первый обработчик получает право выполнять переподключение.
+            if (Interlocked.Exchange(ref _reconnectInProgress, 1) != 0)
+            {
+                return;
+            }
+
+            try
+            {
+                while (_isWeighingActive && !_isFinishingWeighing && !IsDisposed)
+                {
+                    try
+                    {
+                        // Сначала закрываем старый экземпляр соединения, затем
+                        // создаём новое подключение к порту динамического взвешивания.
+                        await _tcpService.DisconnectAsync();
+                        await _tcpService.ConnectAsync(5004);
+
+                        // Подключение считается восстановленным только после Pong.
+                        if (await CheckServerConnectionAsync())
+                        {
+                            Interlocked.Exchange(ref _serverErrorShown, 0);
+                            _pingTimer.Start();
+                            return;
+                        }
+
+                        await _tcpService.DisconnectAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Ошибка отдельной попытки не прекращает цикл восстановления.
+                        _logger.LogWarning(ex, "Не удалось переподключиться к серверу.");
+                    }
+
+                    // Пауза перед следующей попыткой, чтобы не создавать частые подключения.
+                    await Task.Delay(5000);
+                }
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _reconnectInProgress, 0);
             }
         }
 
@@ -295,7 +373,7 @@ namespace PromVesClient
 
         private void OnConnectionError(Exception exception)
         {
-            if (IsDisposed || _isFinishingWeighing)
+            if (IsDisposed || _isFinishingWeighing || !_isWeighingActive)
             {
                 return;
             }
@@ -303,17 +381,25 @@ namespace PromVesClient
             _pingTimer.Stop();
             SetServerConnectionStatus(Color.Red);
 
-            BeginInvoke(() =>
+            // Запускаем восстановление в фоне, чтобы не блокировать поток интерфейса.
+            _ = ReconnectToServerAsync();
+
+            // Повторные события ошибки до восстановления не показывают новые MessageBox.
+            if (Interlocked.Exchange(ref _serverErrorShown, 1) == 0)
             {
-                // При потере связи форма возвращается в состояние ожидания подключения.
-                btnWeighing.Text = "Начать взвешивание";
-                MessageBox.Show(exception.Message, "Ошибка сервера", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            });
+                BeginInvoke(() => MessageBox.Show(
+                    exception.Message,
+                    "Ошибка сервера",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error));
+            }
         }
 
         private async void DynamicWeighing_FormClosing(object? sender, FormClosingEventArgs e)
         {
             // Отписываем обработчики и закрываем соединение перед закрытием формы.
+            _isWeighingActive = false;
+            _isFinishingWeighing = true;
             _pingTimer.Stop();
             _pingTimer.Tick -= PingTimer_Tick;
             _tcpService.MessageReceived -= OnMessageReceived;
