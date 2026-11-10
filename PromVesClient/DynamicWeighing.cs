@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
-using System.Text;
 using System.Text.Json;
 using System.Windows.Forms;
+using Microsoft.Extensions.Logging;
 using PromVesClient.DTO;
 using PromVesClient.Service.TcpService;
 
@@ -14,6 +15,23 @@ namespace PromVesClient
         // Сервис отвечает за подключение к серверу и получение сообщений по TCP.
         private readonly TcpService _tcpService;
 
+        private readonly ILogger<DynamicWeighing> _logger;
+
+        // Время начала результатов, которые уже были обработаны в текущем сеансе.
+        private readonly HashSet<DateTime> _knownResultStartTimes = new();
+
+        // Не показывать пользователю ошибку, если соединение закрывается
+        // после завершения динамического взвешивания.
+        private bool _isFinishingWeighing;
+
+        // Таймер проверки активности сервера.
+        private readonly System.Windows.Forms.Timer _pingTimer = new();
+        private int _pingInProgress;
+        private TaskCompletionSource<bool>? _pendingPong;
+
+        private const int PingIntervalMs = 5000;
+        private const int PingTimeoutMs = 3000;
+
         // Настройки разбора JSON: сервер может отдавать свойства как в PascalCase,
         // так и в camelCase, а даты — в ISO 8601 или в старом формате.
         private static readonly JsonSerializerOptions JsonOptions = new()
@@ -23,14 +41,18 @@ namespace PromVesClient
         };
 
         // Инициализирует форму и подписывает её на события TCP-сервиса.
-        public DynamicWeighing(TcpService tcpService)
+        public DynamicWeighing(TcpService tcpService, ILogger<DynamicWeighing> logger)
         {
             _tcpService = tcpService;
+            _logger = logger;
             InitializeComponent();
 
             _tcpService.MessageReceived += OnMessageReceived;
             _tcpService.ConnectionError += OnConnectionError;
             FormClosing += DynamicWeighing_FormClosing;
+
+            _pingTimer.Interval = PingIntervalMs;
+            _pingTimer.Tick += PingTimer_Tick;
         }
 
         private void dataGridViewReceipts_CellContentClick(object sender, DataGridViewCellEventArgs e)
@@ -50,7 +72,11 @@ namespace PromVesClient
             {
                 try
                 {
+                    // При новом подключении начинаем отслеживание списка заново.
+                    _knownResultStartTimes.Clear();
+                    _isFinishingWeighing = false;
                     await _tcpService.ConnectAsync(5004);
+                    _pingTimer.Start();
                     btnWeighing.Text = "Закончить взвешивание";
                 }
                 catch (Exception ex)
@@ -61,7 +87,11 @@ namespace PromVesClient
             }
             else
             {
-                // Повторное нажатие завершает взвешивание и закрывает соединение.
+                // Перед закрытием соединения сообщаем серверу о завершении
+                // динамического взвешивания. Сервис выполнит максимум 5 попыток.
+                _isFinishingWeighing = true;
+                _pingTimer.Stop();
+                await _tcpService.SendMessageAsync("EndDynamic", 5);
                 await _tcpService.DisconnectAsync();
                 btnWeighing.Text = "Начать взвешивание";
             }
@@ -70,6 +100,16 @@ namespace PromVesClient
         // Обрабатывает сообщение сервера и добавляет результат в таблицу.
         private void OnMessageReceived(string message)
         {
+            _logger.LogInformation("Получено сообщение от сервера."+ message);
+
+            // Ответ Pong подтверждает, что сервер получил Ping и продолжает работать.
+            if (string.Equals(message.Trim(), "Pong", StringComparison.OrdinalIgnoreCase))
+            {
+                SetServerConnectionStatus(Color.Green);
+                _pendingPong?.TrySetResult(true);
+                return;
+            }
+
             // TCP-сервис принимает данные в фоновом потоке, поэтому обновление
             // элементов Windows Forms необходимо выполнить в UI-потоке.
             if (InvokeRequired)
@@ -85,14 +125,119 @@ namespace PromVesClient
 
             foreach (RailcarWeightResultDto result in results)
             {
+                // Повторные сообщения с тем же временем начала игнорируются.   
+                if (_knownResultStartTimes.Contains(result.StartTime)
+                    || IsResultAlreadyAdded(result.StartTime))
+                {
+                    continue;
+                }
+
                 dataGridViewReceipts.Rows.Add(
-                    result.Number.ToString(CultureInfo.CurrentCulture),
                     result.StartTime.ToString("dd.MM.yyyy HH:mm:ss"),
                     result.EndTime.ToString("dd.MM.yyyy HH:mm:ss"),
                     FormatWeight(result.TotalWeight));
+
+                // Запоминаем время сразу после добавления, чтобы повтор этого
+                // результата в следующем сообщении не создал дубликат.
+                _knownResultStartTimes.Add(result.StartTime);
+            }
+        }
+
+        // Каждые 5 секунд отправляет Ping и ожидает ответ Pong.
+        private async void PingTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_isFinishingWeighing
+                || !_tcpService.ServerConnected
+                || Interlocked.Exchange(ref _pingInProgress, 1) != 0)
+            {
+                return;
             }
 
-            ShowResults(results);
+            var pong = new TaskCompletionSource<bool>(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            _pendingPong = pong;
+
+            try
+            {
+                using var timeoutCts = new CancellationTokenSource(PingTimeoutMs);
+                bool sent = await _tcpService.SendMessageAsync(
+                    "Ping",
+                    1,
+                    timeoutCts.Token);
+
+                if (!sent)
+                {
+                    SetServerConnectionStatus(Color.Red);
+                    _logger.LogWarning("Не удалось отправить Ping серверу.");
+                    return;
+                }
+
+                try
+                {
+                    await pong.Task.WaitAsync(TimeSpan.FromMilliseconds(PingTimeoutMs));
+                    _logger.LogDebug("Сервер подтвердил доступность соединения: Pong.");
+                }
+                catch (TimeoutException)
+                {
+                    SetServerConnectionStatus(Color.Red);
+                    _logger.LogWarning("Сервер не ответил на Ping в течение 3 секунд.");
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning("Истёк таймаут отправки Ping.");
+            }
+            finally
+            {
+                if (ReferenceEquals(_pendingPong, pong))
+                {
+                    _pendingPong = null;
+                }
+
+                Interlocked.Exchange(ref _pingInProgress, 0);
+            }
+        }
+
+        // Меняет цвет индикатора в UI-потоке, так как Ping обрабатывается асинхронно.
+        private void SetServerConnectionStatus(Color color)
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+
+            if (InvokeRequired)
+            {
+                BeginInvoke(() => SetServerConnectionStatus(color));
+                return;
+            }
+
+            lblConnectServer.BackColor = color;
+        }
+
+        // Проверяет, был ли результат с таким временем начала уже добавлен в таблицу.
+        private bool IsResultAlreadyAdded(DateTime startTime)
+        {
+            foreach (DataGridViewRow row in dataGridViewReceipts.Rows)
+            {
+                if (row.IsNewRow || row.Cells[0].Value is null)
+                {
+                    continue;
+                }
+
+                if (DateTime.TryParseExact(
+                        Convert.ToString(row.Cells[0].Value),
+                        "dd.MM.yyyy HH:mm:ss",
+                        CultureInfo.CurrentCulture,
+                        DateTimeStyles.None,
+                        out DateTime existingStartTime)
+                    && existingStartTime == startTime)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         // Разбирает JSON с результатом взвешивания вагона (или массивом результатов).
@@ -143,46 +288,6 @@ namespace PromVesClient
             }
         }
 
-        // Показывает все полученные значения в MessageBox (временная проверка).
-        private static void ShowResults(IReadOnlyList<RailcarWeightResultDto> results)
-        {
-            var builder = new StringBuilder();
-
-            foreach (RailcarWeightResultDto result in results)
-            {
-                builder.AppendLine($"Номер: {result.Number}");
-                builder.AppendLine($"Вес стороны 1: {FormatWeight(result.Side1Weight)}");
-                builder.AppendLine($"Вес стороны 2: {FormatWeight(result.Side2Weight)}");
-                builder.AppendLine($"Вес стороны 3: {FormatWeight(result.Side3Weight)}");
-                builder.AppendLine($"Вес стороны 4: {FormatWeight(result.Side4Weight)}");
-                builder.AppendLine($"Общий вес: {FormatWeight(result.TotalWeight)}");
-                builder.AppendLine("Веса портов:");
-
-                if (result.PortWeights.Count == 0)
-                {
-                    builder.AppendLine("  (нет данных)");
-                }
-                else
-                {
-                    foreach (KeyValuePair<int, decimal> port in result.PortWeights)
-                    {
-                        builder.AppendLine($"  Порт {port.Key}: {FormatWeight(port.Value)}");
-                    }
-                }
-
-                builder.AppendLine($"Начало: {result.StartTime:dd.MM.yyyy HH:mm:ss}");
-                builder.AppendLine($"Окончание: {result.EndTime:dd.MM.yyyy HH:mm:ss}");
-                builder.AppendLine();
-            }
-
-            MessageBox.Show(
-                builder.ToString().TrimEnd(),
-                "Данные от сервера",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
-
-        }
-
         private static string FormatWeight(decimal weight)
         {
             return weight.ToString("0.##", CultureInfo.CurrentCulture);
@@ -190,10 +295,13 @@ namespace PromVesClient
 
         private void OnConnectionError(Exception exception)
         {
-            if (IsDisposed)
+            if (IsDisposed || _isFinishingWeighing)
             {
                 return;
             }
+
+            _pingTimer.Stop();
+            SetServerConnectionStatus(Color.Red);
 
             BeginInvoke(() =>
             {
@@ -206,6 +314,8 @@ namespace PromVesClient
         private async void DynamicWeighing_FormClosing(object? sender, FormClosingEventArgs e)
         {
             // Отписываем обработчики и закрываем соединение перед закрытием формы.
+            _pingTimer.Stop();
+            _pingTimer.Tick -= PingTimer_Tick;
             _tcpService.MessageReceived -= OnMessageReceived;
             _tcpService.ConnectionError -= OnConnectionError;
             await _tcpService.DisconnectAsync();

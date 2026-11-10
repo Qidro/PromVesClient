@@ -9,9 +9,6 @@ namespace PromVesClient.DTO
     // Результат взвешивания вагона, который приходит от сервера.
     public class RailcarWeightResultDto
     {
-        // Порядковый номер результата в списке вагонов.
-        public long Number { get; set; }
-
         // Вес первой боковой стороны (COM-порт 1). 0, если порт не используется.
         public decimal Side1Weight { get; set; }
 

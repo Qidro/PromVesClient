@@ -267,7 +267,7 @@ namespace PromVesClient.Service.TcpService
                     if (string.IsNullOrWhiteSpace(message))
                         continue;
 
-                    _logger.LogDebug(
+                    _logger.LogInformation(
                         "Получено сообщение от сервера: {Message}",
                         message);
 
@@ -358,12 +358,39 @@ namespace PromVesClient.Service.TcpService
             }
         }
 
+        // Отправляет команду серверу с исходным поведением: повторяет попытки,
+        // пока соединение живо. Для ограниченного количества попыток используется
+        // перегрузка SendMessageAsync(message, maxAttempts).
+        public Task<bool> SendMessageAsync(string message)
+        {
+            return SendMessageAsync(message, int.MaxValue, CancellationToken.None);
+        }
+
         // Отправляет команду серверу строкой "команда\n" ("\n" обязателен — разделитель для ReadLineAsync на приёме).
-        // При ошибке отправки повторяет попытки каждые 500 мс, пока соединение живо.
+        // При ошибке отправки повторяет попытки каждые 500 мс, но не более maxAttempts раз.
         // Возвращает false, если соединения нет или оно закрылось до успешной отправки.
         // ВАЖНО: true означает лишь запись в сокет — подтверждений сервер не шлёт.
-        public async Task<bool> SendMessageAsync(string message)
+        public async Task<bool> SendMessageAsync(string message, int maxAttempts)
         {
+            return await SendMessageAsync(message, maxAttempts, CancellationToken.None);
+        }
+
+        // Вариант отправки с внешним токеном отмены. Используется для команд,
+        // которым нужен жёсткий таймаут отправки.
+        public async Task<bool> SendMessageAsync(
+            string message,
+            int maxAttempts,
+            CancellationToken cancellationToken)
+        {
+            if (maxAttempts < 1)
+            {
+                return false;
+            }
+
+            using CancellationTokenSource sendCts =
+                CancellationTokenSource.CreateLinkedTokenSource(Token, cancellationToken);
+            CancellationToken sendToken = sendCts.Token;
+
             // Нет соединения (до подключения или после DisconnectAsync).
             if (_client is null || _stream is null || !_client.Connected)
             {
@@ -375,20 +402,25 @@ namespace PromVesClient.Service.TcpService
 
             // Цикл, пока соединение живо. _client/_stream могут обнулиться в
             // DisconnectAsync параллельно с отправкой, поэтому проверяем на каждой итерации.
-            while (ServerConnected
+            int attempts = 0;
+
+            while (attempts < maxAttempts
+                && ServerConnected
                 && _client is not null
                 && _stream is not null
                 && _client.Connected)
             {
+                attempts++;
+
                 try
                 {
                     // Token прерывает запись при штатном закрытии соединения.
-                    await _stream.WriteAsync(data, 0, data.Length, Token);
-                    await _stream.FlushAsync(Token);
+                    await _stream.WriteAsync(data, 0, data.Length, sendToken);
+                    await _stream.FlushAsync(sendToken);
 
                     return true;
                 }
-                catch (OperationCanceledException) when (Token.IsCancellationRequested)
+                catch (OperationCanceledException) when (sendToken.IsCancellationRequested)
                 {
                     // Соединение закрывается штатно — повторять бессмысленно.
                     break;
@@ -421,10 +453,15 @@ namespace PromVesClient.Service.TcpService
                         message);
                 }
 
+                if (attempts >= maxAttempts)
+                {
+                    break;
+                }
+
                 // Пауза между попытками; при закрытии соединения во время паузы выйдет OCE.
                 try
                 {
-                    await Task.Delay(TimeSpan.FromMilliseconds(500), Token);
+                    await Task.Delay(TimeSpan.FromMilliseconds(500), sendToken);
                 }
                 catch (OperationCanceledException)
                 {

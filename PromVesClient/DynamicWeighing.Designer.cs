@@ -30,8 +30,8 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DynamicWeighing));
             btnWeighing = new Button();
+            lblConnectServer = new Label();
             dataGridViewReceipts = new DataGridView();
-            NumberColumn = new DataGridViewTextBoxColumn();
             StartTimeColumn = new DataGridViewTextBoxColumn();
             EndTimeColumn = new DataGridViewTextBoxColumn();
             TotalWeightColumn = new DataGridViewTextBoxColumn();
@@ -50,24 +50,29 @@
             btnWeighing.UseVisualStyleBackColor = true;
             btnWeighing.Click += btnWeighing_Click;
             // 
+            // lblConnectServer
+            // 
+            lblConnectServer.AutoSize = true;
+            lblConnectServer.BackColor = Color.Red;
+            lblConnectServer.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            lblConnectServer.Location = new Point(28, 21);
+            lblConnectServer.Name = "lblConnectServer";
+            lblConnectServer.Size = new Size(182, 21);
+            lblConnectServer.TabIndex = 27;
+            lblConnectServer.Text = "Соединение с сервером";
+            // 
             // dataGridViewReceipts
             // 
             dataGridViewReceipts.AllowUserToOrderColumns = true;
             dataGridViewReceipts.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dataGridViewReceipts.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewReceipts.Columns.AddRange(new DataGridViewColumn[] { NumberColumn, StartTimeColumn, EndTimeColumn, TotalWeightColumn });
+            dataGridViewReceipts.Columns.AddRange(new DataGridViewColumn[] { StartTimeColumn, EndTimeColumn, TotalWeightColumn });
             dataGridViewReceipts.Location = new Point(28, 70);
             dataGridViewReceipts.Name = "dataGridViewReceipts";
             dataGridViewReceipts.ReadOnly = true;
             dataGridViewReceipts.Size = new Size(608, 419);
             dataGridViewReceipts.TabIndex = 25;
             dataGridViewReceipts.CellContentClick += dataGridViewReceipts_CellContentClick;
-            // 
-            // NumberColumn
-            // 
-            NumberColumn.HeaderText = "Номер";
-            NumberColumn.Name = "NumberColumn";
-            NumberColumn.ReadOnly = true;
             // 
             // StartTimeColumn
             // 
@@ -104,6 +109,7 @@
             ClientSize = new Size(648, 579);
             Controls.Add(button1);
             Controls.Add(dataGridViewReceipts);
+            Controls.Add(lblConnectServer);
             Controls.Add(btnWeighing);
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "DynamicWeighing";
@@ -111,14 +117,15 @@
             Load += DynamicWeighing_Load;
             ((System.ComponentModel.ISupportInitialize)dataGridViewReceipts).EndInit();
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
 
         private Button btnWeighing;
+        private Label lblConnectServer;
         private DataGridView dataGridViewReceipts;
         private Button button1;
-        private DataGridViewTextBoxColumn NumberColumn;
         private DataGridViewTextBoxColumn StartTimeColumn;
         private DataGridViewTextBoxColumn EndTimeColumn;
         private DataGridViewTextBoxColumn TotalWeightColumn;
